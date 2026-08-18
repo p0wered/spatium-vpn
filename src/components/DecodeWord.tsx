@@ -20,11 +20,14 @@ const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 export function DecodeWord({
   word,
   duration = 900,
+  active = true,
   className = '',
 }: {
   word: string
   /** Сколько длится разбор слова, мс */
   duration?: number
+  /** Внешний момент запуска — нужен для синхронизации с сюжетной анимацией */
+  active?: boolean
   className?: string
 }) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -42,7 +45,7 @@ export function DecodeWord({
       setRevealed(word.length)
       return
     }
-    if (!inView) return
+    if (!inView || !active) return
 
     const start = performance.now()
     const timer = window.setInterval(() => {
@@ -53,7 +56,7 @@ export function DecodeWord({
     }, SHUFFLE_MS)
 
     return () => clearInterval(timer)
-  }, [inView, reduced, word, duration])
+  }, [inView, reduced, word, duration, active])
 
   // Считается прямо в рендере: он и так происходит только на смену revealed
   // или shuffle, а мемоизация по счётчику тасовки ничего бы не сэкономила
