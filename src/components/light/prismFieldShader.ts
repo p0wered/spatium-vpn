@@ -45,11 +45,6 @@ float saturate(float v) {
   return clamp(v, 0.0, 1.0);
 }
 
-float easeOutCubic(float v) {
-  v = saturate(v);
-  return 1.0 - pow(1.0 - v, 3.0);
-}
-
 float sdBox(vec2 p, vec2 b) {
   vec2 q = abs(p) - b;
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
@@ -62,29 +57,43 @@ float sdSegment(vec2 p, vec2 a, vec2 b) {
   return length(pa - ba * h);
 }
 
-float tri(float x, float center, float radius) {
-  return max(1.0 - abs(x - center) / radius, 0.0);
+float innerGateMask(float gateT) {
+  // Первые и последние две точки фиксируют вход и выход луча.
+  float gateStep = 1.0 / max(uGateCount - 1.0, 1.0);
+  float afterFirstTwo = step(gateStep * 1.5, gateT);
+  float beforeLastTwo = 1.0 - step(1.0 - gateStep * 1.5, gateT);
+  return afterFirstTwo * beforeLastTwo;
 }
 
-/*
- * В покое движется только одна локальная группа рамок. Большую часть цикла
- * поле неподвижно: иначе адаптация превращается в эквалайзер.
- */
-float idleEnvelope(float t) {
-  float phase = fract(t / 7.2);
-  float enter = smoothstep(0.10, 0.22, phase);
-  float leave = 1.0 - smoothstep(0.48, 0.66, phase);
-  return enter * leave;
+float staticPointOffset(float gateT) {
+  float gateIndex = floor(gateT * max(uGateCount - 1.0, 1.0) + 0.5);
+  // Две некратные волны дают устойчивую, но не механически чередующуюся
+  // ломаную. На mobile амплитуда меньше из-за более низких рамок.
+  float shape = sin(gateIndex * 2.5 + 0.4) * 0.75
+              + sin(gateIndex * 3.7 + 1.2) * 0.25;
+  return shape * mix(0.053, 0.047, uMobile) * innerGateMask(gateT);
 }
 
-float activeIdleCenter(float t) {
-  return mod(floor(t / 7.2), 2.0) < 1.0 ? 0.31 : 0.70;
-}
-
-float gateShift(float t, float gateT) {
+float idlePointShift(float t, float gateT) {
   if (t <= 0.0) return 0.0;
-  float direction = mod(floor(t / 7.2), 2.0) < 1.0 ? 1.0 : -1.0;
-  return tri(gateT, activeIdleCenter(t), 0.095) * idleEnvelope(t) * direction * 0.013;
+
+  float gateIndex = floor(gateT * max(uGateCount - 1.0, 1.0) + 0.5);
+  float slowDrift = sin(t * 0.39 + gateIndex * 1.71)
+                  + sin(t * 0.23 + gateIndex * 2.83) * 0.36;
+  float enter = smoothstep(0.0, 1.6, t);
+  return slowDrift * 0.0105 * enter * innerGateMask(gateT);
+}
+
+float idleSignalAtX(float x, float t) {
+  // Первый сигнал идёт с небольшой паузой после интро. Дальше он занимает
+  // меньше половины цикла, чтобы между проходами было спокойное idle-состояние.
+  if (t < 1.8) return 0.0;
+
+  float phase = mod(t - 1.8, 4.55) / 4.55;
+  float travel = saturate(phase / 0.45);
+  float signalActive = 1.0 - smoothstep(0.42, 0.45, phase);
+  float headX = mix(-0.12, 1.12, smoothstep(0.0, 1.0, travel));
+  return exp(-pow((x - headX) / 0.105, 2.0)) * signalActive;
 }
 
 float pathY(float gateT) {
@@ -92,13 +101,7 @@ float pathY(float gateT) {
   // как в выбранном кадре. На мобильном возвращаем его к центру: там иначе
   // теряется полезная высота между текстом и чипами.
   float base = mix(0.370, 0.385, uMobile);
-  float settled = easeOutCubic((uProgress - 0.20) / 0.58);
-
-  // Два осмысленных обхода из утверждённого кадра.
-  float route = tri(gateT, 0.31, 0.105) * 0.038
-              + tri(gateT, 0.70, 0.105) * 0.033;
-
-  return base + route * settled + gateShift(uIdleTime, gateT);
+  return base + staticPointOffset(gateT) + idlePointShift(uIdleTime, gateT);
 }
 
 vec3 strandProfile(float distancePx, float env, float thickness) {
@@ -162,8 +165,7 @@ void main() {
 
     float gateT = fi / max(uGateCount - 1.0, 1.0);
     float x = mix(left, right, gateT);
-    float shift = gateShift(uIdleTime, gateT);
-    vec2 center = vec2(x, gateBaseY + shift);
+    vec2 center = vec2(x, gateBaseY);
 
     vec2 metric = vec2(aspect, 1.0);
     float front = abs(sdBox((uv - center) * metric, vec2(gateHalfW * aspect, gateHalfH)));
@@ -220,27 +222,25 @@ void main() {
   float settled = smoothstep(0.78, 1.0, uProgress);
   float persistentEnv = mix(0.10, 0.26, smoothstep(0.18, 0.96, uv.x));
   float longitudinal = max(mix(0.035, persistentEnv, settled), movingEnv);
+  longitudinal += idleSignalAtX(uv.x, uIdleTime) * 0.050;
 
   vec3 beamCol = strandProfile(beamDistance, longitudinal,
                                mix(1.40, 0.90, uMobile)) * beamGain;
 
-  // Контакты загораются один за другим. После прохождения остаётся тихое
-  // холодное ядро, а пик живёт около 170 мс.
+  // Контакты загораются на фиксированном расстоянии перед фронтом луча.
+  // Привязка к revealX не даёт лучу обогнать точки в правой части экрана.
   for (int i = 0; i < MAX_GATES; i++) {
     float fi = float(i);
     if (fi >= uGateCount) break;
     float gateT = fi / max(uGateCount - 1.0, 1.0);
-    float hitAt = mix(0.15, 0.88, gateT);
-    float passed = smoothstep(hitAt, hitAt + 0.035, uProgress);
-    float flash = exp(-pow((uProgress - hitAt) / 0.032, 2.0));
-    float idlePulse = 0.0;
-    if (uIdleTime > 0.0) {
-      idlePulse = tri(gateT, activeIdleCenter(uIdleTime), 0.095)
-                * idleEnvelope(uIdleTime) * 0.32;
-    }
+    float contactX = mix(left, right, gateT);
+    float frontDistance = revealX - contactX;
+    float passed = smoothstep(-0.080, -0.038, frontDistance);
+    float flash = exp(-pow((frontDistance + 0.052) / 0.026, 2.0));
+    float idleSignal = idleSignalAtX(contactX, uIdleTime) * 0.10;
 
-    vec2 contact = vec2(mix(left, right, gateT), pathY(gateT)) * uResolution;
-    col += contactLight(px, contact, passed * 0.56 + flash * 1.08 + idlePulse);
+    vec2 contact = vec2(contactX, pathY(gateT)) * uResolution;
+    col += contactLight(px, contact, passed * 0.56 + flash * 1.08 + idleSignal);
   }
 
   // Свет не должен выдавать прямоугольную кромку канваса или новый шов между
