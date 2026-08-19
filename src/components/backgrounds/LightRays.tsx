@@ -3,7 +3,7 @@ import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { hexToRgb, startRenderLoop } from './loop'
 
 /**
- * Адаптация React Bits LightRays под PrismVPN: объёмные лучи света.
+ * Адаптация React Bits LightRays под SpatiumVPN: объёмные лучи света.
  * Изменения к оригиналу: общий цикл из loop.ts (пауза вне вьюпорта,
  * reduced-motion → статичный кадр), контекст создаётся один раз (без
  * пересоздания при скролле), пропсы не реактивны — фон монтируется один раз.

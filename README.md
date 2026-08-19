@@ -1,4 +1,4 @@
-# PrismVPN
+# SpatiumVPN
 
 Landing page + dashboard for a fictional VPN service. Portfolio project with a heavy focus on design: dark premium theme inspired by Apple's Liquid Glass aesthetic.
 

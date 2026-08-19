@@ -24,8 +24,8 @@ const platforms: { id: Platform; label: string }[] = [
 
 /** Первый клиент в списке — рекомендуемый (на мобильных — своё приложение) */
 const clients: Record<Platform, string[]> = {
-  ios: ['PrismVPN app', 'Happ', 'Streisand', 'v2RayTun'],
-  android: ['PrismVPN app', 'v2RayTun', 'Happ', 'Hiddify'],
+  ios: ['SpatiumVPN app', 'Happ', 'Streisand', 'v2RayTun'],
+  android: ['SpatiumVPN app', 'v2RayTun', 'Happ', 'Hiddify'],
   macos: ['Happ', 'Streisand', 'Hiddify'],
   windows: ['Hiddify', 'v2rayN', 'NekoRay'],
   linux: ['Hiddify', 'NekoRay', 'sing-box (CLI)'],
@@ -70,7 +70,7 @@ export function SetupPage() {
             <div className="flex w-full flex-1 flex-col justify-between p-7 sm:py-9 sm:pl-9">
               <div>
                 <h2 className="text-xl font-semibold tracking-tight lg:text-2xl">
-                  PrismVPN app
+                  SpatiumVPN app
                 </h2>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-fg-muted">
                   The fastest way in: install the app, tap once — your subscription, servers and
@@ -103,7 +103,7 @@ export function SetupPage() {
             <div className="absolute right-12 top-8 hidden md:block">
               <img
                 src={connectedApp}
-                alt="PrismVPN app on iPhone"
+                alt="SpatiumVPN app on iPhone"
                 className="pointer-events-none max-h-76 object-contain object-bottom select-none sm:max-h-115"
               />
             </div>

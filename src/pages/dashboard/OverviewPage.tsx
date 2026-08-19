@@ -86,7 +86,7 @@ export function OverviewPage() {
             value={`${devices.length} of ${plan.deviceLimit}`}
             sub="connected to your plan"
           />
-          <StatCard label={`Traffic · ${period}d`} value={formatGB(totalGB)} sub="through PrismVPN" />
+          <StatCard label={`Traffic · ${period}d`} value={formatGB(totalGB)} sub="through SpatiumVPN" />
         </div>
       </Reveal>
 

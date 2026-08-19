@@ -27,7 +27,7 @@ function mulberry32(seed: number) {
 // ---------------------------------------------------------------------------
 
 export const plan = {
-  name: 'Prism Plus',
+  name: 'Spatium Plus',
   dailyRate: 0.15, // $/день, списывается ежедневно с баланса
   deviceLimit: 5,
 }
@@ -193,4 +193,4 @@ export function generateSubToken(seed = Date.now()) {
 
 export const initialSubToken = generateSubToken(20260731)
 
-export const subLink = (token: string) => `https://prismvpn.io/sub/${token}`
+export const subLink = (token: string) => `https://spatiumvpn.io/sub/${token}`

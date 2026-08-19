@@ -9,14 +9,20 @@ import { initialUser } from '../data/mock'
  * перезагрузку. Остальной стейт dashboard по-прежнему сессионный.
  */
 
-const KEY = 'prismvpn:session'
+const KEY = 'spatiumvpn:session'
+const LEGACY_KEY = 'prismvpn:session'
 
 export type Session = { nickname: string }
 
 function read(): Session | null {
   try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? (JSON.parse(raw) as Session) : null
+    const raw = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY)
+    if (!raw) return null
+
+    const storedSession = JSON.parse(raw) as Session
+    localStorage.setItem(KEY, raw)
+    localStorage.removeItem(LEGACY_KEY)
+    return storedSession
   } catch {
     return null
   }
@@ -30,6 +36,7 @@ function write(next: Session | null) {
   try {
     if (next) localStorage.setItem(KEY, JSON.stringify(next))
     else localStorage.removeItem(KEY)
+    localStorage.removeItem(LEGACY_KEY)
   } catch {
     // приватный режим / отключённое хранилище — работаем без persistence
   }

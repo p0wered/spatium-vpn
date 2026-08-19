@@ -3,7 +3,7 @@ import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { hexToRgb, startRenderLoop } from './loop'
 
 /**
- * Адаптация React Bits ColorBends под PrismVPN: текучие цветные «ленты».
+ * Адаптация React Bits ColorBends под SpatiumVPN: текучие цветные «ленты».
  * Главное изменение — портирован с three.js (~160 КБ gzip) на ogl (~12 КБ),
  * шейдер оригинала без изменений. Плюс общий цикл из loop.ts и нереактивные
  * пропсы, как у остальных фонов.

@@ -24,7 +24,7 @@ export function DevPage() {
     <main className="mx-auto flex max-w-4xl flex-col gap-14 px-6 py-12">
       <header>
         <h1 className="text-3xl font-semibold tracking-tight">Design system sandbox</h1>
-        <p className="mt-2 text-fg-muted">Токены и компоненты PrismVPN. Только для разработки.</p>
+        <p className="mt-2 text-fg-muted">Токены и компоненты SpatiumVPN. Только для разработки.</p>
         <Link
           to="/dev/backgrounds"
           className="mt-3 inline-block text-sm text-ice transition-opacity hover:opacity-80"
@@ -91,8 +91,8 @@ export function DevPage() {
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-medium">Buttons</h2>
         <div className="flex flex-wrap items-center gap-4">
-          <Button size="lg">Get PrismVPN</Button>
-          <Button>Get PrismVPN</Button>
+          <Button size="lg">Get SpatiumVPN</Button>
+          <Button>Get SpatiumVPN</Button>
           <Button variant="secondary">View pricing</Button>
           <Button variant="ghost">Learn more</Button>
           <Button disabled>Disabled</Button>

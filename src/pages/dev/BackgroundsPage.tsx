@@ -75,7 +75,7 @@ function HeroDemoContent() {
         servers.
       </p>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-        <Button size="lg">Get PrismVPN</Button>
+        <Button size="lg">Get SpatiumVPN</Button>
         <Button size="lg" variant="secondary">
           View pricing
         </Button>

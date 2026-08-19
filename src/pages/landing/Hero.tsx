@@ -95,7 +95,7 @@ export function Hero() {
               className="rounded-full min-w-40"
               onClick={() => navigate('/login')}
             >
-              Get PrismVPN
+              Get SpatiumVPN
             </Button>
             <Button
               size="lg"

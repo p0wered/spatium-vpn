@@ -3,7 +3,7 @@ import { Color, Mesh, Program, Renderer, RenderTarget, Triangle } from 'ogl'
 import { startRenderLoop } from './loop'
 
 /**
- * Адаптация React Bits Strands под PrismVPN: светящиеся нити + опциональная
+ * Адаптация React Bits Strands под SpatiumVPN: светящиеся нити + опциональная
  * стеклянная линза (glass) с рефракцией и дисперсией у кромки — «призма».
  * Изменения к оригиналу: общий цикл из loop.ts (в оригинале паузы не было),
  * uniforms ставятся один раз при монтировании (оригинал пересобирал палитру
