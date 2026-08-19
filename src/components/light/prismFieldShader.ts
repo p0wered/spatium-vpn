@@ -66,6 +66,17 @@ float boxStroke(vec2 p, vec2 center, vec2 halfSize, float widthPx) {
   return 1.0 - smoothstep(widthPx, widthPx + 1.15, d);
 }
 
+float sdRoundedBox(vec2 p, vec2 halfSize, float radius) {
+  vec2 q = abs(p) - halfSize + radius;
+  return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - radius;
+}
+
+float roundedBoxStroke(vec2 p, vec2 center, vec2 halfSize,
+                       float radius, float widthPx) {
+  float d = abs(sdRoundedBox(p - center, halfSize, radius));
+  return 1.0 - smoothstep(widthPx, widthPx + 1.15, d);
+}
+
 float dotField(vec2 p, vec2 center, vec2 halfSize, vec2 spacing) {
   vec2 local = p - center;
   float inside = step(abs(local.x), halfSize.x) * step(abs(local.y), halfSize.y);
@@ -74,21 +85,11 @@ float dotField(vec2 p, vec2 center, vec2 halfSize, vec2 spacing) {
 }
 
 float moduleHalfWidth(float index) {
-  float desktop = 0.032;
-  if (index > 0.5) desktop = 0.036;
-  if (index > 1.5) desktop = 0.031;
-  if (index > 2.5) desktop = 0.035;
-  if (index > 3.5) desktop = 0.033;
-  return mix(desktop, 0.052, uMobile);
+  return mix(0.034, 0.052, uMobile) + index * 0.0;
 }
 
 float moduleHalfHeight(float index) {
-  float desktop = 0.165;
-  if (index > 0.5) desktop = 0.180;
-  if (index > 1.5) desktop = 0.170;
-  if (index > 2.5) desktop = 0.175;
-  if (index > 3.5) desktop = 0.168;
-  return mix(desktop, 0.122, uMobile);
+  return mix(0.170, 0.122, uMobile) + index * 0.0;
 }
 
 float innerGateMask(float gateT) {
@@ -178,63 +179,45 @@ float moduleDetails(vec2 local, vec2 halfSize, float index) {
     vec2(-halfSize.x * 0.68, halfSize.y * 0.54),
     vec2( halfSize.x * 0.68, halfSize.y * 0.54), 0.46);
   detail += lineStroke(local,
-    vec2(-halfSize.x * 0.68, -halfSize.y * 0.47),
-    vec2( halfSize.x * 0.68, -halfSize.y * 0.47), 0.46);
-
-  float tickBand = step(abs(local.y + halfSize.y * 0.08), 1.25)
-                 * step(abs(local.x), halfSize.x * 0.68);
-  float ticks = step(0.57, fract((local.x + halfSize.x) / 7.0));
-  detail += tickBand * ticks * 0.72;
+    vec2(-halfSize.x * 0.68, -halfSize.y * 0.63),
+    vec2( halfSize.x * 0.68, -halfSize.y * 0.63), 0.46);
 
   if (index < 0.5) {
     // SNI — две выборки сигнатуры и короткий слот результата.
-    detail += dotField(local, vec2(0.0, halfSize.y * 0.24),
-                       vec2(halfSize.x * 0.66, halfSize.y * 0.10), vec2(8.0, 7.0));
-    detail += dotField(local, vec2(0.0, -halfSize.y * 0.27),
-                       vec2(halfSize.x * 0.66, halfSize.y * 0.10), vec2(8.0, 7.0));
-    detail += boxStroke(local, vec2(-halfSize.x * 0.30, -halfSize.y * 0.06),
-                        vec2(halfSize.x * 0.22, 4.0), 0.42);
+    detail += dotField(local, vec2(0.0, halfSize.y * -0.045),
+                       vec2(halfSize.x * 0.66, halfSize.y * 0.5), vec2(8.0, 7.0));
   } else if (index < 1.5) {
     // TLS fingerprint — три заголовочных поля и более плотная матрица.
-    detail += boxStroke(local, vec2(0.0, halfSize.y * 0.34),
-                        vec2(halfSize.x * 0.60, 5.0), 0.42);
+    detail += boxStroke(local, vec2(0.0, halfSize.y * 0.35),
+                        vec2(halfSize.x * 0.68, 8.0), 0.42);
     detail += boxStroke(local, vec2(0.0, halfSize.y * 0.22),
-                        vec2(halfSize.x * 0.60, 5.0), 0.42);
+                        vec2(halfSize.x * 0.68, 8.0), 0.42);
     detail += boxStroke(local, vec2(0.0, halfSize.y * 0.10),
-                        vec2(halfSize.x * 0.60, 5.0), 0.42);
-    detail += dotField(local, vec2(0.0, -halfSize.y * 0.25),
-                       vec2(halfSize.x * 0.65, halfSize.y * 0.13), vec2(7.0, 7.0));
+                        vec2(halfSize.x * 0.68, 8.0), 0.42);
+    detail += boxStroke(local, vec2(0.0, halfSize.y * -0.02),
+                        vec2(halfSize.x * 0.68, 8.0), 0.42);
+    detail += boxStroke(local, vec2(0.0, halfSize.y * -0.34),
+                        vec2(halfSize.x * 0.68, 48.0), 0.42);
+    detail += dotField(local, vec2(0.0, -halfSize.y * 0.36),
+                       vec2(halfSize.x * 0.55, halfSize.y * 0.135), vec2(13.0, 13.0));
   } else if (index < 2.5) {
     // L7 — несколько вертикальных каналов разной плотности.
-    detail += boxStroke(local, vec2(-halfSize.x * 0.38, halfSize.y * 0.10),
-                        vec2(3.2, halfSize.y * 0.27), 0.42);
-    detail += boxStroke(local, vec2(-halfSize.x * 0.08, halfSize.y * 0.10),
-                        vec2(4.5, halfSize.y * 0.27), 0.42);
-    detail += boxStroke(local, vec2( halfSize.x * 0.26, halfSize.y * 0.10),
-                        vec2(2.4, halfSize.y * 0.27), 0.42);
-    detail += dotField(local, vec2(halfSize.x * 0.54, halfSize.y * 0.10),
-                       vec2(1.8, halfSize.y * 0.26), vec2(6.0, 7.0));
-    detail += dotField(local, vec2(0.0, -halfSize.y * 0.30),
-                       vec2(halfSize.x * 0.66, halfSize.y * 0.07), vec2(7.0, 7.0));
+    detail += boxStroke(local, vec2(-halfSize.x * 0.62, halfSize.y * -0.045),
+                        vec2(4, halfSize.y * 0.5), 0.42);
+    detail += boxStroke(local, vec2(-halfSize.x * 0.30, halfSize.y * -0.045),
+                        vec2(4, halfSize.y * 0.5), 0.42);
+    detail += boxStroke(local, vec2(-halfSize.x * 0.001, halfSize.y * -0.045),
+                        vec2(4, halfSize.y * 0.5), 0.42);
+    detail += boxStroke(local, vec2(-halfSize.x * -0.3, halfSize.y * -0.045),
+                        vec2(4, halfSize.y * 0.5), 0.42);
+    detail += boxStroke(local, vec2(-halfSize.x * -0.6, halfSize.y * -0.045),
+                        vec2(4, halfSize.y * 0.5), 0.42);
   } else if (index < 3.5) {
-    // Policy — строгая матрица правил и два поля результата.
-    detail += dotField(local, vec2(0.0, halfSize.y * 0.23),
-                       vec2(halfSize.x * 0.64, halfSize.y * 0.17), vec2(10.0, 10.0));
-    detail += boxStroke(local, vec2(0.0, -halfSize.y * 0.18),
-                        vec2(halfSize.x * 0.59, 6.0), 0.42);
-    detail += boxStroke(local, vec2(0.0, -halfSize.y * 0.33),
-                        vec2(halfSize.x * 0.42, 4.0), 0.42);
+    // TODO
+
   } else {
-    // Rate — спектр коротких столбцов и семплы трафика.
-    float waveMask = step(abs(local.x), halfSize.x * 0.68)
-                   * step(abs(local.y - halfSize.y * 0.25), halfSize.y * 0.13);
-    float wave = sin(local.x * 0.31) * 7.0 + sin(local.x * 0.73 + 1.4) * 3.0;
-    detail += waveMask * (1.0 - smoothstep(0.65, 1.55,
-      abs(local.y - halfSize.y * 0.25 - wave))) * 0.78;
-    detail += dotField(local, vec2(0.0, -halfSize.y * 0.14),
-                       vec2(halfSize.x * 0.65, halfSize.y * 0.12), vec2(7.0, 7.0));
-    detail += boxStroke(local, vec2(0.0, -halfSize.y * 0.34),
-                        vec2(halfSize.x * 0.56, 6.0), 0.42);
+    // TODO
+
   }
 
   return min(detail, 1.55);
@@ -275,7 +258,9 @@ void main() {
                            moduleHalfHeight(fi) * uResolution.y);
     vec2 local = px - centerPx;
 
-    float outline = boxStroke(px, centerPx, halfSizePx, 0.58);
+    float cornerRadiusPx = uResolution.y * 0.0055;
+    float outline = roundedBoxStroke(px, centerPx, halfSizePx,
+                                     cornerRadiusPx, 0.58);
     float details = moduleDetails(local, halfSizePx, fi);
     float proximity = exp(-pow((x - revealX) / mix(0.105, 0.145, uMobile), 2.0));
     float idleReveal = idleSignalAtX(x, uIdleTime);
@@ -301,7 +286,7 @@ void main() {
                  * withinX * dashX;
   boundary += (1.0 - smoothstep(0.0, 1.15 / uResolution.y, nearVertical))
             * withinY * dashY;
-  col += uGlassEdgeColor * boundary * 0.050 * gateFade;
+  col += uGlassEdgeColor * boundary * 0.01 * gateFade;
 
   // Сегментный луч: у каждого модуля две точки контакта, между ними тракт идёт
   // горизонтально. Так сохраняется богатая ломаная исходной графики при пяти

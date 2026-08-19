@@ -4,8 +4,8 @@ import { PRISM_FIELD_FRAG, PRISM_FIELD_VERT } from './prismFieldShader'
 
 const PASSAGE_MS = 2450
 const MODULES = ['SNI', 'TLS FP', 'L7', 'POLICY', 'RATE'] as const
-const DESKTOP_HALF_WIDTHS = [0.032, 0.036, 0.031, 0.035, 0.033] as const
-const DESKTOP_HALF_HEIGHTS = [0.165, 0.18, 0.17, 0.175, 0.168] as const
+const DESKTOP_HALF_WIDTH = 0.034
+const DESKTOP_HALF_HEIGHT = 0.17
 
 /**
  * Быстрые настройки Bypass. Цвета ядра и ореола разделены: так можно
@@ -112,8 +112,8 @@ export function PrismField({
       const contentLeftNorm = contentLeft / Math.max(width, 1)
       program.uniforms.uContentLeft.value = contentLeftNorm
 
-      const halfWidths = mobile ? MODULES.map(() => 0.052) : DESKTOP_HALF_WIDTHS
-      const halfHeights = mobile ? MODULES.map(() => 0.122) : DESKTOP_HALF_HEIGHTS
+      const halfWidths = MODULES.map(() => mobile ? 0.052 : DESKTOP_HALF_WIDTH)
+      const halfHeights = MODULES.map(() => mobile ? 0.122 : DESKTOP_HALF_HEIGHT)
       const firstX = mobile
         ? 0.055 + halfWidths[0]
         : contentLeftNorm + halfWidths[0]
@@ -167,7 +167,7 @@ export function PrismField({
     const updateLabels = (progress: number, idleTime: number) => {
       const mobile = program.uniforms.uMobile.value > 0.5
       const contentLeftNorm = program.uniforms.uContentLeft.value as number
-      const halfWidths = mobile ? MODULES.map(() => 0.052) : DESKTOP_HALF_WIDTHS
+      const halfWidths = MODULES.map(() => mobile ? 0.052 : DESKTOP_HALF_WIDTH)
       const firstX = mobile ? 0.055 + halfWidths[0] : contentLeftNorm + halfWidths[0]
       const lastX = mobile
         ? 0.945 - halfWidths[MODULES.length - 1]
@@ -233,10 +233,6 @@ export function PrismField({
   return (
     <div ref={containerRef} aria-hidden className={`pointer-events-none ${className}`}>
       <div className="absolute inset-0 z-[1] hidden font-mono sm:block">
-        <span className="absolute top-[40.5%] left-[calc((100%-72rem)/2+1.5rem)] text-[9px] tracking-[0.2em] text-white/28 uppercase max-[1152px]:left-6">
-          DPI edge
-        </span>
-
         {MODULES.map((name, index) => (
           <div
             key={name}
@@ -248,18 +244,6 @@ export function PrismField({
             <p className="text-[10px] tracking-[0.13em] text-white/80 uppercase">{name}</p>
             <p className="mt-0.5 text-[9px] tracking-[0.12em] text-white/36">0{index + 1}</p>
           </div>
-        ))}
-
-        {['No match', 'Bypass'].map((label, index) => (
-          <span
-            key={label}
-            ref={(node) => {
-              statusRefs.current[index] = node
-            }}
-            className="absolute text-[8px] tracking-[0.14em] text-white/50 uppercase opacity-0 will-change-[opacity]"
-          >
-            {label}
-          </span>
         ))}
       </div>
     </div>

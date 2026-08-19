@@ -17,7 +17,7 @@ The selected direction and the browser-rendered implementation were normalized t
 No actionable P0/P1/P2 findings remain.
 
 - Composition and hierarchy: the implementation preserves the existing landing header, content container, section typography, transport chips, and dominant light path. Five modules replace the primitive repeated frames without competing with the headline or beam.
-- Technical visual language: `SNI`, `TLS FP`, `L7`, `POLICY`, and `RATE` use distinct flat instrument anatomies—sample matrices, fingerprint fields, channels, rule grids, result slots, and a rate waveform—inside matte one-pixel enclosures. There are no glass bodies, perspective, reflections, CGI depth, or card fills.
+- Technical visual language: `SNI`, `TLS FP`, `L7`, `POLICY`, and `RATE` share one width, height, and vertical axis while using distinct flat instrument anatomies—sample matrices, fingerprint fields, channels, rule grids, result slots, and a rate waveform. There are no glass bodies, perspective, reflections, CGI depth, or card fills.
 - Light behavior: the beam and its ten contact points remain the only luminous elements. A narrow moving proximity field raises nearby outline, internal-detail, and label contrast; after passage the module returns to a readable low-contrast state. The modules do not emit bloom.
 - Layout and spacing: the desktop field follows the same `max-w-6xl px-6` inset as the copy and transport row. The outer `DPI EDGE` boundary, module labels, status labels, and line remain aligned at `1672 × 941`, `768 × 1024`, and `390 × 844`. Mobile intentionally hides the small DOM labels while retaining the five technical diagrams, preventing cramped or illegible annotation.
 - Typography and content: existing Geist/Geist Mono treatment and all landing copy are preserved. The new labels use the monospace technical layer consistently and do not affect semantic reading because the field is decorative.
@@ -39,6 +39,7 @@ No actionable P0/P1/P2 findings remain.
 3. A moving-state capture verified that the beam front locally reveals `POLICY` and `RATE` details without making their outlines glow; after the front passes, contrast settles back down.
 4. Tablet and mobile passes confirmed five modules remain visible without overflow. Small labels are removed below `sm`, while technical interiors and the line preserve the concept.
 5. Final equal-size comparison found only the intentional differences listed above. No fidelity, responsiveness, runtime, or accessibility blocker remains.
+6. Geometry refinement unified all five module bounds and their DOM-label anchors; a fresh `1672 × 941` browser capture confirms aligned top and bottom edges with no runtime warnings.
 
 ## Implementation checklist
 
