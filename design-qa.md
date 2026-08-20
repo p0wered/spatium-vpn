@@ -1,50 +1,44 @@
-# Design QA — Bypass POLICY / RATE interiors
+# Design QA — Bypass contact points
 
 ## Evidence
 
-- Source visual truth: `/Users/eva-02/.codex/generated_images/01a01f8f-a863-79e2-a1b7-aa938c241a75/exec-a42539c4-45fd-4b20-9e3e-464b0b7eb02e.png`
-- Browser-rendered desktop implementation: `/Users/eva-02/Projects/prism-vpn/qa-bypass-policy-rate-desktop.png`
-- Equal-size full-view comparison: `/Users/eva-02/Projects/prism-vpn/qa-bypass-policy-rate-comparison.png`
-- Focused POLICY / RATE comparison: `/Users/eva-02/Projects/prism-vpn/qa-bypass-policy-rate-focus.png`
-- Browser-rendered mobile implementation: `/Users/eva-02/Projects/prism-vpn/qa-bypass-policy-rate-mobile.png`
-- Desktop source and implementation pixels: `1672 × 941` each.
-- Desktop CSS viewport: `1672 × 941`; density normalization: equal pixel dimensions, no scaling.
-- Mobile CSS viewport and pixels: `390 × 844`.
-- State: Bypass section after the initial 2.45 s light passage, with the settled beam visible.
+- Source visual truth: `/Users/eva-02/Projects/prism-vpn/qa-bypass-contact-points-before.png`
+- Browser-rendered implementation: `/Users/eva-02/Projects/prism-vpn/qa-bypass-contact-points-viewport.png`
+- Focused implementation crop: `/Users/eva-02/Projects/prism-vpn/qa-bypass-contact-points-after.png`
+- Same-input before/after comparison: `/Users/eva-02/Projects/prism-vpn/qa-bypass-contact-points-comparison.png`
+- Browser viewport: `1408 × 900` CSS px at `devicePixelRatio: 1`.
+- Source and focused implementation pixels: `1408 × 436` each; no density scaling.
+- Full viewport implementation pixels: `1408 × 900`.
+- State: Bypass section after the 2.45 s introductory passage, with the settled beam visible.
+- Primary behavior checked: scroll into the Bypass section and completion of the beam reveal.
+- Browser console: no warnings or errors.
 
 ## Findings
 
-No actionable P0/P1/P2 findings remain.
+No actionable P0/P1/P2 findings remain for the requested alignment correction.
 
-- Fonts and typography: existing Geist / Geist Mono typography, labels, sizes, spacing, wrapping, and optical hierarchy are unchanged. The shader edit introduces no text.
-- Spacing and layout rhythm: module frames, gate spacing, content inset, section height, beam path, and transport layout are unchanged. The new details remain inside the existing POLICY and RATE bounds on desktop and mobile.
-- Colors and visual tokens: both interiors reuse the existing cold-neutral diagram color and the established low-contrast reveal gain. Neither module emits bloom; the white beam and contact points remain the only luminous elements.
-- Image quality and asset fidelity: the source concept is translated into deterministic analytic shader geometry, which stays sharp across DPRs and avoids raster artifacts. POLICY uses nine disconnected vertical samples with varied extents. RATE uses one continuous staircase path plus a deliberately weaker partial echo.
-- Copy and content: all landing copy and labels are unchanged.
-- Visual character: POLICY reads as a sampled field rather than circuit routing because the strokes have no connectors, pads, nodes, or common baseline. RATE reads as a continuous duration signal with discrete value levels.
-- Responsive behavior: at `390 × 844`, both interiors remain legible inside narrower modules without overflow or collisions. Small DOM labels retain the existing mobile behavior.
-- Runtime and accessibility: browser console contains no errors or warnings. Existing off-screen pause and `prefers-reduced-motion` behavior are unchanged.
-
-## Intentional Differences From The Source Concept
-
-- Only the two requested interiors were changed. The real landing layout, existing module spacing, beam amplitude, and settled contrast remain authoritative even where the generated concept differs.
-- POLICY sample positions were regularized enough to render reliably at mobile width while retaining varied heights and gaps.
-- RATE is implemented as a genuinely continuous polyline; the generated mock visually suggested the idea but contained breaks around the bright beam.
+- Contact geometry: every entry and exit pearl now uses the exact same module half-width as its rounded frame, so each pearl center and each beam segment endpoint lies on the vertical outline. The previous `0.94` multiplier visibly inset both contacts.
+- Fonts and typography: unchanged; the existing Geist and Geist Mono rendering, labels, wrapping, and hierarchy are preserved.
+- Spacing and layout rhythm: module positions, sizes, gaps, section spacing, and path heights are unchanged. Only horizontal contact coordinates moved to the outlines.
+- Colors and visual tokens: unchanged; beam, contact glow, frame, and diagram colors retain their existing tokens and opacity behavior.
+- Image quality and asset fidelity: the browser-rendered WebGL field remains sharp at the tested DPR; the correction introduces no scaling, raster substitution, or bloom clipping.
+- Copy and content: unchanged.
+- Responsive logic: desktop and mobile use the same exact-width contact calculation; the existing mobile half-width remains authoritative. The in-app browser did not expose a smaller responsive viewport during this run, so the current mobile state was not separately captured.
 
 ## Comparison History
 
-1. The selected ImageGen direction was resolved from the explicitly attached second option.
-2. POLICY and RATE were implemented in the existing WebGL shader without touching the first three module interiors or page structure.
-3. Equal-size desktop and focused comparisons confirmed the new anatomies match the selected direction and remain subordinate to the beam.
-4. Mobile capture confirmed the geometry scales without clipping; browser logs remained clean.
-5. `npm run build`, `npm run lint`, and `git diff --check` pass. Vite reports only its pre-existing non-blocking bundle-size advisory.
+1. The attached source crop showed contact pearls inset from the visible vertical outlines.
+2. Code inspection found the path and contact loops both using `moduleHalfWidth(fi) * 0.94`, while the frames used `moduleHalfWidth(fi)`.
+3. Both loops were changed to the exact frame half-width.
+4. The post-fix browser capture shows all ten contact centers aligned with their corresponding vertical outlines; the same-input comparison records the visible correction.
+5. `npm run build`, `npm run lint`, and `git diff --check` pass.
 
 ## Implementation Checklist
 
-- [x] Replace POLICY placeholder with a sparse vertical sampling field.
-- [x] Replace RATE placeholder with a continuous stepped signal and faint echo.
-- [x] Preserve the first three modules, frames, beam, copy, spacing, and motion behavior.
-- [x] Verify desktop and mobile rendering.
-- [x] Verify build, lint, diff hygiene, and browser console.
+- [x] Align beam entry/exit endpoints with module outlines.
+- [x] Align contact-light centers with the same endpoints.
+- [x] Preserve frame geometry, path height, copy, color, animation, and section layout.
+- [x] Verify settled desktop rendering and browser console.
+- [x] Verify build, lint, and diff hygiene.
 
 final result: passed

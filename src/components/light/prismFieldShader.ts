@@ -356,7 +356,10 @@ void main() {
     if (fi >= uGateCount) break;
     float gateT = fi / max(uGateCount - 1.0, 1.0);
     float moduleX = mix(left, right, gateT);
-    float halfW = moduleHalfWidth(fi) * 0.94;
+    // Use the exact frame half-width for the optical path. The previous 0.94
+    // inset placed both contact pearls a few pixels inside each module instead
+    // of on its vertical outline.
+    float halfW = moduleHalfWidth(fi);
     vec2 entry = vec2(moduleX - halfW, pathY(gateT));
     vec2 exitPoint = vec2(moduleX + halfW, pathY(gateT));
     beamDistance = min(beamDistance, sdSegment(px, previous * uResolution,
@@ -396,7 +399,7 @@ void main() {
     if (fi >= uGateCount) break;
     float gateT = fi / max(uGateCount - 1.0, 1.0);
     float moduleX = mix(left, right, gateT);
-    float halfW = moduleHalfWidth(fi) * 0.94;
+    float halfW = moduleHalfWidth(fi);
     for (int side = 0; side < 2; side++) {
       float sideSign = side == 0 ? -1.0 : 1.0;
       float contactX = moduleX + halfW * sideSign;
