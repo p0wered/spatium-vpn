@@ -183,11 +183,9 @@ float moduleDetails(vec2 local, vec2 halfSize, float index) {
     vec2( halfSize.x * 0.68, -halfSize.y * 0.63), 0.46);
 
   if (index < 0.5) {
-    // SNI — две выборки сигнатуры и короткий слот результата.
     detail += dotField(local, vec2(0.0, halfSize.y * -0.045),
                        vec2(halfSize.x * 0.66, halfSize.y * 0.5), vec2(8.0, 7.0));
   } else if (index < 1.5) {
-    // TLS fingerprint — три заголовочных поля и более плотная матрица.
     detail += boxStroke(local, vec2(0.0, halfSize.y * 0.35),
                         vec2(halfSize.x * 0.68, 8.0), 0.42);
     detail += boxStroke(local, vec2(0.0, halfSize.y * 0.22),
@@ -201,23 +199,82 @@ float moduleDetails(vec2 local, vec2 halfSize, float index) {
     detail += dotField(local, vec2(0.0, -halfSize.y * 0.36),
                        vec2(halfSize.x * 0.55, halfSize.y * 0.135), vec2(13.0, 13.0));
   } else if (index < 2.5) {
-    // L7 — несколько вертикальных каналов разной плотности.
     detail += boxStroke(local, vec2(-halfSize.x * 0.62, halfSize.y * -0.045),
                         vec2(4, halfSize.y * 0.5), 0.42);
     detail += boxStroke(local, vec2(-halfSize.x * 0.30, halfSize.y * -0.045),
                         vec2(4, halfSize.y * 0.5), 0.42);
-    detail += boxStroke(local, vec2(-halfSize.x * 0.001, halfSize.y * -0.045),
-                        vec2(4, halfSize.y * 0.5), 0.42);
-    detail += boxStroke(local, vec2(-halfSize.x * -0.3, halfSize.y * -0.045),
-                        vec2(4, halfSize.y * 0.5), 0.42);
-    detail += boxStroke(local, vec2(-halfSize.x * -0.6, halfSize.y * -0.045),
-                        vec2(4, halfSize.y * 0.5), 0.42);
+    detail += dotField(local, vec2(halfSize.x * 0.30, halfSize.y * 0.3),
+                       vec2(halfSize.x * 0.38, halfSize.y * 0.16), vec2(8.0, 7.0));
+    detail += boxStroke(local, vec2(-halfSize.x * 0.001, halfSize.y * -0.245),
+                        vec2(4, halfSize.y * 0.3), 0.42);
+    detail += boxStroke(local, vec2(-halfSize.x * -0.3, halfSize.y * -0.245),
+                        vec2(4, halfSize.y * 0.3), 0.42);
+    detail += boxStroke(local, vec2(-halfSize.x * -0.6, halfSize.y * -0.245),
+                        vec2(4, halfSize.y * 0.3), 0.42);
   } else if (index < 3.5) {
-    // TODO
-
+    // POLICY — разреженные вертикальные выборки. Линии намеренно не связаны:
+    // это поле измерений, а не разводка печатной платы.
+    detail += lineStroke(local,
+      vec2(-halfSize.x * 0.72,  halfSize.y * 0.12),
+      vec2(-halfSize.x * 0.72, -halfSize.y * 0.18), 0.42);
+    detail += lineStroke(local,
+      vec2(-halfSize.x * 0.54,  halfSize.y * 0.31),
+      vec2(-halfSize.x * 0.54, -halfSize.y * 0.06), 0.42);
+    detail += lineStroke(local,
+      vec2(-halfSize.x * 0.36,  halfSize.y * 0.48),
+      vec2(-halfSize.x * 0.36, -halfSize.y * 0.32), 0.42);
+    detail += lineStroke(local,
+      vec2(-halfSize.x * 0.18,  halfSize.y * 0.24),
+      vec2(-halfSize.x * 0.18, -halfSize.y * 0.10), 0.42);
+    detail += lineStroke(local,
+      vec2(0.0,                    halfSize.y * 0.44),
+      vec2(0.0,                   -halfSize.y * 0.52), 0.42);
+    detail += lineStroke(local,
+      vec2( halfSize.x * 0.18,  halfSize.y * 0.18),
+      vec2( halfSize.x * 0.18, -halfSize.y * 0.28), 0.42);
+    detail += lineStroke(local,
+      vec2( halfSize.x * 0.36,  halfSize.y * 0.38),
+      vec2( halfSize.x * 0.36, -halfSize.y * 0.42), 0.42);
+    detail += lineStroke(local,
+      vec2( halfSize.x * 0.54,  halfSize.y * 0.16),
+      vec2( halfSize.x * 0.54, -halfSize.y * 0.12), 0.42);
+    detail += lineStroke(local,
+      vec2( halfSize.x * 0.72,  halfSize.y * 0.27),
+      vec2( halfSize.x * 0.72, -halfSize.y * 0.23), 0.42);
   } else {
-    // TODO
+    // RATE — один непрерывный сигнал, квантованный по вертикальным уровням.
+    vec2 p0 = vec2(-halfSize.x * 0.72,  halfSize.y * 0.38);
+    vec2 p1 = vec2(-halfSize.x * 0.43,  halfSize.y * 0.38);
+    vec2 p2 = vec2(-halfSize.x * 0.43,  halfSize.y * 0.19);
+    vec2 p3 = vec2(-halfSize.x * 0.10,  halfSize.y * 0.19);
+    vec2 p4 = vec2(-halfSize.x * 0.10, -halfSize.y * 0.01);
+    vec2 p5 = vec2( halfSize.x * 0.22, -halfSize.y * 0.01);
+    vec2 p6 = vec2( halfSize.x * 0.22, -halfSize.y * 0.22);
+    vec2 p7 = vec2( halfSize.x * 0.50, -halfSize.y * 0.22);
+    vec2 p8 = vec2( halfSize.x * 0.50, -halfSize.y * 0.39);
+    vec2 p9 = vec2( halfSize.x * 0.72, -halfSize.y * 0.39);
 
+    detail += lineStroke(local, p0, p1, 0.46);
+    detail += lineStroke(local, p1, p2, 0.46);
+    detail += lineStroke(local, p2, p3, 0.46);
+    detail += lineStroke(local, p3, p4, 0.46);
+    detail += lineStroke(local, p4, p5, 0.46);
+    detail += lineStroke(local, p5, p6, 0.46);
+    detail += lineStroke(local, p6, p7, 0.46);
+    detail += lineStroke(local, p7, p8, 0.46);
+    detail += lineStroke(local, p8, p9, 0.46);
+
+    // Короткое слабое эхо добавляет глубину, но не превращает декор в график
+    // с осями или вторую самостоятельную кривую.
+    detail += lineStroke(local,
+      vec2(-halfSize.x * 0.16, -halfSize.y * 0.34),
+      vec2( halfSize.x * 0.14, -halfSize.y * 0.34), 0.42) * 0.24;
+    detail += lineStroke(local,
+      vec2( halfSize.x * 0.14, -halfSize.y * 0.34),
+      vec2( halfSize.x * 0.14, -halfSize.y * 0.48), 0.42) * 0.24;
+    detail += lineStroke(local,
+      vec2( halfSize.x * 0.14, -halfSize.y * 0.48),
+      vec2( halfSize.x * 0.42, -halfSize.y * 0.48), 0.42) * 0.24;
   }
 
   return min(detail, 1.55);
