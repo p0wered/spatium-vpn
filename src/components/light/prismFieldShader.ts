@@ -138,6 +138,44 @@ float pathY(float gateT) {
   return base + staticPointOffset(gateT) + idlePointShift(uIdleTime, gateT);
 }
 
+float segmentContactEnvelope(float x, float startX, float endX) {
+  float width = max(endX - startX, 0.000001);
+  float t = saturate((x - startX) / width);
+  float inside = step(startX, x) * step(x, endX);
+  // Нулевая производная на контактах сохраняет гладкий стык сегментов:
+  // 100% у точек, 70% точно посередине между ними.
+  float envelope = 1.0 - 0.25 * pow(sin(t * PI), 2.0);
+  return mix(1.0, envelope, inside);
+}
+
+float persistentSegmentEnvelope(float x, float left, float right) {
+  float envelope = 1.0;
+
+  for (int i = 0; i < MAX_GATES; i++) {
+    float fi = float(i);
+    if (fi >= uGateCount) break;
+
+    float gateT = fi / max(uGateCount - 1.0, 1.0);
+    float moduleX = mix(left, right, gateT);
+    float halfW = moduleHalfWidth(fi);
+    float entryX = moduleX - halfW;
+    float exitX = moduleX + halfW;
+
+    // Отрезок внутри модуля: entry → exit.
+    envelope *= segmentContactEnvelope(x, entryX, exitX);
+
+    if (fi + 1.0 < uGateCount) {
+      float nextGateT = (fi + 1.0) / max(uGateCount - 1.0, 1.0);
+      float nextModuleX = mix(left, right, nextGateT);
+      float nextEntryX = nextModuleX - moduleHalfWidth(fi + 1.0);
+      // Отрезок между модулями: текущий exit → следующий entry.
+      envelope *= segmentContactEnvelope(x, exitX, nextEntryX);
+    }
+  }
+
+  return envelope;
+}
+
 vec3 strandProfile(float distancePx, float env, float thickness) {
   // Это намеренно почти буквальная формула React Bits Strands. Толщина и
   // яркость растут из одной продольной env, а длинный хвост рождается из
@@ -414,6 +452,7 @@ void main() {
 
   float settled = smoothstep(0.78, 1.0, uProgress);
   float persistentEnv = mix(0.10, 0.26, smoothstep(0.18, 0.96, uv.x));
+  persistentEnv *= persistentSegmentEnvelope(uv.x, left, right);
   float longitudinal = max(mix(0.035, persistentEnv, settled), movingEnv);
   longitudinal += idleSignalAtX(uv.x, uIdleTime) * 0.050;
 

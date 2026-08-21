@@ -109,7 +109,11 @@ export function Bypass() {
             {TRANSPORTS.map((name) => (
               <li
                 key={name}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[11px] tracking-[0.08em] text-fg/90"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono
+                text-[11px] tracking-[0.08em] text-fg/90 transition-all duration-300 ease-out
+                hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10 hover:text-fg
+                hover:shadow-[0_0_18px_rgb(170_204_255/0.16)] motion-reduce:transform-none
+                motion-reduce:transition-none"
               >
                 {name}
               </li>

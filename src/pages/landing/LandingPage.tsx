@@ -8,12 +8,12 @@ export function LandingPage() {
   useSmoothScroll()
 
   return (
-    <>
+    <div className="select-none">
       <Header />
       <main>
         <Hero />
         <Bypass />
       </main>
-    </>
+    </div>
   )
 }

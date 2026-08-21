@@ -13,10 +13,10 @@ const DESKTOP_HALF_HEIGHT = 0.17
  * Strands у Hero. diagram задаёт только матовые линии схемы; он не светится.
  */
 export const PRISM_LIGHT_SETTINGS = {
-  beamCore: '#dceeff',
-  beamGlow: '#b4d2ff',
-  contactCore: '#ffffff',
-  contactGlow: '#b4d2ff',
+  beamCore: '#d0e9ff',
+  beamGlow: '#9dc7ff',
+  contactCore: '#e5f3ff',
+  contactGlow: '#aacfff',
   diagram: '#a8b8d0',
   glow: 0.7,
   taper: 6,

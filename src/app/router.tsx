@@ -17,6 +17,10 @@ export const router = createBrowserRouter([
     lazy: async () => ({ Component: (await import('../pages/app/AppPage')).AppPage }),
   },
   {
+    path: '/dev',
+    lazy: async () => ({ Component: (await import('../pages/dev/DevPage')).DevPage }),
+  },
+  {
     path: '/dashboard',
     element: <DashboardLayout />,
     children: [
@@ -28,20 +32,4 @@ export const router = createBrowserRouter([
       { path: 'settings', element: <SettingsPage /> },
     ],
   },
-  // Песочница дизайн-системы: только dev-сборка, в прод не попадает вовсе
-  // (динамические импорты внутри мёртвой ветки вырезаются вместе с чанками)
-  ...(import.meta.env.DEV
-    ? [
-        {
-          path: '/dev',
-          lazy: async () => ({ Component: (await import('../pages/dev/DevPage')).DevPage }),
-        },
-        {
-          path: '/dev/backgrounds',
-          lazy: async () => ({
-            Component: (await import('../pages/dev/BackgroundsPage')).BackgroundsPage,
-          }),
-        },
-      ]
-    : []),
 ])
