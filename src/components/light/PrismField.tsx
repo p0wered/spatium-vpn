@@ -21,7 +21,11 @@ export const PRISM_LIGHT_SETTINGS = {
   glow: 0.7,
   taper: 6,
   edgeFade: 0.13,
-  desktopGateSpan: 0.66,
+  // Свободный промежуток между соседними модулями примерно в 1.5 раза
+  // меньше исходного. На desktop сохраняем левый контентный якорь, на
+  // mobile — центрируем более компактную группу симметричными inset'ами.
+  desktopGateSpan: 0.54,
+  mobileGateInset: 0.118,
 } as const
 
 const rgb = (hex: string) => {
@@ -83,6 +87,7 @@ export function PrismField({
         uMobile: { value: 0 },
         uContentLeft: { value: 0.125 },
         uDesktopGateSpan: { value: PRISM_LIGHT_SETTINGS.desktopGateSpan },
+        uMobileGateInset: { value: PRISM_LIGHT_SETTINGS.mobileGateInset },
         uBeamCoreColor: { value: rgb(PRISM_LIGHT_SETTINGS.beamCore) },
         uBeamGlowColor: { value: rgb(PRISM_LIGHT_SETTINGS.beamGlow) },
         uContactCoreColor: { value: rgb(PRISM_LIGHT_SETTINGS.contactCore) },
@@ -115,10 +120,10 @@ export function PrismField({
       const halfWidths = MODULES.map(() => mobile ? 0.052 : DESKTOP_HALF_WIDTH)
       const halfHeights = MODULES.map(() => mobile ? 0.122 : DESKTOP_HALF_HEIGHT)
       const firstX = mobile
-        ? 0.055 + halfWidths[0]
+        ? PRISM_LIGHT_SETTINGS.mobileGateInset + halfWidths[0]
         : contentLeftNorm + halfWidths[0]
       const lastX = mobile
-        ? 0.945 - halfWidths[MODULES.length - 1]
+        ? 1 - PRISM_LIGHT_SETTINGS.mobileGateInset - halfWidths[MODULES.length - 1]
         : Math.min(contentLeftNorm + PRISM_LIGHT_SETTINGS.desktopGateSpan, 0.94)
       const centerY = mobile ? 0.385 : 0.389
 
@@ -168,9 +173,11 @@ export function PrismField({
       const mobile = program.uniforms.uMobile.value > 0.5
       const contentLeftNorm = program.uniforms.uContentLeft.value as number
       const halfWidths = MODULES.map(() => mobile ? 0.052 : DESKTOP_HALF_WIDTH)
-      const firstX = mobile ? 0.055 + halfWidths[0] : contentLeftNorm + halfWidths[0]
+      const firstX = mobile
+        ? PRISM_LIGHT_SETTINGS.mobileGateInset + halfWidths[0]
+        : contentLeftNorm + halfWidths[0]
       const lastX = mobile
-        ? 0.945 - halfWidths[MODULES.length - 1]
+        ? 1 - PRISM_LIGHT_SETTINGS.mobileGateInset - halfWidths[MODULES.length - 1]
         : Math.min(contentLeftNorm + PRISM_LIGHT_SETTINGS.desktopGateSpan, 0.94)
       const revealX = -0.08 + 1.16 * smoothstep(0.03, 0.96, progress)
       const settled = smoothstep(0.78, 1, progress)

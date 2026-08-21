@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useInView, useReducedMotion } from 'motion/react'
+import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
 import { DecodeWord } from '../../components/DecodeWord'
 import { GrainOverlay } from '../../components/GrainOverlay'
 import { PrismField } from '../../components/light/PrismField'
 
 const TRANSPORTS = ['VLESS', 'REALITY', 'XTLS-VISION', 'HYSTERIA2', 'TUIC', 'WIREGUARD']
+
+const textContainer: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.15, delayChildren: 0.3 } },
+}
 
 /**
  * Секция обхода блокировок (см. PROJECT.md → «Наполнение секций»).
@@ -20,6 +25,16 @@ export function Bypass() {
   const [started, setStarted] = useState(false)
   const [decode, setDecode] = useState(false)
   const [transportsVisible, setTransportsVisible] = useState(false)
+
+  const textItem: Variants = {
+    hidden: reduced ? { opacity: 0 } : { opacity: 0, y: 28, filter: 'blur(6px)' },
+    show: {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+    },
+  }
 
   useEffect(() => {
     if (!inView) return
@@ -51,20 +66,31 @@ export function Bypass() {
       <GrainOverlay className="z-20 mask-[linear-gradient(to_bottom,transparent,black_18%,black_84%,transparent)]" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col px-6">
-        {/* Заголовок не ревилим: его событие — разбор слова, второй fade поверх
-            только смазал бы момент */}
-        <div className="mt-[16svh] max-w-2xl">
-          <p className="font-mono text-xs tracking-[0.18em] text-fg-muted uppercase">Access</p>
+        <motion.div
+          className="mt-[16svh] max-w-2xl"
+          variants={textContainer}
+          initial="hidden"
+          animate={started ? 'show' : 'hidden'}
+        >
+          <motion.p
+            variants={textItem}
+            className="font-mono text-xs tracking-[0.18em] text-fg-muted uppercase"
+          >
+            Access
+          </motion.p>
 
-          <h2 className="mt-4 text-4xl font-semibold tracking-tighter text-balance sm:text-6xl">
+          <motion.h2
+            variants={textItem}
+            className="mt-4 text-4xl font-semibold tracking-tighter text-balance sm:text-6xl"
+          >
             The internet, <DecodeWord word="unfiltered" active={decode} />
-          </h2>
+          </motion.h2>
 
-          <p className="mt-5 max-w-md leading-6 text-fg-muted">
+          <motion.p variants={textItem} className="mt-5 max-w-md leading-6 text-fg-muted">
             News sites, messengers, streaming — whatever your country decided you shouldn't reach.
             And when the blocks move, we move first.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <motion.div
           className="mt-auto mb-[10svh]"

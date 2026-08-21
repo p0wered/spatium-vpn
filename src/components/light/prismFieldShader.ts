@@ -26,6 +26,7 @@ uniform float uGateCount;
 uniform float uMobile;
 uniform float uContentLeft;
 uniform float uDesktopGateSpan;
+uniform float uMobileGateInset;
 uniform vec3 uBeamCoreColor;
 uniform vec3 uBeamGlowColor;
 uniform vec3 uContactCoreColor;
@@ -287,11 +288,12 @@ void main() {
 
   float firstHalfW = moduleHalfWidth(0.0);
   float lastHalfW = moduleHalfWidth(4.0);
-  // Первая внешняя кромка совпадает с контентным inset; на mobile оставляем
-  // небольшой безопасный край, достаточный для самой широкой схемы.
-  float left = mix(uContentLeft + firstHalfW, 0.055 + firstHalfW, uMobile);
+  // Первая внешняя кромка совпадает с контентным inset; на mobile более
+  // компактную группу центрируют одинаковые безопасные края.
+  float left = mix(uContentLeft + firstHalfW,
+                   uMobileGateInset + firstHalfW, uMobile);
   float right = mix(min(uContentLeft + uDesktopGateSpan, 0.94),
-                    0.945 - lastHalfW, uMobile);
+                    1.0 - uMobileGateInset - lastHalfW, uMobile);
   float gateBaseY = mix(0.389, 0.385, uMobile);
   float beamBaseY = mix(0.370, 0.385, uMobile);
 
@@ -301,8 +303,9 @@ void main() {
 
   vec3 col = vec3(0.0);
 
-  // Пять плоских модулей DPI. Их собственный контраст низкий; фронт света и
-  // редкий idle-сигнал лишь проявляют ближайшую конструкцию, не зажигая кромки.
+  // Пять плоских модулей DPI. Рамка и внутренняя геометрия получают один и тот
+  // же локальный свет: радиальный от двух точек контакта и полосовой от участка
+  // луча внутри модуля. Вдали от тракта остаётся только слабый матовый контур.
   for (int i = 0; i < MAX_GATES; i++) {
     float fi = float(i);
     if (fi >= uGateCount) break;
@@ -319,14 +322,38 @@ void main() {
     float outline = roundedBoxStroke(px, centerPx, halfSizePx,
                                      cornerRadiusPx, 0.58);
     float details = moduleDetails(local, halfSizePx, fi);
-    float proximity = exp(-pow((x - revealX) / mix(0.105, 0.145, uMobile), 2.0));
-    float idleReveal = idleSignalAtX(x, uIdleTime);
-    float settled = smoothstep(0.78, 1.0, uProgress);
-    float baseGain = mix(0.025, 0.105, settled);
-    float localGain = proximity * 0.20 + idleReveal * 0.10;
 
-    col += uGlassEdgeColor * outline * (baseGain + localGain) * gateFade;
-    col += uGlassEdgeColor * details * (baseGain * 0.58 + localGain * 0.88) * gateFade;
+    float halfW = moduleHalfWidth(fi);
+    float path = pathY(gateT);
+    vec2 entryPx = vec2(x - halfW, path) * uResolution;
+    vec2 exitPx = vec2(x + halfW, path) * uResolution;
+    float pointDistancePx = min(length(px - entryPx), length(px - exitPx));
+    float lineDistancePx = sdSegment(px, entryPx, exitPx);
+
+    // Интро и idle считаются в координате текущего пикселя, а не центра
+    // модуля. Поэтому световое пятно непрерывно проходит по его геометрии.
+    float proximity = exp(-pow((uv.x - revealX) / mix(0.105, 0.145, uMobile), 2.0));
+    float idleReveal = idleSignalAtX(uv.x, uIdleTime);
+    float settled = smoothstep(0.78, 1.0, uProgress);
+    float passed = smoothstep(-0.055, 0.018, revealX - uv.x);
+
+    // Idle не поднимает яркость всего модуля. Он только немного расширяет
+    // физическую область света вокруг текущего участка луча и его контактов.
+    float pointRadiusPx = uResolution.y * mix(0.058, 0.078, idleReveal);
+    float lineRadiusPx = uResolution.y * mix(0.040, 0.054, idleReveal);
+    float pointLight = 1.0 / (1.0 + pow(pointDistancePx / pointRadiusPx, 2.0));
+    float lineLight = 1.0 / (1.0 + pow(lineDistancePx / lineRadiusPx, 2.0));
+    float localLight = max(pointLight, lineLight * 0.76);
+
+    float persistentEnergy = mix(0.125, 0.4, smoothstep(0.18, 0.96, uv.x));
+    float lightEnergy = passed * mix(0.035, persistentEnergy, settled)
+                      + proximity * 0.19
+                      + idleReveal * 0.055;
+    float baseGain = mix(0.025, 0.035, settled);
+    float surfaceGain = (baseGain + localLight * lightEnergy) * gateFade;
+
+    col += uGlassEdgeColor * outline * surfaceGain;
+    col += uGlassEdgeColor * details * surfaceGain;
   }
 
   // Едва видимая граница зоны DPI — матовая пунктирная разметка, не панель.
