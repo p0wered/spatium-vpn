@@ -1,124 +1,90 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
-import { DecodeWord } from '../../components/DecodeWord'
-import { GrainOverlay } from '../../components/GrainOverlay'
-import { PrismField } from '../../components/light/PrismField'
+import { lazy, Suspense, useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'motion/react'
 
-const TRANSPORTS = ['VLESS', 'REALITY', 'XTLS-VISION', 'HYSTERIA2', 'TUIC', 'WIREGUARD']
-
-const textContainer: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.15, delayChildren: 0.3 } },
-}
+const Strands = lazy(() => import('../../components/backgrounds/Strands'))
 
 /**
- * Секция обхода блокировок (см. PROJECT.md → «Наполнение секций»).
+ * Вторая секция лендинга, перенесённая из Figma (frame 158:4).
  *
- * Однократная сюжетная сцена: свет проходит через оптическое поле, после
- * первого обхода разбирается `unfiltered`, а по завершении приходят чипы.
- * Дальше поле живёт редкими локальными перестроениями, не повторяя интро.
+ * Свет за панелью — тот же Strands, что и в Hero, но с одной почти прямой
+ * нитью. Canvas шире панели и не клипается ею: полупрозрачная стеклянная
+ * поверхность лежит поверх нити и приглушает её внутри своих границ.
  */
 export function Bypass() {
   const sectionRef = useRef<HTMLElement>(null)
-  const inView = useInView(sectionRef, { once: true, amount: 0.35 })
+  const inView = useInView(sectionRef, { once: true, amount: 0.08 })
   const reduced = useReducedMotion()
-  const [started, setStarted] = useState(false)
-  const [decode, setDecode] = useState(false)
-  const [transportsVisible, setTransportsVisible] = useState(false)
 
-  const textItem: Variants = {
-    hidden: reduced ? { opacity: 0 } : { opacity: 0, y: 28, filter: 'blur(6px)' },
-    show: {
-      opacity: 1,
-      y: 0,
-      filter: 'blur(0px)',
-      transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
-    },
-  }
-
-  useEffect(() => {
-    if (!inView) return
-    setStarted(true)
-
-    if (reduced) {
-      setDecode(true)
-      setTransportsVisible(true)
-      return
-    }
-
-    const decodeTimer = window.setTimeout(() => setDecode(true), 820)
-    const transportsTimer = window.setTimeout(() => setTransportsVisible(true), 2480)
-    return () => {
-      clearTimeout(decodeTimer)
-      clearTimeout(transportsTimer)
-    }
-  }, [inView, reduced])
+  const reveal = reduced
+    ? { opacity: inView ? 1 : 0 }
+    : {
+        opacity: inView ? 1 : 0,
+        y: inView ? 0 : 24,
+        filter: inView ? 'blur(0px)' : 'blur(6px)',
+      }
 
   return (
     <section
       id="features"
       ref={sectionRef}
-      className="relative flex min-h-svh flex-col overflow-hidden"
+      aria-labelledby="bypass-title"
+      className="relative overflow-hidden bg-black py-20 sm:py-24 lg:py-[100px]"
     >
-      <PrismField active={started} className="absolute inset-0 z-0" />
-
-      {/* Grain — верхним слоем, как в Hero; к кромкам гаснет, чтобы не резать стык секций */}
-      <GrainOverlay className="z-20 mask-[linear-gradient(to_bottom,transparent,black_18%,black_84%,transparent)]" />
-
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col px-6">
+      <div className="mx-auto w-full max-w-[1108px] px-6">
         <motion.div
-          className="mt-[16svh] max-w-2xl"
-          variants={textContainer}
-          initial="hidden"
-          animate={started ? 'show' : 'hidden'}
+          className="mx-auto max-w-[693px] text-center"
+          initial={false}
+          animate={reveal}
+          transition={{ duration: reduced ? 0 : 0.85, ease: [0.22, 1, 0.36, 1] }}
         >
-          <motion.p
-            variants={textItem}
-            className="font-mono text-xs tracking-[0.18em] text-fg-muted uppercase"
+          <h2
+            id="bypass-title"
+            className="bg-[linear-gradient(180deg,#fff_8%,rgb(255_255_255/0.72)_100%)] bg-clip-text text-4xl leading-[1.06] font-semibold tracking-[-0.03em] text-transparent sm:text-5xl lg:text-[64px] lg:leading-[68px]"
           >
-            Access
-          </motion.p>
+            Build to resist blocking
+          </h2>
 
-          <motion.h2
-            variants={textItem}
-            className="mt-4 text-4xl font-semibold tracking-tighter text-balance sm:text-6xl"
-          >
-            The internet, <DecodeWord word="unfiltered" active={decode} />
-          </motion.h2>
-
-          <motion.p variants={textItem} className="mt-5 max-w-md leading-6 text-fg-muted">
-            News sites, messengers, streaming — whatever your country decided you shouldn't reach.
-            And when the blocks move, we move first.
-          </motion.p>
+          <p className="mx-auto mt-3.5 max-w-[609px] text-base leading-6 font-light text-white/75 sm:text-lg sm:leading-7">
+            Spatium is built to bypass filtering based on Deep Packet Inspection, helping your
+            connection remain available on restrictive networks.
+          </p>
         </motion.div>
 
         <motion.div
-          className="mt-auto mb-[10svh]"
+          aria-hidden
+          className="relative isolate mt-11 aspect-[1060/563] min-h-72 w-full sm:min-h-0"
           initial={false}
-          animate={
-            transportsVisible
-              ? { opacity: 1, y: 0, filter: 'blur(0px)' }
-              : { opacity: 0, y: reduced ? 0 : 18, filter: reduced ? 'blur(0px)' : 'blur(4px)' }
-          }
-          transition={{ duration: reduced ? 0 : 0.72, ease: [0.22, 1, 0.36, 1] }}
+          animate={reveal}
+          transition={{
+            duration: reduced ? 0 : 0.95,
+            delay: reduced ? 0 : 0.1,
+            ease: [0.22, 1, 0.36, 1],
+          }}
         >
-          <p className="font-mono text-[11px] tracking-[0.18em] text-fg-muted uppercase">
-            Transports
-          </p>
-          <ul className="mt-3 flex flex-wrap gap-x-2 gap-y-2">
-            {TRANSPORTS.map((name) => (
-              <li
-                key={name}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono
-                text-[11px] tracking-[0.08em] text-fg/90 transition-all duration-300 ease-out
-                hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10 hover:text-fg
-                hover:shadow-[0_0_18px_rgb(170_204_255/0.16)] motion-reduce:transform-none
-                motion-reduce:transition-none"
-              >
-                {name}
-              </li>
-            ))}
-          </ul>
+          {inView && (
+            <div className="pointer-events-none absolute -top-[30%] left-[-10%] z-0 h-[60%] w-[120%] mask-[radial-gradient(ellipse_92%_86%_at_50%_50%,black_0%,black_64%,transparent_100%)]">
+              <Suspense fallback={null}>
+                <Strands
+                  colors={['#8ba8ff']}
+                  count={1}
+                  speed={0.2}
+                  amplitude={0.1}
+                  waviness={0.65}
+                  thickness={0.52}
+                  glow={2.2}
+                  taper={2.4}
+                  intensity={0.62}
+                  saturation={0.78}
+                  opacity={1}
+                  scale={4.2}
+                />
+              </Suspense>
+            </div>
+          )}
+
+          <div className="bypass-shell absolute inset-0 z-10">
+            <div className="bypass-inner absolute inset-3 z-10" />
+          </div>
         </motion.div>
       </div>
     </section>

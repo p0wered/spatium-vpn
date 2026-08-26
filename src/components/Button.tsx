@@ -29,6 +29,6 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props} />
+    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}{...props} />
   )
 }

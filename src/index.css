@@ -60,6 +60,78 @@
 }
 
 @layer components {
+  .bypass-shell {
+    overflow: hidden;
+    border-radius: 24px;
+    isolation: isolate;
+    background: rgb(255 255 255 / 0.06);
+    backdrop-filter: blur(48px);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 65%,
+      rgb(0 0 0 / 90%) 73%,
+      rgb(0 0 0 / 62%) 82%,
+      rgb(0 0 0 / 25%) 91%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 65%,
+      rgb(0 0 0 / 90%) 73%,
+      rgb(0 0 0 / 62%) 82%,
+      rgb(0 0 0 / 25%) 91%,
+      transparent 100%
+    );
+  }
+
+  .bypass-shell::before,
+  .bypass-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+
+  .bypass-shell::before {
+    z-index: 30;
+    background: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 12%) 0%,
+      rgb(255 255 255 / 10%) 38%,
+      rgb(255 255 255 / 3%) 68%,
+      transparent 100%
+    );
+  }
+
+  .bypass-inner {
+    overflow: hidden;
+    border-radius: 16px;
+    background-color: rgb(0 0 0 / 0.2);
+  }
+
+  .bypass-inner::before {
+    background: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 5%) 0%,
+      rgb(255 255 255 / 3%) 42%,
+      rgb(255 255 255 / 0.8%) 70%,
+      transparent 100%
+    );
+  }
+
   /*
    * Механика плавающего лейбла Input.tsx: в покое лейбл висит по центру
    * поля, при фокусе / заполнении / автозаполнении поднимается к верхней

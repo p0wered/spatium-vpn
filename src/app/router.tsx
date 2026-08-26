@@ -21,6 +21,12 @@ export const router = createBrowserRouter([
     lazy: async () => ({ Component: (await import('../pages/dev/DevPage')).DevPage }),
   },
   {
+    path: '/export/strands',
+    lazy: async () => ({
+      Component: (await import('../pages/export/StrandsExportPage')).StrandsExportPage,
+    }),
+  },
+  {
     path: '/dashboard',
     element: <DashboardLayout />,
     children: [

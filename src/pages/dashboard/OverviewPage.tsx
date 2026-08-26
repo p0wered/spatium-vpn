@@ -18,7 +18,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub: st
     <GlassCard className="p-5">
       <div>
         <div className="text-xs text-fg-muted">{label}</div>
-        <div className={`mt-2 font-mono text-xl tracking-tight lg:text-2xl`}>{value}</div>
+        <div className={`mt-2 font-normal text-xl tracking-tight lg:text-2xl`}>{value}</div>
         <div className="mt-1.5 text-xs text-fg-muted">{sub}</div>
       </div>
     </GlassCard>
@@ -95,7 +95,7 @@ export function OverviewPage() {
           <GlassCard className="h-full p-5 lg:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-sm font-medium">Traffic</h2>
+                <h2 className="text-sm font-semibold">Traffic</h2>
                 <p className="mt-0.5 text-xs text-fg-muted">GB per day, last {period} days</p>
               </div>
               <PeriodSwitch value={period} onChange={setPeriod} />
@@ -109,7 +109,7 @@ export function OverviewPage() {
         <Reveal delay={0.2}>
           <GlassCard className="flex h-full flex-col p-5 lg:p-6">
             <div>
-              <h2 className="text-sm font-medium">Recommended servers</h2>
+              <h2 className="text-sm font-semibold">Recommended servers</h2>
               <p className="mt-0.5 text-xs text-fg-muted">nearest to you · estimated ping</p>
             </div>
             <ul className="mt-4 flex flex-1 flex-col">

@@ -153,7 +153,7 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
           className={`${
             isLeftAligned
               ? 'mt-[30svh] max-w-3xl sm:text-[5.5rem]'
-              : 'mt-[20svh] max-w-4xl sm:text-[7rem]'
+              : 'mt-[24svh] max-w-4xl sm:text-[6rem]'
           } text-5xl font-semibold tracking-tighter text-balance [text-shadow:0_2px_32px_rgb(0_0_0/0.55)]`}
         >
           Move unseen. Arrive instantly.

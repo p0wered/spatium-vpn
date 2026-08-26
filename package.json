@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "format": "prettier --write .",
-    "shoot": "node scripts/shoot-app.mjs"
+    "shoot": "node scripts/shoot-app.mjs",
+    "export:strands": "node scripts/export-strands.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",

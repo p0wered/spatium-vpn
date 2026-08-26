@@ -198,6 +198,8 @@ export interface StrandsProps {
   glassSize?: number
   /** Центр линзы в долях ширины/высоты от левого верхнего угла (default 0.5/0.5) */
   glassCenter?: [number, number]
+  /** Фиксированный момент в секундах: рисует один кадр для PNG-экспорта. */
+  staticTime?: number
   className?: string
 }
 
@@ -232,6 +234,7 @@ export default function Strands({
   dispersion = 1,
   glassSize = 1,
   glassCenter = [0.5, 0.5],
+  staticTime,
   className = '',
 }: StrandsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -245,6 +248,8 @@ export default function Strands({
       alpha: true,
       premultipliedAlpha: true,
       antialias: true,
+      // Только export-режиму нужно читать пиксели после завершения кадра.
+      preserveDrawingBuffer: staticTime !== undefined,
     })
     const gl = renderer.gl
     if (!('drawBuffers' in gl)) return // шейдеры требуют WebGL2
@@ -313,8 +318,8 @@ export default function Strands({
     ro.observe(container)
     resize()
 
-    const stopLoop = startRenderLoop(container, (t) => {
-      program.uniforms.uTime.value = t * 0.001
+    const renderFrame = (timeSeconds: number) => {
+      program.uniforms.uTime.value = timeSeconds
       if (glass) {
         renderer.render({ scene: mesh, target: renderTarget })
         glassProgram.uniforms.uScene.value = renderTarget.texture
@@ -322,10 +327,26 @@ export default function Strands({
       } else {
         renderer.render({ scene: mesh })
       }
-    })
+    }
+
+    let stopLoop = () => {}
+    let exportRaf = 0
+    if (staticTime === undefined) {
+      stopLoop = startRenderLoop(container, (t) => renderFrame(t * 0.001))
+    } else {
+      // ResizeObserver отрабатывает асинхронно. Следующий rAF гарантирует,
+      // что canvas уже получил итоговый размер перед единственным кадром.
+      exportRaf = requestAnimationFrame(() => {
+        resize()
+        renderFrame(staticTime)
+        gl.finish()
+        gl.canvas.dataset.strandsReady = 'true'
+      })
+    }
 
     return () => {
       stopLoop()
+      cancelAnimationFrame(exportRaf)
       ro.disconnect()
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()

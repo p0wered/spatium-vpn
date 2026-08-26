@@ -15,6 +15,9 @@ dist-ssr
 # Скриншоты мока приложения (scripts/shoot-app.mjs) — генерируются локально
 shots
 
+# PNG-экспорты WebGL-фонов для Figma — генерируются локально
+exports
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
