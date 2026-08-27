@@ -198,8 +198,12 @@ export interface StrandsProps {
   glassSize?: number
   /** Центр линзы в долях ширины/высоты от левого верхнего угла (default 0.5/0.5) */
   glassCenter?: [number, number]
-  /** Фиксированный момент в секундах: рисует один кадр для PNG-экспорта. */
+  /** Фиксированный момент в секундах: один кадр вместо постоянного rAF-цикла. */
   staticTime?: number
+  /** Верхняя граница DPR. Для мягкого фонового света 1–1.5 обычно достаточно. */
+  dpr?: number
+  /** Нужен только экспортёру, который читает пиксели после отрисовки. */
+  preserveDrawingBuffer?: boolean
   className?: string
 }
 
@@ -235,6 +239,8 @@ export default function Strands({
   glassSize = 1,
   glassCenter = [0.5, 0.5],
   staticTime,
+  dpr = 2,
+  preserveDrawingBuffer = false,
   className = '',
 }: StrandsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -244,12 +250,14 @@ export default function Strands({
     if (!container) return
 
     const renderer = new Renderer({
-      dpr: Math.min(window.devicePixelRatio, 2),
+      dpr: Math.min(window.devicePixelRatio, dpr),
       alpha: true,
       premultipliedAlpha: true,
-      antialias: true,
+      // Полноэкранный треугольник не имеет видимых геометрических рёбер —
+      // MSAA здесь расходует память, но не улучшает изображение.
+      antialias: false,
       // Только export-режиму нужно читать пиксели после завершения кадра.
-      preserveDrawingBuffer: staticTime !== undefined,
+      preserveDrawingBuffer,
     })
     const gl = renderer.gl
     if (!('drawBuffers' in gl)) return // шейдеры требуют WebGL2
@@ -288,20 +296,24 @@ export default function Strands({
     })
     const mesh = new Mesh(gl, { geometry, program })
 
-    const renderTarget = new RenderTarget(gl, { width: 1, height: 1 })
-    const glassProgram = new Program(gl, {
-      vertex: VERT,
-      fragment: GLASS_FRAG,
-      uniforms: {
-        uScene: { value: renderTarget.texture },
-        uResolution: { value: [1, 1] },
-        uRadius: { value: 0.46 * glassSize },
-        uRefraction: { value: refraction },
-        uDispersion: { value: dispersion },
-        uCenter: { value: [glassCenter[0], 1 - glassCenter[1]] },
-      },
-    })
-    const glassMesh = new Mesh(gl, { geometry, program: glassProgram })
+    // Раньше framebuffer и второй шейдер создавались даже при glass=false.
+    // Для Bypass это была чистая цена на входе без единого использованного кадра.
+    const renderTarget = glass ? new RenderTarget(gl, { width: 1, height: 1 }) : null
+    const glassProgram = renderTarget
+      ? new Program(gl, {
+          vertex: VERT,
+          fragment: GLASS_FRAG,
+          uniforms: {
+            uScene: { value: renderTarget.texture },
+            uResolution: { value: [1, 1] },
+            uRadius: { value: 0.46 * glassSize },
+            uRefraction: { value: refraction },
+            uDispersion: { value: dispersion },
+            uCenter: { value: [glassCenter[0], 1 - glassCenter[1]] },
+          },
+        })
+      : null
+    const glassMesh = glassProgram ? new Mesh(gl, { geometry, program: glassProgram }) : null
 
     const resize = () => {
       const { clientWidth: w, clientHeight: h } = container
@@ -311,8 +323,8 @@ export default function Strands({
       const pw = gl.canvas.width
       const ph = gl.canvas.height
       program.uniforms.uResolution.value = [pw, ph]
-      renderTarget.setSize(pw, ph)
-      glassProgram.uniforms.uResolution.value = [pw, ph]
+      renderTarget?.setSize(pw, ph)
+      if (glassProgram) glassProgram.uniforms.uResolution.value = [pw, ph]
     }
     const ro = new ResizeObserver(resize)
     ro.observe(container)
@@ -320,7 +332,7 @@ export default function Strands({
 
     const renderFrame = (timeSeconds: number) => {
       program.uniforms.uTime.value = timeSeconds
-      if (glass) {
+      if (renderTarget && glassProgram && glassMesh) {
         renderer.render({ scene: mesh, target: renderTarget })
         glassProgram.uniforms.uScene.value = renderTarget.texture
         renderer.render({ scene: glassMesh })
@@ -330,23 +342,25 @@ export default function Strands({
     }
 
     let stopLoop = () => {}
-    let exportRaf = 0
+    let staticRaf = 0
     if (staticTime === undefined) {
       stopLoop = startRenderLoop(container, (t) => renderFrame(t * 0.001))
     } else {
       // ResizeObserver отрабатывает асинхронно. Следующий rAF гарантирует,
       // что canvas уже получил итоговый размер перед единственным кадром.
-      exportRaf = requestAnimationFrame(() => {
+      staticRaf = requestAnimationFrame(() => {
         resize()
         renderFrame(staticTime)
-        gl.finish()
+        // Синхронная GPU-остановка нужна только скрипту экспорта. В обычной
+        // странице команда может завершиться асинхронно и не блокировать reveal.
+        if (preserveDrawingBuffer) gl.finish()
         gl.canvas.dataset.strandsReady = 'true'
       })
     }
 
     return () => {
       stopLoop()
-      cancelAnimationFrame(exportRaf)
+      cancelAnimationFrame(staticRaf)
       ro.disconnect()
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()

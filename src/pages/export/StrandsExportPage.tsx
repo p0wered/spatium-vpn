@@ -16,6 +16,7 @@ export function StrandsExportPage() {
         intensity={0.55}
         scale={1.95}
         staticTime={staticTime}
+        preserveDrawingBuffer
       />
     </main>
   )
