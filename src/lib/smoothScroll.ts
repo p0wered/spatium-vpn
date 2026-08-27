@@ -3,8 +3,7 @@ import LocomotiveScroll from 'locomotive-scroll'
 import 'locomotive-scroll/locomotive-scroll.css'
 
 /**
- * Инертный скролл лендинга — Locomotive Scroll v5 (решения — PROJECT.md
- * → «Анимации и движение»).
+ * Инертный скролл лендинга — Locomotive Scroll v5.
  *
  * Почему v5, а не v4: v4 оборачивает страницу в transform-контейнер и
  * подменяет скролл своим — это ломает `fixed`-хедер с GradualBlur,

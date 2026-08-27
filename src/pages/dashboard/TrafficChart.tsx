@@ -3,7 +3,7 @@ import type { TrafficDay } from '../../data/mock'
 import { formatDate, formatGB } from '../../lib/format'
 
 /**
- * Кастомный SVG-график трафика (Recharts отброшен — см. PROJECT.md).
+ * Кастомный SVG-график трафика (Recharts отброшен).
  * Плавная линия (catmull-rom → bezier) + градиентная заливка, hover —
  * вертикальная направляющая с точкой и glass-tooltip. Ширина меряется
  * ResizeObserver'ом: viewBox-растяжение искажало бы штрих и точки.

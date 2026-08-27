@@ -17,5 +17,3 @@ npm run build     # type-check + production build
 npm run lint      # oxlint
 npm run format    # prettier
 ```
-
-See [PROJECT.md](./PROJECT.md) for the full design system spec, scope and development plan (in Russian).
