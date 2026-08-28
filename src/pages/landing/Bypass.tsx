@@ -1,5 +1,7 @@
-import { useRef } from 'react'
+import { lazy, Suspense, useRef } from 'react'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
+
+const IceRidge = lazy(() => import('../../components/backgrounds/IceRidge'))
 
 const revealContainer: Variants = {
   hidden: {},
@@ -17,15 +19,19 @@ const textItem: Variants = {
 }
 
 const blockItem: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: {},
   show: {
-    opacity: 1,
-    y: 0,
     transition: {
-      duration: 0.9,
-      ease: [0.22, 1, 0.36, 1],
-      delayChildren: 0.15,
+      delayChildren: 0.05,
     },
+  },
+}
+
+const blockVeil: Variants = {
+  hidden: { opacity: 1 },
+  show: {
+    opacity: 0,
+    transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] },
   },
 }
 
@@ -73,9 +79,19 @@ export function Bypass() {
           className="relative isolate mt-11 aspect-[1060/563] min-h-72 w-full sm:min-h-0"
           variants={blockItem}
         >
+          <div className="pointer-events-none absolute inset-x-[-28%] top-0 z-0 h-40 -translate-y-1/2 sm:inset-x-[-15%] sm:h-56 lg:inset-x-[-11%] lg:h-64">
+            <Suspense fallback={null}>
+              <IceRidge active={Boolean(reduced || inView)} />
+            </Suspense>
+          </div>
+
           <div className="bypass-shell absolute inset-0 z-10">
             <div className="bypass-inner absolute inset-3 z-10" />
           </div>
+          <motion.div
+            variants={blockVeil}
+            className="pointer-events-none absolute inset-0 z-20 rounded-[24px] bg-black"
+          />
         </motion.div>
       </motion.div>
     </section>
