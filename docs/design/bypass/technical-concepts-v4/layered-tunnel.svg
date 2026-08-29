@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" fill="none">
+  <defs>
+    <style>
+      @font-face { font-family:"Geist"; src:url("../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2"); }
+      @font-face { font-family:"Geist Mono"; src:url("../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2"); }
+      .sans { font-family:"Geist",ui-sans-serif,system-ui,sans-serif; }
+      .mono { font-family:"Geist Mono",ui-monospace,monospace; }
+      .label { fill:#f5f5f7; font-size:18px; font-weight:520; letter-spacing:.02em; }
+      .meta { fill:#8c8d94; font-size:16px; font-weight:500; letter-spacing:.12em; }
+    </style>
+    <linearGradient id="ridge" x1="150" x2="1450" gradientUnits="userSpaceOnUse"><stop stop-color="#B4D2FF" stop-opacity="0"/><stop offset=".22" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset=".5" stop-color="white"/><stop offset=".78" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset="1" stop-color="#B4D2FF" stop-opacity="0"/></linearGradient>
+    <filter id="ridgeGlow" x="0" y="40" width="1600" height="140" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="20"/></filter>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="white" fill-opacity=".055"/></pattern>
+    <pattern id="scan" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line y2="9" stroke="white" stroke-opacity=".045"/></pattern>
+    <clipPath id="innerClip"><rect x="100" y="120" width="1400" height="720" rx="24"/></clipPath>
+  </defs>
+  <rect width="1600" height="920" fill="#000"/>
+  <g opacity=".78" filter="url(#ridgeGlow)"><path d="M150 102H1450" stroke="url(#ridge)" stroke-width="16"/></g>
+  <path d="M150 102H1450" stroke="url(#ridge)" stroke-width="2"/>
+  <rect x="80.5" y="100.5" width="1439" height="759" rx="33.5" fill="#0A0A0C" fill-opacity=".92" stroke="white" stroke-opacity=".12"/>
+  <rect x="100.5" y="120.5" width="1399" height="719" rx="23.5" fill="#030304" fill-opacity=".64" stroke="white" stroke-opacity=".055"/>
+  <g clip-path="url(#innerClip)">
+    <rect x="100" y="120" width="1400" height="720" fill="url(#dots)"/>
+    <text x="180" y="205" class="mono meta">PROTOCOL STACK · WHAT THE NETWORK CAN OBSERVE</text>
+    <text x="1420" y="205" text-anchor="end" class="mono meta">VLESS / TROJAN + TLS / REALITY</text>
+    <path d="M180 232H1420" stroke="white" stroke-opacity=".08"/>
+
+    <rect x="1130" y="274" width="150" height="380" fill="url(#scan)"/>
+    <path d="M1130 274V654M1280 274V654" stroke="white" stroke-opacity=".14"/>
+    <text x="1205" y="295" text-anchor="middle" class="mono meta">DPI SEES HERE</text>
+
+    <path d="M180 350H1060C1098 350 1114 365 1130 394C1150 430 1166 447 1205 447C1244 447 1260 430 1280 394C1296 365 1312 350 1350 350H1420" stroke="white" stroke-opacity=".22"/>
+    <path d="M180 620H1060C1098 620 1114 605 1130 576C1150 540 1166 523 1205 523C1244 523 1260 540 1280 576C1296 605 1312 620 1350 620H1420" stroke="white" stroke-opacity=".22"/>
+    <path d="M180 398H1030C1080 398 1100 410 1130 434C1156 455 1176 464 1205 464C1234 464 1254 455 1280 434C1310 410 1330 398 1380 398H1420" stroke="white" stroke-opacity=".38"/>
+    <path d="M180 572H1030C1080 572 1100 560 1130 536C1156 515 1176 506 1205 506C1234 506 1254 515 1280 536C1310 560 1330 572 1380 572H1420" stroke="white" stroke-opacity=".38"/>
+    <path d="M180 446H1000C1066 446 1092 456 1130 471C1154 481 1178 485 1205 485C1232 485 1256 481 1280 471C1318 456 1344 446 1410 446H1420" stroke="white" stroke-opacity=".72" stroke-width="1.5"/>
+    <path d="M180 524H1000C1066 524 1092 514 1130 499C1154 489 1178 485 1205 485C1232 485 1256 489 1280 499C1318 514 1344 524 1410 524H1420" stroke="white" stroke-opacity=".72" stroke-width="1.5"/>
+    <path d="M180 485H1420" stroke="white" stroke-opacity=".9" stroke-width="1.6"/>
+
+    <g stroke="white" stroke-opacity=".15"><path d="M230 350V620"/><path d="M260 398V572"/><path d="M290 446V524"/></g>
+    <text x="180" y="329" class="mono meta">OUTER APPEARANCE · TLS / REALITY</text>
+    <text x="180" y="386" class="mono meta">AUTHENTICATED PROXY · VLESS / TROJAN</text>
+    <text x="180" y="434" class="mono meta">ENCRYPTED USER TRAFFIC</text>
+    <text x="180" y="505" class="mono meta">ONE CONTINUOUS SESSION</text>
+
+    <path d="M1205 316V426" stroke="white" stroke-opacity=".28"/>
+    <path d="M1197 414L1205 426L1213 414" stroke="white" stroke-opacity=".36"/>
+    <text x="1340" y="328" text-anchor="end" class="mono meta">BROWSER-LIKE HANDSHAKE</text>
+    <text x="1340" y="347" text-anchor="end" class="mono meta">WEB-LIKE OUTER SHAPE</text>
+
+    <path d="M180 690H1420" stroke="white" stroke-opacity=".1"/>
+    <text x="180" y="724" class="mono meta">VLESS IS THE INNER PROXY · REALITY / TLS DEFINE THE PUBLIC WIRE APPEARANCE</text>
+    <text x="180" y="773" class="sans label">The censor cannot read the tunnel; it classifies the outer handshake, packet shape and endpoint behavior around it.</text>
+  </g>
+</svg>

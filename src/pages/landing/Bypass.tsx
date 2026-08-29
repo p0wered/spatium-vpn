@@ -1,5 +1,6 @@
 import { lazy, Suspense, useRef } from 'react'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
+import { BypassDiagram } from '../../components/landing/BypassDiagram'
 
 const IceRidge = lazy(() => import('../../components/backgrounds/IceRidge'))
 
@@ -76,7 +77,7 @@ export function Bypass() {
 
         <motion.div
           aria-hidden
-          className="relative isolate mt-11 aspect-[1060/563] min-h-72 w-full sm:min-h-0"
+          className="relative isolate mx-auto mt-11 aspect-[360/430] min-h-[420px] w-full max-w-[480px] lg:aspect-[1060/563] lg:min-h-0 lg:max-w-none"
           variants={blockItem}
         >
           <div className="pointer-events-none absolute inset-x-[-28%] top-0 z-0 h-40 -translate-y-1/2 sm:inset-x-[-15%] sm:h-56 lg:inset-x-[-11%] lg:h-64">
@@ -86,7 +87,9 @@ export function Bypass() {
           </div>
 
           <div className="bypass-shell absolute inset-0 z-10">
-            <div className="bypass-inner absolute inset-3 z-10" />
+            <div className="bypass-inner absolute inset-3 z-10">
+              <BypassDiagram active={Boolean(reduced || inView)} reducedMotion={Boolean(reduced)} />
+            </div>
           </div>
           <motion.div
             variants={blockVeil}

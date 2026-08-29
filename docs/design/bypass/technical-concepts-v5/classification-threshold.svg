@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" fill="none">
+  <defs>
+    <style>
+      @font-face { font-family:"Geist"; src:url("../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2"); }
+      @font-face { font-family:"Geist Mono"; src:url("../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2"); }
+      .sans { font-family:"Geist",ui-sans-serif,system-ui,sans-serif; }
+      .mono { font-family:"Geist Mono",ui-monospace,monospace; }
+      .label { fill:#f5f5f7; font-size:22px; font-weight:520; letter-spacing:.02em; }
+      .meta { fill:#92939a; font-size:18px; font-weight:500; letter-spacing:.1em; }
+      .micro { fill:#777980; font-size:15px; font-weight:500; letter-spacing:.08em; }
+    </style>
+    <linearGradient id="ridge" x1="150" x2="1450" gradientUnits="userSpaceOnUse"><stop stop-color="#B4D2FF" stop-opacity="0"/><stop offset=".22" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset=".5" stop-color="white"/><stop offset=".78" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset="1" stop-color="#B4D2FF" stop-opacity="0"/></linearGradient>
+    <filter id="ridgeGlow" x="0" y="40" width="1600" height="140" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="20"/></filter>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="white" fill-opacity=".055"/></pattern>
+    <pattern id="scan" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line y2="10" stroke="white" stroke-opacity=".05"/></pattern>
+    <clipPath id="innerClip"><rect x="100" y="120" width="1400" height="720" rx="24"/></clipPath>
+  </defs>
+  <rect width="1600" height="920" fill="#000"/><g opacity=".78" filter="url(#ridgeGlow)"><path d="M150 102H1450" stroke="url(#ridge)" stroke-width="16"/></g><path d="M150 102H1450" stroke="url(#ridge)" stroke-width="2"/>
+  <rect x="80.5" y="100.5" width="1439" height="759" rx="33.5" fill="#0A0A0C" fill-opacity=".92" stroke="white" stroke-opacity=".12"/><rect x="100.5" y="120.5" width="1399" height="719" rx="23.5" fill="#030304" fill-opacity=".64" stroke="white" stroke-opacity=".055"/>
+  <g clip-path="url(#innerClip)"><rect x="100" y="120" width="1400" height="720" fill="url(#dots)"/>
+    <text x="180" y="205" class="mono meta">PROTOCOL CLASSIFICATION · TWO DIFFERENT COSTS</text><text x="1420" y="205" text-anchor="end" class="mono meta">CONCEPTUAL · NOT TELEMETRY</text><path d="M180 232H1420" stroke="white" stroke-opacity=".08"/>
+
+    <text x="180" y="298" class="mono meta">RECOGNIZABLE VPN</text>
+    <g transform="translate(180 322)">
+      <rect width="390" height="118" rx="4" fill="white" fill-opacity=".025" stroke="white" stroke-opacity=".14"/>
+      <path d="M0 36H390M0 78H390" stroke="white" stroke-opacity=".08"/>
+      <g fill="white" fill-opacity=".13"><rect x="20" y="14" width="66" height="10"/><rect x="104" y="14" width="66" height="10"/><rect x="188" y="14" width="66" height="10"/><rect x="272" y="14" width="66" height="10"/><rect x="20" y="52" width="126" height="10"/><rect x="164" y="52" width="126" height="10"/><rect x="20" y="94" width="78" height="10"/><rect x="116" y="94" width="78" height="10"/><rect x="212" y="94" width="78" height="10"/></g>
+      <text x="370" y="25" text-anchor="end" class="mono micro">FIXED FIELDS</text><text x="370" y="63" text-anchor="end" class="mono micro">REPEATED LENGTHS</text><text x="370" y="105" text-anchor="end" class="mono micro">STABLE SEQUENCE</text>
+    </g>
+
+    <text x="180" y="512" class="mono meta">CAMOUFLAGED TUNNEL</text>
+    <g transform="translate(180 536)">
+      <rect width="390" height="118" rx="4" fill="white" fill-opacity=".035" stroke="white" stroke-opacity=".2"/>
+      <rect x="14" y="14" width="362" height="32" rx="2" fill="white" fill-opacity=".045" stroke="white" stroke-opacity=".1"/>
+      <rect x="14" y="58" width="172" height="44" rx="2" fill="white" fill-opacity=".025" stroke="white" stroke-opacity=".08"/>
+      <rect x="198" y="58" width="178" height="44" rx="2" fill="white" fill-opacity=".025" stroke="white" stroke-opacity=".08"/>
+      <text x="28" y="35" class="mono micro">WEB-LIKE TLS SURFACE</text><text x="28" y="85" class="mono micro">CLIENT HELLO</text><text x="212" y="85" class="mono micro">TRAFFIC SHAPE</text>
+    </g>
+
+    <path d="M570 381H650M570 595H650" stroke="white" stroke-opacity=".32"/><path d="M636 373L650 381L636 389M636 587L650 595L636 603" stroke="white" stroke-opacity=".42"/>
+    <g transform="translate(650 292)">
+      <rect width="226" height="392" rx="4" fill="url(#scan)" stroke="white" stroke-opacity=".17"/>
+      <text x="113" y="34" text-anchor="middle" class="mono meta">PASSIVE DPI</text><path d="M20 54H206" stroke="white" stroke-opacity=".12"/>
+      <g class="mono micro"><text x="28" y="105">HANDSHAKE</text><text x="28" y="165">PACKET SHAPE</text><text x="28" y="225">TIMING</text><text x="28" y="285">ENDPOINT</text></g>
+      <g stroke="white" stroke-opacity=".15"><path d="M28 120H198"/><path d="M28 180H198"/><path d="M28 240H198"/><path d="M28 300H198"/></g>
+      <text x="113" y="358" text-anchor="middle" class="mono micro">CLASSIFY · THEN ACT</text>
+    </g>
+    <path d="M876 381H954M876 595H954" stroke="white" stroke-opacity=".32"/><path d="M940 373L954 381L940 389M940 587L954 595L940 603" stroke="white" stroke-opacity=".42"/>
+
+    <g transform="translate(954 322)">
+      <rect width="466" height="118" rx="4" fill="white" fill-opacity=".025" stroke="white" stroke-opacity=".14"/>
+      <rect x="18" y="18" width="170" height="82" rx="2" fill="white" fill-opacity=".055" stroke="white" stroke-opacity=".12"/>
+      <text x="103" y="48" text-anchor="middle" class="mono micro">HIGH CONFIDENCE</text><text x="103" y="76" text-anchor="middle" class="mono meta">PROTOCOL MATCH</text>
+      <path d="M226 59H318" stroke="white" stroke-opacity=".32"/><path d="M348 42L382 76M382 42L348 76" stroke="white" stroke-opacity=".7" stroke-width="1.6"/><text x="438" y="65" text-anchor="end" class="mono meta">DROP</text>
+    </g>
+    <g transform="translate(954 536)">
+      <rect width="466" height="118" rx="4" fill="white" fill-opacity=".035" stroke="white" stroke-opacity=".2"/>
+      <rect x="18" y="18" width="236" height="82" rx="2" fill="white" fill-opacity=".04" stroke="white" stroke-opacity=".1"/>
+      <rect x="32" y="30" width="202" height="22" rx="2" fill="white" fill-opacity=".035"/><rect x="32" y="66" width="202" height="22" rx="2" fill="white" fill-opacity=".055"/>
+      <text x="133" y="46" text-anchor="middle" class="mono micro">ORDINARY HTTPS</text><text x="133" y="82" text-anchor="middle" class="mono micro">SHAPED TUNNEL</text>
+      <path d="M278 59H338" stroke="white" stroke-opacity=".42"/><path d="M324 51L338 59L324 67" stroke="white" stroke-opacity=".52"/><text x="438" y="65" text-anchor="end" class="mono meta">FORWARD</text>
+    </g>
+    <path d="M180 708H1420" stroke="white" stroke-opacity=".1"/><text x="180" y="743" class="mono meta">THE DIFFERENCE IS CLASSIFICATION CONFIDENCE · NOT ENCRYPTION STRENGTH</text><text x="180" y="790" class="sans label">A stable fingerprint supports a narrow block; a web-overlapping surface forces a broader, riskier rule.</text>
+  </g>
+</svg>

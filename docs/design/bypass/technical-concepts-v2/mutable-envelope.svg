@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" fill="none">
+  <defs>
+    <style>
+      @font-face { font-family:"Geist"; src:url("../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2"); }
+      @font-face { font-family:"Geist Mono"; src:url("../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2"); }
+      .sans { font-family:"Geist",ui-sans-serif,system-ui,sans-serif; }.mono { font-family:"Geist Mono",ui-monospace,monospace; }
+      .label { fill:#f5f5f7; font-size:15px; font-weight:520; letter-spacing:.02em; }.meta { fill:#8c8d94; font-size:12px; font-weight:500; letter-spacing:.12em; }
+    </style>
+    <linearGradient id="ridge" x1="150" y1="0" x2="1450" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#B4D2FF" stop-opacity="0"/><stop offset=".22" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset=".5" stop-color="white"/><stop offset=".78" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset="1" stop-color="#B4D2FF" stop-opacity="0"/></linearGradient>
+    <filter id="ridgeGlow" x="0" y="40" width="1600" height="140" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="20"/></filter>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="white" fill-opacity=".055"/></pattern>
+    <clipPath id="innerClip"><rect x="100" y="120" width="1400" height="720" rx="24"/></clipPath>
+  </defs>
+  <rect width="1600" height="920" fill="#000"/><g opacity=".78" filter="url(#ridgeGlow)"><path d="M150 102H1450" stroke="url(#ridge)" stroke-width="16"/></g><path d="M150 102H1450" stroke="url(#ridge)" stroke-width="2"/>
+  <rect x="80.5" y="100.5" width="1439" height="759" rx="33.5" fill="#0A0A0C" fill-opacity=".92" stroke="white" stroke-opacity=".12"/><rect x="100.5" y="120.5" width="1399" height="719" rx="23.5" fill="#030304" fill-opacity=".64" stroke="white" stroke-opacity=".055"/>
+  <g clip-path="url(#innerClip)"><rect x="100" y="120" width="1400" height="720" fill="url(#dots)"/>
+    <text x="180" y="205" class="mono meta">SAME ENCRYPTED SESSION</text><text x="1420" y="205" text-anchor="end" class="mono meta">EXAMPLE TACTICS · NOT STAGES</text><path d="M180 232H1420" stroke="white" stroke-opacity=".08"/>
+    <path d="M244 446H1356" stroke="white" stroke-opacity=".18"/><circle cx="244" cy="446" r="7" fill="#F5F5F7"/><circle cx="1356" cy="446" r="7" fill="#F5F5F7"/>
+
+    <g fill="#09090B" stroke="white" stroke-opacity=".44">
+      <rect x="300.5" y="382.5" width="166" height="127" rx="16"/><rect x="494.5" y="398.5" width="133" height="95" rx="14"/>
+      <rect x="655.5" y="366.5" width="188" height="159" rx="18"/><rect x="871.5" y="405.5" width="121" height="81" rx="13"/>
+      <rect x="1020.5" y="377.5" width="312" height="137" rx="16" stroke-dasharray="5 7"/>
+      <rect x="1036.5" y="397.5" width="78" height="97" rx="12"/><rect x="1131.5" y="397.5" width="91" height="97" rx="12"/><rect x="1239.5" y="397.5" width="77" height="97" rx="12"/>
+    </g>
+    <g fill="#0F0F12" stroke="white" stroke-opacity=".26">
+      <rect x="332.5" y="425.5" width="102" height="41" rx="8"/><rect x="514.5" y="425.5" width="93" height="41" rx="8"/>
+      <rect x="692.5" y="425.5" width="114" height="41" rx="8"/><rect x="889.5" y="425.5" width="85" height="41" rx="8"/>
+      <rect x="1050.5" y="425.5" width="50" height="41" rx="8"/><rect x="1145.5" y="425.5" width="63" height="41" rx="8"/><rect x="1253.5" y="425.5" width="49" height="41" rx="8"/>
+    </g>
+    <g stroke="white" stroke-opacity=".34">
+      <path d="M352 438V454M363 438V454M374 438V454"/><path d="M534 438V454M545 438V454M556 438V454"/>
+      <path d="M713 438V454M724 438V454M735 438V454"/><path d="M907 438V454M918 438V454M929 438V454"/>
+      <path d="M1063 438V454M1074 438V454"/><path d="M1159 438V454M1170 438V454M1181 438V454"/><path d="M1266 438V454M1277 438V454"/>
+    </g>
+    <g stroke="white" stroke-opacity=".16">
+      <path d="M320 400H366M320 412H412"/><path d="M514 414H548"/><path d="M676 386H720M676 398H792M676 410H748"/>
+      <path d="M889 419H931"/><path d="M1050 411H1082"/><path d="M1145 411H1190"/><path d="M1253 411H1284"/>
+    </g>
+
+    <path d="M300 566H627" stroke="white" stroke-opacity=".14"/><path d="M300 556V576M627 556V576" stroke="white" stroke-opacity=".14"/><text x="463" y="604" text-anchor="middle" class="mono meta">LENGTH + PADDING</text>
+    <path d="M655 566H992" stroke="white" stroke-opacity=".14"/><path d="M655 556V576M992 556V576" stroke="white" stroke-opacity=".14"/><text x="824" y="604" text-anchor="middle" class="mono meta">HEADERS + TIMING</text>
+    <path d="M1020 566H1333" stroke="white" stroke-opacity=".14"/><path d="M1020 556V576M1333 556V576" stroke="white" stroke-opacity=".14"/><text x="1176" y="604" text-anchor="middle" class="mono meta">FRAGMENTED HANDSHAKE</text>
+
+    <rect x="298.5" y="668.5" width="103" height="33" rx="8" fill="#09090B" stroke="white" stroke-opacity=".18"/><rect x="417.5" y="668.5" width="73" height="33" rx="8" fill="#09090B" stroke="white" stroke-opacity=".18"/><rect x="506.5" y="668.5" width="119" height="33" rx="8" fill="#09090B" stroke="white" stroke-opacity=".18"/>
+    <text x="648" y="690" class="mono meta">JUNK BEFORE HANDSHAKE</text>
+    <text x="180" y="773" class="sans label">The session stays intact while headers, padding, timing and boundaries vary, making a stable signature harder to extract.</text>
+  </g>
+</svg>

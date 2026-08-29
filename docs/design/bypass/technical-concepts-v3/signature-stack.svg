@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" fill="none">
+  <defs>
+    <style>
+      @font-face { font-family:"Geist"; src:url("../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2"); }
+      @font-face { font-family:"Geist Mono"; src:url("../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2"); }
+      .sans { font-family:"Geist",ui-sans-serif,system-ui,sans-serif; }.mono { font-family:"Geist Mono",ui-monospace,monospace; }
+      .label { fill:#f5f5f7; font-size:15px; font-weight:520; letter-spacing:.02em; }.meta { fill:#8c8d94; font-size:12px; font-weight:500; letter-spacing:.12em; }
+    </style>
+    <linearGradient id="ridge" x1="150" y1="0" x2="1450" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#B4D2FF" stop-opacity="0"/><stop offset=".22" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset=".5" stop-color="white"/><stop offset=".78" stop-color="#B4D2FF" stop-opacity=".34"/><stop offset="1" stop-color="#B4D2FF" stop-opacity="0"/></linearGradient>
+    <filter id="ridgeGlow" x="0" y="40" width="1600" height="140" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="20"/></filter>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="white" fill-opacity=".055"/></pattern>
+    <pattern id="scan" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line y2="10" stroke="white" stroke-opacity=".045"/></pattern>
+    <clipPath id="innerClip"><rect x="100" y="120" width="1400" height="720" rx="24"/></clipPath>
+  </defs>
+  <rect width="1600" height="920" fill="#000"/><g opacity=".78" filter="url(#ridgeGlow)"><path d="M150 102H1450" stroke="url(#ridge)" stroke-width="16"/></g><path d="M150 102H1450" stroke="url(#ridge)" stroke-width="2"/>
+  <rect x="80.5" y="100.5" width="1439" height="759" rx="33.5" fill="#0A0A0C" fill-opacity=".92" stroke="white" stroke-opacity=".12"/><rect x="100.5" y="120.5" width="1399" height="719" rx="23.5" fill="#030304" fill-opacity=".64" stroke="white" stroke-opacity=".055"/>
+  <g clip-path="url(#innerClip)"><rect x="100" y="120" width="1400" height="720" fill="url(#dots)"/>
+    <text x="180" y="205" class="mono meta">CONCEPTUAL FEATURE STACK</text><text x="1420" y="205" text-anchor="end" class="mono meta">ONE SESSION · NO FAILOVER</text><path d="M180 232H1420" stroke="white" stroke-opacity=".08"/>
+    <rect x="716" y="270" width="168" height="390" fill="url(#scan)"/><path d="M716 270V660M884 270V660" stroke="white" stroke-opacity=".12"/>
+    <text x="800" y="292" text-anchor="middle" class="mono meta">WIRE SHAPING</text>
+    <text x="184" y="348" class="mono meta">LENGTH</text><text x="184" y="438" class="mono meta">TIMING</text><text x="184" y="528" class="mono meta">HEADER</text><text x="184" y="618" class="mono meta">BOUNDARY</text>
+    <g stroke="white" stroke-opacity=".08"><path d="M286 344H1410"/><path d="M286 434H1410"/><path d="M286 524H1410"/><path d="M286 614H1410"/></g>
+    <g stroke="#F5F5F7" stroke-opacity=".56" stroke-width="1.5">
+      <path d="M286 344H330V310H360V344H404V310H434V344H478V310H508V344H552V310H582V344H626V310H656V344H700C736 344 746 330 774 330C816 330 825 364 866 350C874 347 880 345 884 344H928V318H960V344H1018V296H1058V344H1122V326H1175V344H1240V307H1274V344H1410"/>
+      <path d="M286 434H336V408H350V434H416V408H430V434H496V408H510V434H576V408H590V434H656V408H670V434H704C742 434 750 413 782 421C816 430 821 449 854 438C866 434 875 433 884 434H920V406H930V434H1003V399H1015V434H1054V414H1064V434H1155V393H1168V434H1232V411H1244V434H1314V404H1325V434H1410"/>
+      <path d="M286 524H322V492H337V524H387V492H402V524H452V492H467V524H517V492H532V524H582V492H597V524H647V492H662V524H706C744 524 748 498 780 506C812 514 821 543 856 530C867 526 876 524 884 524H922V500H940V524H973V486H995V524H1033V510H1045V524H1109V493H1137V524H1176V504H1190V524H1260V481H1282V524H1341V512H1354V524H1410"/>
+      <path d="M286 614H344V580H370V614H440V580H466V614H536V580H562V614H632V580H658V614H706C742 614 755 592 785 601C819 611 828 630 858 614C868 609 876 611 884 614H925M945 614H1012M1028 614H1060M1084 614H1154M1171 614H1219M1248 614H1302M1324 614H1410"/>
+    </g>
+    <path d="M286 690H1410" stroke="white" stroke-opacity=".36"/><circle cx="286" cy="690" r="6" fill="#F5F5F7"/><circle cx="1410" cy="690" r="6" fill="#F5F5F7"/><text x="800" y="716" text-anchor="middle" class="mono meta">INNER SESSION CONTINUES</text>
+    <text x="180" y="773" class="sans label">The tunnel stays continuous while observable patterns become less reusable as a stable signature.</text>
+  </g>
+</svg>

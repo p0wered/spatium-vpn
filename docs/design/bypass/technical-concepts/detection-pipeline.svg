@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" fill="none">
+  <defs>
+    <style>
+      @font-face {
+        font-family: "Geist";
+        src: url("../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Geist Mono";
+        src: url("../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2");
+      }
+      .sans { font-family: "Geist", ui-sans-serif, system-ui, sans-serif; }
+      .mono { font-family: "Geist Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+      .label { fill: #f5f5f7; font-size: 15px; font-weight: 520; letter-spacing: .02em; }
+      .meta { fill: #8c8d94; font-size: 12px; font-weight: 500; letter-spacing: .12em; }
+    </style>
+    <linearGradient id="ridge" x1="150" y1="0" x2="1450" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B4D2FF" stop-opacity="0"/>
+      <stop offset=".22" stop-color="#B4D2FF" stop-opacity=".34"/>
+      <stop offset=".5" stop-color="white"/>
+      <stop offset=".78" stop-color="#B4D2FF" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#B4D2FF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="flow" x1="230" y1="0" x2="1370" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5F5F7" stop-opacity=".48"/>
+      <stop offset=".5" stop-color="#F5F5F7"/>
+      <stop offset="1" stop-color="#F5F5F7" stop-opacity=".64"/>
+    </linearGradient>
+    <filter id="ridgeGlow" x="0" y="40" width="1600" height="140" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="white" fill-opacity=".055"/>
+    </pattern>
+    <pattern id="scan" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="9" stroke="white" stroke-opacity=".05"/>
+    </pattern>
+    <clipPath id="innerClip">
+      <rect x="100" y="120" width="1400" height="720" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1600" height="920" fill="#000"/>
+  <g opacity=".78" filter="url(#ridgeGlow)">
+    <path d="M150 102H1450" stroke="url(#ridge)" stroke-width="16"/>
+  </g>
+  <path d="M150 102H1450" stroke="url(#ridge)" stroke-width="2"/>
+
+  <rect x="80.5" y="100.5" width="1439" height="759" rx="33.5" fill="#0A0A0C" fill-opacity=".92" stroke="white" stroke-opacity=".12"/>
+  <rect x="100.5" y="120.5" width="1399" height="719" rx="23.5" fill="#030304" fill-opacity=".64" stroke="white" stroke-opacity=".055"/>
+
+  <g clip-path="url(#innerClip)">
+    <rect x="100" y="120" width="1400" height="720" fill="url(#dots)"/>
+    <rect x="664" y="248" width="272" height="460" fill="url(#scan)"/>
+    <path d="M664 248V708M936 248V708" stroke="white" stroke-opacity=".14"/>
+
+    <text x="210" y="220" class="mono meta">OBSERVABLE PATTERN</text>
+    <text x="800" y="220" text-anchor="middle" class="mono meta">TRANSPORT ADAPTS</text>
+    <text x="1390" y="220" text-anchor="end" class="mono meta">CONNECTION CONTINUES</text>
+    <path d="M210 246H1390" stroke="white" stroke-opacity=".08"/>
+
+    <path d="M225 470H1375" stroke="white" stroke-opacity=".08"/>
+    <path d="M225 470H650" stroke="url(#flow)" stroke-width="2.5"/>
+    <path d="M950 470H1375" stroke="url(#flow)" stroke-width="2.5"/>
+    <circle cx="225" cy="470" r="6" fill="#F5F5F7"/>
+    <circle cx="1375" cy="470" r="6" fill="#F5F5F7"/>
+
+    <g stroke="#F5F5F7" stroke-opacity=".52">
+      <path d="M286 470V410M302 470V430M318 470V398M334 470V440M350 470V410"/>
+      <path d="M398 470V410M414 470V430M430 470V398M446 470V440M462 470V410"/>
+      <path d="M510 470V410M526 470V430M542 470V398M558 470V440M574 470V410"/>
+    </g>
+    <path d="M272 382H588" stroke="white" stroke-opacity=".16"/>
+    <path d="M272 382V394M588 382V394" stroke="white" stroke-opacity=".16"/>
+    <text x="430" y="360" text-anchor="middle" class="mono meta">REPEATING SIGNATURE</text>
+
+    <g stroke="#F5F5F7" stroke-opacity=".72">
+      <path d="M680 470C704 470 704 418 728 418C752 418 752 526 776 526C800 526 800 398 824 398C848 398 848 510 872 510C896 510 896 450 920 450"/>
+      <path d="M680 505C704 505 704 486 728 486C752 486 752 438 776 438C800 438 800 522 824 522C848 522 848 454 872 454C896 454 896 492 920 492" stroke-opacity=".26"/>
+    </g>
+    <path d="M800 328V382" stroke="white" stroke-opacity=".24"/>
+    <path d="M740 328H860" stroke="white" stroke-opacity=".24"/>
+    <text x="800" y="304" text-anchor="middle" class="mono meta">CLASSIFICATION ATTEMPT</text>
+
+    <g stroke="#F5F5F7" stroke-opacity=".52">
+      <path d="M1008 470V424M1022 470V448M1049 470V398M1061 470V438M1094 470V416"/>
+      <path d="M1138 470V438M1158 470V404M1171 470V452M1206 470V418M1224 470V390"/>
+      <path d="M1266 470V428M1278 470V446M1308 470V406M1332 470V432"/>
+    </g>
+    <path d="M990 554H1350" stroke="white" stroke-opacity=".16"/>
+    <path d="M990 542V554M1350 542V554" stroke="white" stroke-opacity=".16"/>
+    <text x="1170" y="586" text-anchor="middle" class="mono meta">OBSERVABLE SHAPE CHANGED</text>
+
+    <text x="180" y="778" class="sans label">The network sees a different traffic pattern while the connection keeps moving forward.</text>
+  </g>
+</svg>
