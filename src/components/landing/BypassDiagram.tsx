@@ -29,6 +29,15 @@ function DesktopDiagram() {
         <pattern id="bypass-dots-desktop" width="20" height="20" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="0.8" fill="white" fillOpacity="0.055" />
         </pattern>
+        <filter id="bypass-mark-gray" colorInterpolationFilters="sRGB">
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0.573 0
+                    0 0 0 0.576 0
+                    0 0 0 0.604 0
+                    0 0 0 1 0"
+          />
+        </filter>
       </defs>
 
       <rect width="1060" height="563" fill="url(#bypass-dots-desktop)" />
@@ -65,7 +74,7 @@ function DesktopDiagram() {
         <g>
           <rect
             x="56"
-            y="350"
+            y="328"
             width="190"
             height="82"
             rx="12"
@@ -73,13 +82,13 @@ function DesktopDiagram() {
             stroke="white"
             strokeOpacity="0.2"
           />
-          <text x="74" y="379" fill="#777980" fontSize="11" letterSpacing="1.1">
+          <text x="74" y="357" fill="#777980" fontSize="11" letterSpacing="1.1">
             VALID CLIENT
           </text>
-          <text x="74" y="414" fill="#a1a1a6" fontSize="13" letterSpacing="1.15">
+          <text x="74" y="392" fill="#a1a1a6" fontSize="13" letterSpacing="1.15">
             CLIENT PROOF
           </text>
-          <circle cx="222" cy="376" r="6" fill="#f5f5f7" />
+          <circle cx="222" cy="354" r="6" fill="#f5f5f7" />
         </g>
 
         <g>
@@ -104,11 +113,8 @@ function DesktopDiagram() {
             stroke="white"
             strokeOpacity="0.1"
           />
-          <text x="382" y="171" fill="#a1a1a6" fontSize="13" letterSpacing="0.9">
+          <text x="390" y="174" fill="#a1a1a6" fontSize="13" letterSpacing="0.9">
             PUBLIC TLS SURFACE
-          </text>
-          <text x="678" y="171" fill="#777980" fontSize="10" letterSpacing="0.75" textAnchor="end">
-            PUBLIC TO OBSERVER
           </text>
 
           <rect
@@ -182,11 +188,8 @@ function DesktopDiagram() {
             stroke="white"
             strokeOpacity="0.11"
           />
-          <text x="382" y="306" fill="#a1a1a6" fontSize="13" letterSpacing="0.9">
+          <text x="390" y="310" fill="#a1a1a6" fontSize="13" letterSpacing="0.9">
             HIDDEN PROXY PATH
-          </text>
-          <text x="678" y="306" fill="#777980" fontSize="10" letterSpacing="0.75" textAnchor="end">
-            AUTH GATED
           </text>
 
           <rect
@@ -209,8 +212,14 @@ function DesktopDiagram() {
           >
             VERIFY
           </text>
-          <path d="M412 377H448" stroke="white" strokeOpacity="0.3" />
-          <circle cx="430" cy="377" r="6" fill="#0d0d10" stroke="white" strokeOpacity="0.45" />
+          <image
+            href="/spatium-mark.svg"
+            x="410"
+            y="369"
+            width="40"
+            height="21"
+            filter="url(#bypass-mark-gray)"
+          />
 
           <rect
             x="510"
@@ -220,7 +229,7 @@ function DesktopDiagram() {
             rx="4"
             fill="#0f0f12"
             stroke="white"
-            strokeOpacity="0.14"
+            strokeOpacity="0.1"
           />
           <text
             x="592"
@@ -266,7 +275,7 @@ function DesktopDiagram() {
         <g>
           <rect
             x="812"
-            y="350"
+            y="328"
             width="192"
             height="82"
             rx="12"
@@ -274,10 +283,10 @@ function DesktopDiagram() {
             stroke="white"
             strokeOpacity="0.2"
           />
-          <text x="830" y="379" fill="#777980" fontSize="11" letterSpacing="1.05">
+          <text x="830" y="357" fill="#777980" fontSize="11" letterSpacing="1.05">
             PRIVATE OUTPUT
           </text>
-          <text x="830" y="414" fill="#a1a1a6" fontSize="13" letterSpacing="1.15">
+          <text x="830" y="392" fill="#a1a1a6" fontSize="13" letterSpacing="1.15">
             PROXY SESSION
           </text>
         </g>
@@ -286,27 +295,21 @@ function DesktopDiagram() {
           <path d="M246 209H356" />
           <path d="M346 204L356 209L346 214" />
 
-          <path d="M246 391H286C326 391 320 242 356 242" />
-          <path d="M346 237L356 242L346 247" />
+          <path d="M246 369H356" />
+          <path d="M346 364L356 369L346 374" />
 
-          <path d="M430 262V328" />
-          <path d="M425 318L430 328L435 318" />
-
-          <path d="M474 363H510" />
-          <path d="M500 358L510 363L500 368" />
+          <path d="M474 370H510" />
+          <path d="M500 365L510 370L500 375" />
 
           <path d="M704 209H812" />
           <path d="M802 204L812 209L802 214" />
 
-          <path d="M704 391H812" />
-          <path d="M802 386L812 391L802 396" />
+          <path d="M704 369H812" />
+          <path d="M802 364L812 369L802 374" />
         </g>
 
         <path d="M56 456H1004" stroke="white" strokeOpacity="0.075" />
-        <text x="56" y="481" fill="#92939a" fontSize="11" letterSpacing="1.15">
-          THE PROBE AND THE CLIENT REACH THE SAME ADDRESS · ONLY ONE CAN REVEAL THE TUNNEL
-        </text>
-        <text x="56" y="510" fill="#f5f5f7" fontSize="14" fontFamily="var(--font-sans)">
+        <text x="56" y="495" fill="#626262" fontSize="14" fontFamily="var(--font-sans)">
           The public surface remains plausible while authentication gates access to the proxy behind
           it.
         </text>
@@ -490,12 +493,10 @@ function MobileDiagram() {
         <g {...lineProps} strokeWidth="1" strokeOpacity="0.42">
           <path d="M92 112V146" />
           <path d="M87 136L92 146L97 136" />
-          <path d="M268 112V146" />
-          <path d="M263 136L268 146L273 136" />
+          <path d="M268 112V200C268 228 247 228 247 244" />
+          <path d="M242 234L247 244L252 234" />
           <path d="M105 220V244" />
           <path d="M100 234L105 244L110 234" />
-          <path d="M247 220V244" />
-          <path d="M242 234L247 244L252 234" />
           <path d="M105 298V342" />
           <path d="M100 332L105 342L110 332" />
           <path d="M247 298V342" />

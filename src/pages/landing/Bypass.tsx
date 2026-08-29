@@ -87,7 +87,7 @@ export function Bypass() {
           </div>
 
           <div className="bypass-shell absolute inset-0 z-10">
-            <div className="bypass-inner absolute inset-3 z-10">
+            <div className="bypass-inner absolute inset-3 z-10 bg-black/30">
               <BypassDiagram active={Boolean(reduced || inView)} reducedMotion={Boolean(reduced)} />
             </div>
           </div>
