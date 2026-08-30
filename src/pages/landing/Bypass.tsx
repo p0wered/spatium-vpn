@@ -54,7 +54,7 @@ export function Bypass() {
       className="relative overflow-hidden bg-black py-20 sm:py-24 lg:py-[100px]"
     >
       <motion.div
-        className="mx-auto w-full max-w-[1108px] px-6"
+        className="mx-auto w-full max-w-[1108px] px-3"
         variants={revealContainer}
         initial={reduced ? false : 'hidden'}
         animate={reduced || inView ? 'show' : 'hidden'}

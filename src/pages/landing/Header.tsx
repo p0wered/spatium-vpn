@@ -73,7 +73,7 @@ export function Header() {
       >
         <GradualBlur />
 
-        <div className="relative mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-6">
+        <div className="relative mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-4">
           <Wordmark className="justify-self-start" />
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Landing sections">

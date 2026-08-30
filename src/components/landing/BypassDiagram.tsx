@@ -406,7 +406,7 @@ function MobileDiagram() {
       <rect width="360" height="430" fill="url(#bypass-dots-mobile)" />
 
       <g style={{ fontFamily: 'var(--font-mono)' }}>
-        <text x="18" y="28" fill="#939393" fontSize="9.5" letterSpacing="1.3">
+        <text x="18" y="28" fill="#939393" fontSize="8" letterSpacing="1.15">
           ONE ENDPOINT · TWO OBSERVERS
         </text>
 
@@ -420,10 +420,10 @@ function MobileDiagram() {
           stroke="white"
           strokeOpacity="0.14"
         />
-        <text x="32" y="74" fill="#777777" fontSize="10.5" letterSpacing="0.8">
+        <text x="32" y="74" fill="#777777" fontSize="9" letterSpacing="0.75">
           ACTIVE PROBE
         </text>
-        <text x="32" y="96" fill="#a1a1a1" fontSize="14" letterSpacing="0.8">
+        <text x="32" y="96" fill="#a1a1a1" fontSize="12" letterSpacing="0.75">
           NO PROOF
         </text>
 
@@ -437,10 +437,10 @@ function MobileDiagram() {
           stroke="white"
           strokeOpacity="0.2"
         />
-        <text x="208" y="74" fill="#777777" fontSize="10.5" letterSpacing="0.8">
+        <text x="208" y="74" fill="#777777" fontSize="9" letterSpacing="0.75">
           VALID CLIENT
         </text>
-        <text x="208" y="96" fill="#a1a1a1" fontSize="13" letterSpacing="0.75">
+        <text x="208" y="96" fill="#a1a1a1" fontSize="11" letterSpacing="0.7">
           CLIENT PROOF
         </text>
 
@@ -464,13 +464,13 @@ function MobileDiagram() {
           stroke="white"
           strokeOpacity="0.1"
         />
-        <text x="44" y="182" fill="#a1a1a1" fontSize="13" letterSpacing="0.75">
+        <text x="44" y="182" fill="#a1a1a1" fontSize="11" letterSpacing="0.7">
           PUBLIC TLS SURFACE
         </text>
-        <text x="316" y="182" fill="#777777" fontSize="8" letterSpacing="0.9" textAnchor="end">
+        <text x="316" y="182" fill="#777777" fontSize="7" letterSpacing="0.8" textAnchor="end">
           SHARED ENTRY
         </text>
-        <text x="44" y="204" fill="#777777" fontSize="9.5" letterSpacing="0.65">
+        <text x="44" y="204" fill="#777777" fontSize="8" letterSpacing="0.6">
           TLS HANDSHAKE · PUBLIC RESPONSE
         </text>
 
@@ -517,8 +517,8 @@ function MobileDiagram() {
           x="105"
           y="269"
           fill="#a1a1a1"
-          fontSize="11.5"
-          letterSpacing="0.7"
+          fontSize="10"
+          letterSpacing="0.65"
           textAnchor="middle"
         >
           WEB RESPONSE
@@ -527,13 +527,13 @@ function MobileDiagram() {
           x="247"
           y="261"
           fill="#777777"
-          fontSize="9.5"
-          letterSpacing="0.65"
+          fontSize="8"
+          letterSpacing="0.6"
           textAnchor="middle"
         >
           VERIFIED CLIENT
         </text>
-        <text x="247" y="278" fill="#a1a1a1" fontSize="12" letterSpacing="0.65" textAnchor="middle">
+        <text x="247" y="278" fill="#a1a1a1" fontSize="10.5" letterSpacing="0.6" textAnchor="middle">
           PROXY TUNNEL
         </text>
 
@@ -547,10 +547,10 @@ function MobileDiagram() {
           stroke="white"
           strokeOpacity="0.14"
         />
-        <text x="32" y="366" fill="#777777" fontSize="10" letterSpacing="0.7">
+        <text x="32" y="366" fill="#777777" fontSize="8.5" letterSpacing="0.65">
           PUBLIC OUTPUT
         </text>
-        <text x="32" y="387" fill="#a1a1a1" fontSize="13" letterSpacing="0.75">
+        <text x="32" y="387" fill="#a1a1a1" fontSize="11" letterSpacing="0.7">
           ORDINARY SITE
         </text>
 
@@ -573,24 +573,23 @@ function MobileDiagram() {
           pad={6}
           hatchId="bypass-hatch-mobile"
         />
-        <text x="208" y="366" fill="#777777" fontSize="10" letterSpacing="0.7">
+        <text x="208" y="366" fill="#777777" fontSize="8.5" letterSpacing="0.65">
           PRIVATE OUTPUT
         </text>
-        <text x="208" y="387" fill="#a1a1a1" fontSize="13" letterSpacing="0.75">
+        <text x="208" y="387" fill="#a1a1a1" fontSize="11" letterSpacing="0.7">
           PROXY SESSION
         </text>
 
         <g {...lineProps} strokeWidth="1" strokeOpacity="0.42">
-          <path d="M92 112V146" />
-          <path d="M87 136L92 146L97 136" />
-          <path d="M268 112V200C268 228 247 228 247 244" />
-          <path d="M242 234L247 244L252 234" />
-          <path d="M105 220V244" />
-          <path d="M100 234L105 244L110 234" />
-          <path d="M105 298V342" />
-          <path d="M100 332L105 342L110 332" />
-          <path d="M247 298V342" />
-          <path d="M242 332L247 342L252 332" />
+          <path d="M92 112V138" />
+          <path d="M87 128L92 138L97 128" />
+          <path d="M268 112V138" />
+          <path d="M263 128L268 138L273 128" />
+
+          <path d="M105 286V334" />
+          <path d="M100 324L105 334L110 324" />
+          <path d="M247 286V334" />
+          <path d="M242 324L247 334L252 324" />
         </g>
       </g>
     </svg>
