@@ -1,0 +1,43 @@
+@font-face {
+  font-family: 'Geist Privacy V2';
+  src: url('../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Geist Mono Privacy V2';
+  src: url('../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; min-height: 100%; margin: 0; background: #000; }
+body { overflow: hidden; }
+#concept-root, .concept { width: 1600px; height: 960px; }
+.concept { display: block; background: #000; font-family: 'Geist Privacy V2', sans-serif; text-rendering: geometricPrecision; }
+.mono, .eyebrow, .label, .value, .dim, .outcome, .tiny { font-family: 'Geist Mono Privacy V2', monospace; }
+.title { fill: url(#title-gradient); font-size: 70px; font-weight: 620; letter-spacing: -2.8px; }
+.body { fill: rgb(255 255 255 / .62); font-size: 21px; font-weight: 340; letter-spacing: -.18px; }
+.eyebrow { fill: #777; font-size: 10px; font-weight: 520; letter-spacing: 1.45px; }
+.section-title { fill: #c4c4c4; font-size: 16px; font-weight: 570; letter-spacing: -.05px; }
+.label { fill: #6f6f6f; font-size: 10px; font-weight: 500; letter-spacing: 1.1px; }
+.value { fill: #c7c7c7; font-size: 13px; font-weight: 520; letter-spacing: .55px; }
+.value-strong { fill: #e2e2e2; }
+.dim { fill: #606060; font-size: 11px; font-weight: 460; letter-spacing: .75px; }
+.outcome { fill: #a8a8a8; font-size: 10px; font-weight: 520; letter-spacing: .95px; }
+.tiny { fill: #555; font-size: 9px; font-weight: 470; letter-spacing: .9px; }
+.glass { fill: rgb(11 12 14 / .84); stroke: rgb(255 255 255 / .15); stroke-width: 1; }
+.glass-inner { fill: rgb(10 10 11 / .92); stroke: rgb(255 255 255 / .13); stroke-width: 1; }
+.card { fill: #0d0d0e; stroke: rgb(255 255 255 / .14); stroke-width: 1; }
+.card-strong { fill: #111214; stroke: rgb(222 231 250 / .22); stroke-width: 1; }
+.hairline { fill: none; stroke: rgb(255 255 255 / .1); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.route { fill: none; stroke: rgb(220 227 242 / .43); stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.route-dim { fill: none; stroke: rgb(255 255 255 / .17); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.route-dashed { fill: none; stroke: rgb(255 255 255 / .2); stroke-width: 1; stroke-dasharray: 4 7; vector-effect: non-scaling-stroke; }
+.accent-line { fill: none; stroke: #dce6ff; stroke-opacity: .74; stroke-width: 1.1; filter: url(#line-glow); vector-effect: non-scaling-stroke; }
+.good-dot { fill: #dce6ff; fill-opacity: .9; filter: url(#dot-glow); }
+.muted-dot { fill: #777; }
+.hidden-value { fill: #696969; }
+.strike { stroke: #888; stroke-width: 1; vector-effect: non-scaling-stroke; }

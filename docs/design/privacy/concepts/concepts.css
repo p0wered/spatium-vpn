@@ -1,0 +1,196 @@
+@font-face {
+  font-family: 'Geist Concept';
+  src: url('../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2')
+    format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Geist Mono Concept';
+  src: url('../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2')
+    format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: #000;
+}
+
+body {
+  overflow: hidden;
+}
+
+#concept-root,
+.concept-frame {
+  width: 1440px;
+  height: 1000px;
+}
+
+.concept-frame {
+  display: block;
+  background: #000;
+  font-family: 'Geist Concept', sans-serif;
+  text-rendering: geometricPrecision;
+}
+
+.concept-frame text {
+  dominant-baseline: alphabetic;
+}
+
+.title {
+  fill: url(#privacy-title-gradient);
+  font-size: 64px;
+  font-weight: 610;
+  letter-spacing: -2.4px;
+}
+
+.body-copy {
+  fill: rgb(255 255 255 / 0.64);
+  font-size: 19px;
+  font-weight: 330;
+  letter-spacing: -0.15px;
+}
+
+.mono,
+.mono-small,
+.mono-value,
+.mono-dim,
+.mono-bright {
+  font-family: 'Geist Mono Concept', monospace;
+}
+
+.mono-small {
+  fill: #737373;
+  font-size: 11px;
+  font-weight: 470;
+  letter-spacing: 1.5px;
+}
+
+.mono-value {
+  fill: #a8a8a8;
+  font-size: 14px;
+  font-weight: 470;
+  letter-spacing: 0.75px;
+}
+
+.mono-dim {
+  fill: #5f5f5f;
+  font-size: 12px;
+  font-weight: 440;
+  letter-spacing: 0.8px;
+}
+
+.mono-bright {
+  fill: #d6d6d6;
+  font-size: 13px;
+  font-weight: 520;
+  letter-spacing: 0.8px;
+}
+
+.proof-title {
+  fill: #b7b7b7;
+  font-size: 15px;
+  font-weight: 520;
+  letter-spacing: -0.05px;
+}
+
+.proof-copy {
+  fill: #666;
+  font-size: 13px;
+  font-weight: 360;
+}
+
+.panel {
+  fill: #070707;
+  stroke: rgb(255 255 255 / 0.15);
+  stroke-width: 1;
+}
+
+.panel-soft {
+  fill: #090909;
+  stroke: rgb(255 255 255 / 0.1);
+  stroke-width: 1;
+}
+
+.node {
+  fill: #0c0c0c;
+  stroke: rgb(255 255 255 / 0.16);
+  stroke-width: 1;
+}
+
+.node-strong {
+  fill: #101010;
+  stroke: rgb(255 255 255 / 0.22);
+  stroke-width: 1;
+}
+
+.hairline {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.1);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.route {
+  fill: none;
+  stroke: rgb(220 224 232 / 0.46);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-dim {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.18);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-dashed {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.2);
+  stroke-width: 1;
+  stroke-dasharray: 5 7;
+  vector-effect: non-scaling-stroke;
+}
+
+.ice-line {
+  fill: none;
+  stroke: #cbd8f5;
+  stroke-opacity: 0.8;
+  stroke-width: 1.2;
+  filter: url(#line-glow);
+  vector-effect: non-scaling-stroke;
+}
+
+.status-visible {
+  fill: #b8b8b8;
+}
+
+.status-hidden {
+  fill: #5f5f5f;
+}
+
+.dot {
+  fill: #dbe6ff;
+}
+
+.clip-label {
+  paint-order: stroke;
+  stroke: #070707;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}

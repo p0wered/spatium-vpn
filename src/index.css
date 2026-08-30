@@ -132,6 +132,99 @@
   }
 
   /*
+   * Privacy mirrors the material of Bypass, but its composition continues
+   * horizontally. Continuous gradients dissolve only the material and its
+   * borders toward the right; future diagram content remains unaffected.
+   */
+  .privacy-shell {
+    overflow: hidden;
+    border-radius: 24px;
+    isolation: isolate;
+    background: linear-gradient(
+      to right,
+      rgb(255 255 255 / 0.06) 0%,
+      rgb(255 255 255 / 0.06) 62%,
+      rgb(255 255 255 / 0.035) 78%,
+      transparent 100%
+    );
+    backdrop-filter: blur(48px);
+  }
+
+  .privacy-shell::before,
+  .privacy-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+
+  .privacy-shell::before {
+    z-index: 30;
+    background: linear-gradient(
+      to right,
+      rgb(255 255 255 / 12%) 0%,
+      rgb(255 255 255 / 10%) 36%,
+      rgb(255 255 255 / 3%) 68%,
+      transparent 100%
+    );
+  }
+
+  .privacy-inner {
+    overflow: hidden;
+    border-radius: 16px;
+    background: linear-gradient(
+      to right,
+      rgb(0 0 0 / 0.3) 0%,
+      rgb(0 0 0 / 0.3) 64%,
+      rgb(0 0 0 / 0.18) 80%,
+      transparent 100%
+    );
+  }
+
+  .privacy-inner::before {
+    background: linear-gradient(
+      to right,
+      rgb(255 255 255 / 5%) 0%,
+      rgb(255 255 255 / 3%) 42%,
+      rgb(255 255 255 / 0.8%) 70%,
+      transparent 100%
+    );
+  }
+
+  /*
+   * Applied to the future technical-graphic layer, not the glass itself.
+   * Primary information stays untouched through 84% of the panel; only
+   * continuation lines and secondary detail soften near the open right edge.
+   */
+  .privacy-diagram-fade {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 0%,
+      #000 84%,
+      rgb(0 0 0 / 82%) 93%,
+      rgb(0 0 0 / 42%) 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 0%,
+      #000 84%,
+      rgb(0 0 0 / 82%) 93%,
+      rgb(0 0 0 / 42%) 100%
+    );
+  }
+
+  /*
    * Механика плавающего лейбла Input.tsx: в покое лейбл висит по центру
    * поля, при фокусе / заполнении / автозаполнении поднимается к верхней
    * кромке и уменьшается. Едут независимые свойства top/translate/scale —
