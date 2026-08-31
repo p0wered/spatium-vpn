@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spatium privacy concepts v4 comparison</title>
+    <style>
+      @font-face { font-family: 'Geist Sheet V4'; src: url('../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2') format('woff2'); font-weight: 100 900; font-display: block; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #050505; color: #d5d5d5; font-family: 'Geist Sheet V4', sans-serif; }
+      body { padding: 34px; }
+      h1 { margin: 0 0 7px; font-size: 28px; font-weight: 590; letter-spacing: -.7px; }
+      p { margin: 0 0 25px; color: #777; font-size: 13px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 470px); gap: 20px; }
+      article { width: 470px; }
+      h2 { margin: 0 0 9px; color: #aaa; font-size: 15px; font-weight: 500; }
+      .viewport { width: 470px; height: 294px; overflow: hidden; border: 1px solid rgb(255 255 255 / .12); border-radius: 12px; background: #000; }
+      img { display: block; width: 470px; height: 294px; object-fit: cover; }
+    </style>
+  </head>
+  <body>
+    <h1>Privacy technical graphics, iteration 4</h1>
+    <p>Two telemetry evolutions and one circuit-style alternative inside the production composition.</p>
+    <div class="grid">
+      <article><h2>01. Mixed Session Telemetry</h2><div class="viewport"><img src="./mixed-telemetry.png" alt="Mixed Session Telemetry" /></div></article>
+      <article><h2>02. Correlated Event Scope</h2><div class="viewport"><img src="./correlated-scope.png" alt="Correlated Event Scope" /></div></article>
+      <article><h2>03. Observer Tap Schematic</h2><div class="viewport"><img src="./observer-tap-circuit.png" alt="Observer Tap Schematic" /></div></article>
+    </div>
+  </body>
+</html>

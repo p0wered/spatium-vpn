@@ -1,0 +1,44 @@
+@font-face {
+  font-family: 'Geist Privacy V5';
+  src: url('../../../../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Geist Mono Privacy V5';
+  src: url('../../../../node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; min-height: 100%; margin: 0; background: #000; }
+body { overflow: hidden; }
+#concept-root, .concept { width: 1440px; height: 900px; }
+.concept { display: block; background: #000; font-family: 'Geist Privacy V5', sans-serif; text-rendering: geometricPrecision; }
+.mono, .eyebrow, .label, .value, .dim, .tiny, .note { font-family: 'Geist Mono Privacy V5', monospace; }
+.title { fill: url(#title-gradient); font-size: 64px; font-weight: 620; letter-spacing: -2px; }
+.body { fill: rgb(255 255 255 / .68); font-size: 18px; font-weight: 340; letter-spacing: -.12px; }
+.eyebrow { fill: #777; font-size: 9px; font-weight: 520; letter-spacing: 1.35px; }
+.label { fill: #747474; font-size: 9px; font-weight: 500; letter-spacing: 1px; }
+.value { fill: #c7c7c7; font-size: 11px; font-weight: 520; letter-spacing: .5px; }
+.value-strong { fill: #e1e1e1; }
+.dim { fill: #606060; font-size: 9px; font-weight: 460; letter-spacing: .68px; }
+.tiny { fill: #575757; font-size: 8px; font-weight: 470; letter-spacing: .72px; }
+.note { fill: #999; font-size: 9px; font-weight: 510; letter-spacing: .78px; }
+.caption { fill: #8f8f8f; font-size: 14px; font-weight: 390; letter-spacing: -.04px; }
+.wire { fill: none; stroke: rgb(217 225 242 / .43); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.wire-dim { fill: none; stroke: rgb(255 255 255 / .16); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.wire-dashed { fill: none; stroke: rgb(255 255 255 / .19); stroke-width: 1; stroke-dasharray: 4 6; vector-effect: non-scaling-stroke; }
+.hairline { fill: none; stroke: rgb(255 255 255 / .095); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.gridline { fill: none; stroke: rgb(255 255 255 / .05); stroke-width: 1; stroke-dasharray: 2 7; vector-effect: non-scaling-stroke; }
+.bar-tx { fill: rgb(205 216 238 / .52); }
+.bar-rx { fill: rgb(255 255 255 / .22); }
+.step-line { fill: none; stroke: rgb(205 216 238 / .58); stroke-width: 1.15; stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; }
+.step-fill { fill: rgb(205 216 238 / .035); }
+.dot { fill: #dce6ff; filter: url(#dot-glow); }
+.dot-dim { fill: #6d6d6d; }
+.gate { fill: #0a0a0b; stroke: rgb(255 255 255 / .18); stroke-width: 1; }
+.open-contact { fill: #080808; stroke: rgb(220 230 250 / .42); stroke-width: 1; }
+.strike { fill: none; stroke: #858585; stroke-width: 1; vector-effect: non-scaling-stroke; }
