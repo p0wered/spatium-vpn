@@ -132,7 +132,7 @@ function DesktopDiagram() {
             OUTSIDE VPN
           </text>
           <text x="172" y="488">
-            PROCESS MEMORY · RELATIVE USAGE
+            RAM ONLY SERVERS · NO DATA AFTER DISCONNECT
           </text>
         </g>
 
@@ -142,12 +142,6 @@ function DesktopDiagram() {
           </text>
           <text x="674" y="232">
             REAL IP ABSENT
-          </text>
-          <text x="674" y="316">
-            IPv4 + IPv6 QUERIES ROUTED
-          </text>
-          <text x="674" y="412">
-            DROPS TO 0 AT DISCONNECT
           </text>
         </g>
 

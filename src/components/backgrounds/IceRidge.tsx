@@ -37,7 +37,8 @@ void main() {
   float crown = exp(-ridgeX * ridgeX * 9.0);
   float breathe = 0.965 + sin(uTime * 0.28) * 0.035;
 
-  float core = exp(-abs(y) * 92.0) * envelope;
+  // Keep the white ridge visibly dense without widening the surrounding blue bloom.
+  float core = exp(-abs(y) * 66.0) * envelope;
   float body = exp(-abs(y) * 13.5) * envelope * (0.34 + center * 0.66);
   float haze = exp(-abs(y) * 4.8) * center * envelope * 0.34;
   float centralHaze = exp(-abs(y) * 2.7) * crown * envelope * 0.14;
@@ -46,7 +47,9 @@ void main() {
   vec3 frost = vec3(0.80, 0.87, 1.0);
   vec3 white = vec3(1.0);
 
-  vec3 col = (haze + centralHaze) * ice + body * frost * 0.78 + core * white * 1.65;
+  vec3 col = (haze + centralHaze) * ice * 3.9
+    + body * frost * 0.9
+    + core * white * 1.1;
   col *= breathe;
 
   // The ridge propagates as light, not as a center-out clip. A concentrated
@@ -79,7 +82,7 @@ void main() {
   col = col * lightField
     + (sourceCore * 1.05 + sourceBloom * 0.26) * sourcePulse * frost
     + transientRay * white;
-  col = 1.0 - exp(-col * 1.55);
+  col = 1.0 - exp(-col * 2.5);
 
   float alpha = clamp(max(max(col.r, col.g), col.b), 0.0, 1.0);
   fragColor = vec4(col, alpha);

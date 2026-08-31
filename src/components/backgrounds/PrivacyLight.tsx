@@ -79,12 +79,12 @@ void main() {
   float ridgeCrown = exp(-ridgeAxis * ridgeAxis * 9.0);
   float crossDistance = abs(x - impact.x);
 
-  float ridgeCore = exp(-crossDistance * 0.72) * ridgeEnvelope;
+  float ridgeCore = exp(-crossDistance * 1.2) * ridgeEnvelope;
   float ridgeBody = exp(-crossDistance * 0.085)
     * ridgeEnvelope
     * (0.34 + ridgeCenter * 0.66);
-  float ridgeHaze = exp(-crossDistance * 0.022) * ridgeCenter * ridgeEnvelope * 0.38;
-  float ridgeCentralHaze = exp(-crossDistance * 0.011) * ridgeCrown * ridgeEnvelope * 0.17;
+  float ridgeHaze = exp(-crossDistance * 0.022) * ridgeCenter * ridgeEnvelope * 0.78;
+  float ridgeCentralHaze = exp(-crossDistance * 0.011) * ridgeCrown * ridgeEnvelope * 0.97;
 
   float reveal = clamp(uReveal, 0.0, 1.0);
   float travelProgress = clamp(reveal / 0.64, 0.0, 1.0);
@@ -133,7 +133,7 @@ void main() {
     + ridgeCore * white * 1.65;
   vec3 col = rayColor + ridgeColor * ridgeField + source * frost;
   col *= breathe;
-  col = 1.0 - exp(-col * 1.55);
+  col = 1.0 - exp(-col * 1.05);
 
   float alpha = clamp(max(max(col.r, col.g), col.b), 0.0, 1.0);
   fragColor = vec4(col, alpha);
