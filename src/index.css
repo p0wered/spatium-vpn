@@ -133,8 +133,8 @@
 
   /*
    * Privacy mirrors the material of Bypass, but its composition continues
-   * horizontally. Continuous gradients dissolve only the material and its
-   * borders toward the right; future diagram content remains unaffected.
+   * horizontally. Continuous gradients dissolve its material and borders
+   * toward the right.
    */
   .privacy-shell {
     overflow: hidden;
@@ -203,7 +203,7 @@
   }
 
   /*
-   * Applied to the future technical-graphic layer, not the glass itself.
+   * Applied to the technical-graphic layer, not the glass itself.
    * Primary information stays untouched through 84% of the panel; only
    * continuation lines and secondary detail soften near the open right edge.
    */

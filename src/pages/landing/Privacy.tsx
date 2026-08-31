@@ -1,5 +1,8 @@
-import { useRef } from 'react'
+import { lazy, Suspense, useRef } from 'react'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
+import { PrivacyDiagram } from '../../components/landing/PrivacyDiagram'
+
+const PrivacyLight = lazy(() => import('../../components/backgrounds/PrivacyLight'))
 
 const revealContainer: Variants = {
   hidden: {},
@@ -37,11 +40,13 @@ const blockVeil: Variants = {
 }
 
 /**
- * Privacy section foundation. The technical diagram and abstract light layer
- * are intentionally deferred until their next design iteration is approved.
+ * Privacy combines the approved technical telemetry diagram with a panel that
+ * remains open toward the right. Its abstract light layer is added separately.
  */
 export function Privacy() {
   const sectionRef = useRef<HTMLElement>(null)
+  const layoutRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const inView = useInView(sectionRef, { once: true, amount: 0.2 })
   const reduced = useReducedMotion()
 
@@ -52,8 +57,19 @@ export function Privacy() {
       aria-labelledby="privacy-title"
       className="relative overflow-hidden bg-black py-20 sm:py-24 lg:py-[110px]"
     >
+      <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block" aria-hidden>
+        <Suspense fallback={null}>
+          <PrivacyLight
+            active={Boolean(reduced || inView)}
+            anchorRef={panelRef}
+            boundsRef={layoutRef}
+          />
+        </Suspense>
+      </div>
+
       <motion.div
-        className="mx-auto grid w-full max-w-[1320px] gap-10 px-5 sm:px-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[420px_720px] xl:justify-center xl:gap-24"
+        ref={layoutRef}
+        className="relative z-10 mx-auto grid w-full max-w-[1320px] gap-10 px-5 sm:px-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[420px_720px] xl:justify-center xl:gap-24"
         variants={revealContainer}
         initial={reduced ? false : 'hidden'}
         animate={reduced || inView ? 'show' : 'hidden'}
@@ -76,12 +92,18 @@ export function Privacy() {
         </motion.div>
 
         <motion.div
+          ref={panelRef}
           aria-hidden
           variants={blockItem}
           className="relative h-[430px] min-w-0 sm:h-[500px] lg:h-[600px]"
         >
           <div className="privacy-shell absolute inset-0 z-10">
-            <div className="privacy-inner absolute inset-3" />
+            <div className="privacy-inner absolute inset-3">
+              <PrivacyDiagram
+                active={Boolean(reduced || inView)}
+                reducedMotion={Boolean(reduced)}
+              />
+            </div>
           </div>
           <motion.div
             variants={blockVeil}
