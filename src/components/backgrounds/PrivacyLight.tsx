@@ -15,7 +15,7 @@ precision highp float;
 
 uniform float uTime;
 uniform float uReveal;
-uniform float uBeamStart;
+uniform float uBeamFadeEnd;
 uniform float uPanelHeight;
 uniform vec2 uImpact;
 uniform vec2 uResolution;
@@ -39,23 +39,34 @@ void main() {
   float y = pixel.y;
   float leftDistance = max(impact.x - x, 0.0);
   float verticalDistance = abs(y - impact.y);
-  float beamLength = max(impact.x - uBeamStart, 1.0);
-  float withinBeam = smoothstep(uBeamStart - 2.0, uBeamStart + 5.0, x)
-    * (1.0 - smoothstep(impact.x - 1.0, impact.x + 2.0, x));
+  float beamLength = max(impact.x, 1.0);
+  float leftExtinction = smoothstep(0.0, uBeamFadeEnd, x);
+  float rightDistance = max(x - impact.x, 0.0);
 
-  // Hairline-thin at the section edge, progressively diffusing as the light
-  // approaches the glass. Every layer follows the same physical profile.
-  float proximity = exp(-leftDistance / max(beamLength * 0.27, 1.0));
-  float coreWidth = mix(0.55, 1.15, proximity);
-  float bodyWidth = mix(1.8, 8.0, proximity);
-  float hazeWidth = mix(6.0, 62.0, pow(proximity, 0.72));
-  float rayCore = exp(-pow(verticalDistance / coreWidth, 1.18)) * withinBeam;
-  float rayBody = exp(-verticalDistance / bodyWidth) * withinBeam;
-  float rayHaze = exp(-verticalDistance / hazeWidth) * withinBeam;
+  // A narrow ray for most of its travel, accelerating into a broad white cusp
+  // only near impact. Core, body, and haze share one profile so the split reads
+  // as the same light refracting at the glass rather than a separate bloom.
+  float proximity = exp(-leftDistance / max(beamLength * 0.30, 1.0));
+  float cusp = pow(proximity, 2.15);
+  float coreWidth = mix(0.65, 34.0, cusp);
+  float bodyWidth = mix(2.2, 62.0, pow(proximity, 1.58));
+  float hazeWidth = mix(8.0, 190.0, pow(proximity, 1.02));
+  float coreTransmission = exp(-rightDistance / 18.0);
+  float bodyTransmission = exp(-rightDistance / 46.0);
+  float hazeTransmission = exp(-rightDistance / 104.0);
+  float rayCore = exp(-pow(verticalDistance / coreWidth, 1.42))
+    * leftExtinction
+    * coreTransmission;
+  float rayBody = exp(-verticalDistance / bodyWidth)
+    * leftExtinction
+    * bodyTransmission;
+  float rayHaze = exp(-verticalDistance / hazeWidth)
+    * leftExtinction
+    * hazeTransmission;
 
   // Ice Ridge rotated ninety degrees. Its envelope and layered falloff mirror
   // the Bypass light instead of approximating the edge with an ellipse.
-  float ridgeAxis = (y - impact.y) / max(uPanelHeight * 0.57, 1.0);
+  float ridgeAxis = (y - impact.y) / max(uPanelHeight * 0.42, 1.0);
   float ridgeEnvelope = pow(max(1.0 - ridgeAxis * ridgeAxis, 0.0), 1.8);
   float ridgeCenter = exp(-ridgeAxis * ridgeAxis * 4.2);
   float ridgeCrown = exp(-ridgeAxis * ridgeAxis * 9.0);
@@ -70,10 +81,15 @@ void main() {
 
   float reveal = clamp(uReveal, 0.0, 1.0);
   float travel = easeInOut(smoothstep(0.0, 0.69, reveal));
-  float headX = mix(uBeamStart - 18.0, impact.x, travel);
-  float behindHead = 1.0 - smoothstep(headX - 5.0, headX + 1.5, x);
+  float headX = mix(-24.0, impact.x, travel);
   float beamIgnition = smoothstep(0.0, 0.07, reveal);
-  float rayReveal = behindHead * beamIgnition;
+  float transmittedReveal = smoothstep(0.64, 0.74, reveal);
+  float coreFront = 1.0 - smoothstep(headX - 3.0, headX + 7.0, x);
+  float bodyFront = 1.0 - smoothstep(headX - 34.0, headX + 13.0, x);
+  float hazeFront = 1.0 - smoothstep(headX - 150.0, headX + 30.0, x);
+  float coreReveal = max(coreFront, transmittedReveal) * beamIgnition;
+  float bodyReveal = max(bodyFront, transmittedReveal) * beamIgnition;
+  float hazeReveal = max(hazeFront, transmittedReveal) * beamIgnition;
 
   // Arrival energy becomes ridge diffusion. There is no independent fade or
   // mask edge, so the travelling ray and the vertical light read as one event.
@@ -101,13 +117,13 @@ void main() {
   vec3 frost = vec3(0.80, 0.87, 1.0);
   vec3 white = vec3(1.0);
 
-  vec3 rayColor = rayHaze * ice * 0.25
-    + rayBody * frost * 0.62
-    + rayCore * white * 1.52;
+  vec3 rayColor = rayHaze * hazeReveal * ice * 0.30
+    + rayBody * bodyReveal * frost * 0.68
+    + rayCore * coreReveal * white * 1.58;
   vec3 ridgeColor = (ridgeHaze + ridgeCentralHaze) * ice
     + ridgeBody * frost * 0.78
     + ridgeCore * white * 1.65;
-  vec3 col = rayColor * rayReveal + ridgeColor * ridgeField + source * white;
+  vec3 col = rayColor + ridgeColor * ridgeField + source * white;
   col *= breathe;
   col = 1.0 - exp(-col * 1.55);
 
@@ -171,7 +187,7 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
       uniforms: {
         uTime: { value: 0 },
         uReveal: { value: 0 },
-        uBeamStart: { value: 0 },
+        uBeamFadeEnd: { value: 1 },
         uPanelHeight: { value: 1 },
         uImpact: { value: [1, 1] },
         uResolution: { value: [1, 1] },
@@ -195,7 +211,11 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
       const scaleY = gl.canvas.height / height
 
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
-      program.uniforms.uBeamStart.value = (boundsRect.left - containerRect.left) * scaleX
+      const beamFadeEnd = Math.max(
+        boundsRect.left - containerRect.left + 180,
+        width * 0.16,
+      )
+      program.uniforms.uBeamFadeEnd.value = beamFadeEnd * scaleX
       program.uniforms.uPanelHeight.value = anchorRect.height * scaleY
       program.uniforms.uImpact.value = [
         (anchorRect.left - containerRect.left) * scaleX,
