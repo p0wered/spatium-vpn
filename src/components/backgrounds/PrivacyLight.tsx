@@ -22,14 +22,21 @@ uniform vec2 uResolution;
 
 out vec4 fragColor;
 
-float easeInOut(float t) {
-  return t < 0.5
-    ? 4.0 * t * t * t
-    : 1.0 - pow(-2.0 * t + 2.0, 3.0) * 0.5;
-}
-
 float easeOut(float t) {
   return 1.0 - pow(1.0 - clamp(t, 0.0, 1.0), 3.0);
+}
+
+float easeInCruise(float t) {
+  t = clamp(t, 0.0, 1.0);
+  // This split preserves the original 4t^3 launch, then continues at its
+  // current velocity so the beam reaches the panel without braking.
+  float split = 0.32635;
+  float coefficient = 1.0 / (split * split * (3.0 - 2.0 * split));
+  float splitValue = coefficient * split * split * split;
+  float cruiseVelocity = 3.0 * coefficient * split * split;
+  return t < split
+    ? coefficient * t * t * t
+    : splitValue + cruiseVelocity * (t - split);
 }
 
 void main() {
@@ -80,32 +87,33 @@ void main() {
   float ridgeCentralHaze = exp(-crossDistance * 0.011) * ridgeCrown * ridgeEnvelope * 0.17;
 
   float reveal = clamp(uReveal, 0.0, 1.0);
-  float travel = easeInOut(smoothstep(0.0, 0.69, reveal));
+  float travelProgress = clamp(reveal / 0.64, 0.0, 1.0);
+  float travel = easeInCruise(travelProgress);
   float headX = mix(-24.0, impact.x, travel);
   float beamIgnition = smoothstep(0.0, 0.07, reveal);
-  float transmittedReveal = smoothstep(0.64, 0.74, reveal);
+  float transmittedReveal = smoothstep(0.625, 0.69, reveal);
   float coreFront = 1.0 - smoothstep(headX - 3.0, headX + 7.0, x);
-  float bodyFront = 1.0 - smoothstep(headX - 34.0, headX + 13.0, x);
-  float hazeFront = 1.0 - smoothstep(headX - 150.0, headX + 30.0, x);
+  float fieldFront = 1.0 - smoothstep(headX - 150.0, headX + 26.0, x);
   float coreReveal = max(coreFront, transmittedReveal) * beamIgnition;
-  float bodyReveal = max(bodyFront, transmittedReveal) * beamIgnition;
-  float hazeReveal = max(hazeFront, transmittedReveal) * beamIgnition;
+  float fieldReveal = max(fieldFront, transmittedReveal) * beamIgnition;
 
   // Arrival energy becomes ridge diffusion. There is no independent fade or
   // mask edge, so the travelling ray and the vertical light read as one event.
-  float ridgeIgnition = smoothstep(0.60, 0.70, reveal);
-  float ridgeTravel = easeOut(smoothstep(0.61, 0.93, reveal));
-  float ridgeSettle = smoothstep(0.76, 1.0, reveal);
+  float ridgeIgnition = smoothstep(0.625, 0.67, reveal);
+  float ridgeTravel = easeOut(smoothstep(0.63, 0.90, reveal));
+  float ridgeSettle = smoothstep(0.72, 1.0, reveal);
   float diffusionWidth = mix(0.025, 0.82, ridgeTravel);
   float ridgeDiffusion = exp(-pow(abs(ridgeAxis) / max(diffusionWidth, 0.001), 1.45));
   float ridgeField = mix(ridgeDiffusion, 1.0, ridgeSettle) * ridgeIgnition;
 
-  float headDistance = (x - headX) / 22.0;
+  float headDistance = (x - headX) / 18.0;
+  float headCore = exp(-pow(verticalDistance / max(coreWidth * 1.12, 0.8), 1.42));
+  float headBody = exp(-verticalDistance / max(bodyWidth, 2.0));
   float movingHead = exp(-headDistance * headDistance)
-    * (exp(-verticalDistance * 0.10) + exp(-verticalDistance * 0.026) * 0.22)
+    * (headCore * 0.42 + headBody * 0.08)
     * (1.0 - ridgeIgnition)
     * beamIgnition;
-  float arrivalDistance = (reveal - 0.665) / 0.055;
+  float arrivalDistance = (reveal - 0.64) / 0.050;
   float arrivalPulse = exp(-arrivalDistance * arrivalDistance);
   float sourceCore = exp(-crossDistance * 0.34) * exp(-verticalDistance * 0.040);
   float sourceBloom = exp(-crossDistance * 0.052) * exp(-verticalDistance * 0.013);
@@ -117,13 +125,13 @@ void main() {
   vec3 frost = vec3(0.80, 0.87, 1.0);
   vec3 white = vec3(1.0);
 
-  vec3 rayColor = rayHaze * hazeReveal * ice * 0.30
-    + rayBody * bodyReveal * frost * 0.68
+  vec3 rayColor = rayHaze * fieldReveal * ice * 0.30
+    + rayBody * fieldReveal * frost * 0.68
     + rayCore * coreReveal * white * 1.58;
   vec3 ridgeColor = (ridgeHaze + ridgeCentralHaze) * ice
     + ridgeBody * frost * 0.78
     + ridgeCore * white * 1.65;
-  vec3 col = rayColor + ridgeColor * ridgeField + source * white;
+  vec3 col = rayColor + ridgeColor * ridgeField + source * frost;
   col *= breathe;
   col = 1.0 - exp(-col * 1.55);
 
