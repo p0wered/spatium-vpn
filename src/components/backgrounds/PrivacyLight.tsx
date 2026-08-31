@@ -2,6 +2,28 @@ import { useEffect, useRef, type RefObject } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { startRenderLoop } from './loop'
 
+const REVEAL_DELAY_MS = 160
+const REVEAL_DURATION_MS = 1080
+const TRAVEL_END = 0.68
+
+function sampleCubicBezier(t: number, a: number, b: number) {
+  const inverse = 1 - t
+  return 3 * inverse * inverse * t * a + 3 * inverse * t * t * b + t * t * t
+}
+
+/** CSS cubic-bezier(0.77, 0, 0.175, 1), evaluated once per frame. */
+function easeInOut(progress: number) {
+  let lower = 0
+  let upper = 1
+  for (let index = 0; index < 10; index += 1) {
+    const t = (lower + upper) * 0.5
+    if (sampleCubicBezier(t, 0.77, 0.175) < progress) lower = t
+    else upper = t
+  }
+
+  return sampleCubicBezier((lower + upper) * 0.5, 0, 1)
+}
+
 const VERT = `#version 300 es
 in vec2 position;
 
@@ -15,6 +37,7 @@ precision highp float;
 
 uniform float uTime;
 uniform float uReveal;
+uniform float uTravel;
 uniform float uBeamFadeEnd;
 uniform float uPanelHeight;
 uniform vec2 uImpact;
@@ -24,19 +47,6 @@ out vec4 fragColor;
 
 float easeOut(float t) {
   return 1.0 - pow(1.0 - clamp(t, 0.0, 1.0), 3.0);
-}
-
-float easeInCruise(float t) {
-  t = clamp(t, 0.0, 1.0);
-  // This split preserves the original 4t^3 launch, then continues at its
-  // current velocity so the beam reaches the panel without braking.
-  float split = 0.32635;
-  float coefficient = 1.0 / (split * split * (3.0 - 2.0 * split));
-  float splitValue = coefficient * split * split * split;
-  float cruiseVelocity = 3.0 * coefficient * split * split;
-  return t < split
-    ? coefficient * t * t * t
-    : splitValue + cruiseVelocity * (t - split);
 }
 
 void main() {
@@ -87,11 +97,10 @@ void main() {
   float ridgeCentralHaze = exp(-crossDistance * 0.011) * ridgeCrown * ridgeEnvelope * 0.97;
 
   float reveal = clamp(uReveal, 0.0, 1.0);
-  float travelProgress = clamp(reveal / 0.64, 0.0, 1.0);
-  float travel = easeInCruise(travelProgress);
-  float headX = mix(-24.0, impact.x, travel);
-  float beamIgnition = smoothstep(0.0, 0.07, reveal);
-  float transmittedReveal = smoothstep(0.625, 0.69, reveal);
+  float headX = mix(-24.0, impact.x + 10.0, clamp(uTravel, 0.0, 1.0));
+  float beamIgnition = smoothstep(0.0, 0.08, reveal);
+  float handoff = smoothstep(0.50, 0.72, reveal);
+  float transmittedReveal = handoff;
   float coreFront = 1.0 - smoothstep(headX - 3.0, headX + 7.0, x);
   float fieldFront = 1.0 - smoothstep(headX - 150.0, headX + 26.0, x);
   float coreReveal = max(coreFront, transmittedReveal) * beamIgnition;
@@ -99,8 +108,8 @@ void main() {
 
   // Arrival energy becomes ridge diffusion. There is no independent fade or
   // mask edge, so the travelling ray and the vertical light read as one event.
-  float ridgeIgnition = smoothstep(0.625, 0.67, reveal);
-  float ridgeTravel = easeOut(smoothstep(0.63, 0.90, reveal));
+  float ridgeIgnition = handoff;
+  float ridgeTravel = easeOut(handoff);
   float ridgeSettle = smoothstep(0.72, 1.0, reveal);
   float diffusionWidth = mix(0.025, 0.82, ridgeTravel);
   float ridgeDiffusion = exp(-pow(abs(ridgeAxis) / max(diffusionWidth, 0.001), 1.45));
@@ -111,10 +120,9 @@ void main() {
   float headBody = exp(-verticalDistance / max(bodyWidth, 2.0));
   float movingHead = exp(-headDistance * headDistance)
     * (headCore * 0.42 + headBody * 0.08)
-    * (1.0 - ridgeIgnition)
+    * (1.0 - handoff)
     * beamIgnition;
-  float arrivalDistance = (reveal - 0.64) / 0.050;
-  float arrivalPulse = exp(-arrivalDistance * arrivalDistance);
+  float arrivalPulse = sin(handoff * 3.14159265);
   float sourceCore = exp(-crossDistance * 0.34) * exp(-verticalDistance * 0.040);
   float sourceBloom = exp(-crossDistance * 0.052) * exp(-verticalDistance * 0.013);
   float source = movingHead * 0.62
@@ -158,7 +166,7 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
   const renderOnceRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    revealStartRef.current = active ? performance.now() + 480 : null
+    revealStartRef.current = active ? performance.now() + REVEAL_DELAY_MS : null
   }, [active])
 
   useEffect(() => {
@@ -195,6 +203,7 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
       uniforms: {
         uTime: { value: 0 },
         uReveal: { value: 0 },
+        uTravel: { value: 0 },
         uBeamFadeEnd: { value: 1 },
         uPanelHeight: { value: 1 },
         uImpact: { value: [1, 1] },
@@ -238,7 +247,6 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
     resize()
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const duration = 1180
     const renderFrame = (timeMs: number) => {
       program.uniforms.uTime.value = timeMs * 0.001
 
@@ -248,8 +256,9 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
           ? 1
           : revealStart === null
             ? 0
-            : Math.min(Math.max((timeMs - revealStart) / duration, 0), 1)
+            : Math.min(Math.max((timeMs - revealStart) / REVEAL_DURATION_MS, 0), 1)
       program.uniforms.uReveal.value = reveal
+      program.uniforms.uTravel.value = easeInOut(Math.min(reveal / TRAVEL_END, 1))
       renderer.render({ scene: mesh })
     }
     renderOnceRef.current = () => renderFrame(performance.now())
