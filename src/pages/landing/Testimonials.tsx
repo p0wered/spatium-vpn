@@ -1,5 +1,7 @@
-import { useRef } from 'react'
+import { lazy, Suspense, useRef } from 'react'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
+
+const OrbitalHorizon = lazy(() => import('../../components/backgrounds/OrbitalHorizon'))
 
 const textItem: Variants = {
   hidden: { opacity: 0, y: 24, filter: 'blur(6px)' },
@@ -34,11 +36,7 @@ function MarqueeRow({ direction }: { direction: 'left' | 'right' }) {
   )
 }
 
-/**
- * The review section is deliberately content-neutral for now: the cards hold
- * the approved structure without inventing customer quotes. The reserved gap
- * between the heading and the ribbons is where the WebGL layer will live.
- */
+/** The cards remain content-neutral until approved customer quotes are ready. */
 export function Testimonials() {
   const sectionRef = useRef<HTMLElement>(null)
   const inView = useInView(sectionRef, { amount: 0.08 })
@@ -49,10 +47,19 @@ export function Testimonials() {
       id="testimonials"
       ref={sectionRef}
       aria-labelledby="testimonials-title"
-      className={`testimonials-section relative overflow-hidden bg-black py-24 sm:py-28 lg:py-[132px] ${
+      className={`testimonials-section relative isolate overflow-hidden bg-black py-24 sm:py-28 lg:py-[132px] ${
         reduced || inView ? 'is-active' : ''
       }`}
     >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+      >
+        <Suspense fallback={null}>
+          <OrbitalHorizon active={Boolean(reduced || inView)} />
+        </Suspense>
+      </div>
+
       <motion.div
         className="relative z-10 mx-auto grid w-full max-w-[1320px] gap-6 px-5 sm:px-6 lg:grid-cols-12 lg:items-end"
         initial={reduced ? false : 'hidden'}
