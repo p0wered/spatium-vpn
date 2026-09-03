@@ -2,6 +2,7 @@ import { Bypass } from './Bypass'
 import { Header } from './Header'
 import { Hero } from './Hero'
 import { Privacy } from './Privacy'
+import { Testimonials } from './Testimonials'
 import { useSmoothScroll } from '../../lib/smoothScroll'
 
 export function LandingPage() {
@@ -15,6 +16,7 @@ export function LandingPage() {
         <Hero />
         <Bypass />
         <Privacy />
+        <Testimonials />
       </main>
     </div>
   )
