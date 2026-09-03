@@ -5,6 +5,8 @@ import { startRenderLoop } from './loop'
 const REVEAL_DELAY_MS = 160
 const REVEAL_DURATION_MS = 1080
 const TRAVEL_END = 0.68
+const BEAM_LENGTH_PX = 620
+const BEAM_FADE_LENGTH_PX = 240
 
 function sampleCubicBezier(t: number, a: number, b: number) {
   const inverse = 1 - t
@@ -38,6 +40,7 @@ precision highp float;
 uniform float uTime;
 uniform float uReveal;
 uniform float uTravel;
+uniform float uBeamStart;
 uniform float uBeamFadeEnd;
 uniform float uPanelHeight;
 uniform vec2 uImpact;
@@ -56,8 +59,8 @@ void main() {
   float y = pixel.y;
   float leftDistance = max(impact.x - x, 0.0);
   float verticalDistance = abs(y - impact.y);
-  float beamLength = max(impact.x, 1.0);
-  float leftExtinction = smoothstep(0.0, uBeamFadeEnd, x);
+  float beamLength = max(impact.x - uBeamStart, 1.0);
+  float leftExtinction = smoothstep(uBeamStart, uBeamFadeEnd, x);
   float rightDistance = max(x - impact.x, 0.0);
 
   // A narrow ray for most of its travel, accelerating into a broad white cusp
@@ -97,7 +100,7 @@ void main() {
   float ridgeCentralHaze = exp(-crossDistance * 0.011) * ridgeCrown * ridgeEnvelope * 0.97;
 
   float reveal = clamp(uReveal, 0.0, 1.0);
-  float headX = mix(-24.0, impact.x + 10.0, clamp(uTravel, 0.0, 1.0));
+  float headX = mix(uBeamStart - 24.0, impact.x + 10.0, clamp(uTravel, 0.0, 1.0));
   float beamIgnition = smoothstep(0.0, 0.08, reveal);
   float handoff = smoothstep(0.50, 0.72, reveal);
   float transmittedReveal = handoff;
@@ -151,7 +154,6 @@ void main() {
 interface PrivacyLightProps {
   active: boolean
   anchorRef: RefObject<HTMLElement | null>
-  boundsRef: RefObject<HTMLElement | null>
 }
 
 /**
@@ -159,7 +161,7 @@ interface PrivacyLightProps {
  * travelling ray and vertical ridge are one event: arrival energy becomes an
  * Ice-Ridge-style diffusion along the glass boundary.
  */
-export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLightProps) {
+export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)
   const revealStartRef = useRef<number | null>(null)
@@ -204,6 +206,7 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
         uTime: { value: 0 },
         uReveal: { value: 0 },
         uTravel: { value: 0 },
+        uBeamStart: { value: 0 },
         uBeamFadeEnd: { value: 1 },
         uPanelHeight: { value: 1 },
         uImpact: { value: [1, 1] },
@@ -217,25 +220,22 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
       const width = container.clientWidth
       const height = container.clientHeight
       const anchor = anchorRef.current
-      const bounds = boundsRef.current
-      if (width === 0 || height === 0 || !anchor || !bounds) return
+      if (width === 0 || height === 0 || !anchor) return
 
       renderer.setSize(width, height)
       const containerRect = container.getBoundingClientRect()
       const anchorRect = anchor.getBoundingClientRect()
-      const boundsRect = bounds.getBoundingClientRect()
       const scaleX = gl.canvas.width / width
       const scaleY = gl.canvas.height / height
+      const impactX = anchorRect.left - containerRect.left
+      const beamStart = impactX - BEAM_LENGTH_PX
 
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
-      const beamFadeEnd = Math.max(
-        boundsRect.left - containerRect.left + 180,
-        width * 0.16,
-      )
-      program.uniforms.uBeamFadeEnd.value = beamFadeEnd * scaleX
+      program.uniforms.uBeamStart.value = beamStart * scaleX
+      program.uniforms.uBeamFadeEnd.value = (beamStart + BEAM_FADE_LENGTH_PX) * scaleX
       program.uniforms.uPanelHeight.value = anchorRect.height * scaleY
       program.uniforms.uImpact.value = [
-        (anchorRect.left - containerRect.left) * scaleX,
+        impactX * scaleX,
         (anchorRect.top - containerRect.top + anchorRect.height * 0.515) * scaleY,
       ]
     }
@@ -243,7 +243,6 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
     const resizeObserver = new ResizeObserver(resize)
     resizeObserver.observe(container)
     if (anchorRef.current) resizeObserver.observe(anchorRef.current)
-    if (boundsRef.current) resizeObserver.observe(boundsRef.current)
     resize()
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -271,7 +270,7 @@ export default function PrivacyLight({ active, anchorRef, boundsRef }: PrivacyLi
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()
     }
-  }, [anchorRef, boundsRef])
+  }, [anchorRef])
 
   return <div ref={containerRef} className="h-full w-full" />
 }

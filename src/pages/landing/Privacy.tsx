@@ -45,7 +45,6 @@ const blockVeil: Variants = {
  */
 export function Privacy() {
   const sectionRef = useRef<HTMLElement>(null)
-  const layoutRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const inView = useInView(sectionRef, { once: true, amount: 0.2 })
   const reduced = useReducedMotion()
@@ -62,13 +61,11 @@ export function Privacy() {
           <PrivacyLight
             active={Boolean(reduced || inView)}
             anchorRef={panelRef}
-            boundsRef={layoutRef}
           />
         </Suspense>
       </div>
 
       <motion.div
-        ref={layoutRef}
         className="relative z-10 mx-auto grid w-full max-w-[1320px] gap-10 px-5 sm:px-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[420px_720px] xl:justify-center xl:gap-24"
         variants={revealContainer}
         initial={reduced ? false : 'hidden'}
