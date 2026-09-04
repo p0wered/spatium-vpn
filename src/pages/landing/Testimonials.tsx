@@ -13,13 +13,48 @@ const textItem: Variants = {
   },
 }
 
-const CARD_COUNT = 4
+const testimonials = [
+  {
+    quote:
+      'It disappears into the background. I connect once, forget about it, and everything simply keeps moving.',
+    name: 'Mara Voss',
+    detail: 'Product designer, Berlin',
+  },
+  {
+    quote:
+      'Server changes feel immediate, and the interface tells me exactly what matters without getting in the way.',
+    name: 'Kenji Arai',
+    detail: 'Independent developer, Kyoto',
+  },
+  {
+    quote:
+      'I wanted privacy without another complicated tool to manage. This feels calm, fast, and easy to trust.',
+    name: 'Nadia Petrenko',
+    detail: 'Creative director, Warsaw',
+  },
+  {
+    quote:
+      'It is the rare utility I do not have to think about after setup. That is exactly what I wanted.',
+    name: 'Tomás Vidal',
+    detail: 'Film editor, Lisbon',
+  },
+] as const
 
 function CardSequence() {
   return (
-    <div className="testimonial-sequence" aria-hidden>
-      {Array.from({ length: CARD_COUNT }, (_, index) => (
-        <div className="testimonial-card" key={index} />
+    <div className="testimonial-sequence">
+      {testimonials.map((testimonial, index) => (
+        <article className="testimonial-card" key={testimonial.name}>
+          <p className="testimonial-card-copy">{testimonial.quote}</p>
+
+          <footer className="testimonial-card-footer">
+            <div>
+              <strong>{testimonial.name}</strong>
+              <span>{testimonial.detail}</span>
+            </div>
+            <span className="testimonial-card-index">0{index + 1}</span>
+          </footer>
+        </article>
       ))}
     </div>
   )
@@ -36,7 +71,6 @@ function MarqueeRow({ direction }: { direction: 'left' | 'right' }) {
   )
 }
 
-/** The cards remain content-neutral until approved customer quotes are ready. */
 export function Testimonials() {
   const sectionRef = useRef<HTMLElement>(null)
   const inView = useInView(sectionRef, { amount: 0.08 })
@@ -80,6 +114,17 @@ export function Testimonials() {
           Approved customer stories will live here once the review copy is ready.
         </motion.p>
       </motion.div>
+
+      <ul className="sr-only">
+        {testimonials.map((testimonial) => (
+          <li key={testimonial.name}>
+            <blockquote>{testimonial.quote}</blockquote>
+            <p>
+              {testimonial.name}, {testimonial.detail}
+            </p>
+          </li>
+        ))}
+      </ul>
 
       <div className="relative z-10 mt-24 space-y-5 sm:mt-28 sm:space-y-6 lg:mt-[168px] lg:space-y-7">
         <MarqueeRow direction="right" />

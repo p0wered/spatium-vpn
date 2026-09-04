@@ -227,7 +227,6 @@
   /*
    * Testimonials marquee. Two identical sequences make each ribbon seamless;
    * black overlay gradients dissolve the glass cards into the page edges.
-   * The cards intentionally carry no content until real review copy exists.
    */
   .testimonial-marquee {
     --testimonial-gap: clamp(1rem, 2vw, 1.75rem);
@@ -298,10 +297,14 @@
   .testimonial-card {
     position: relative;
     isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     width: clamp(17.5rem, 31vw, 32rem);
     height: clamp(11.75rem, 18vw, 18rem);
     flex: none;
     overflow: hidden;
+    padding: clamp(1.4rem, 2.35vw, 2.35rem);
     border-radius: var(--radius-card);
     background-color: rgb(255 255 255 / 0.04);
     backdrop-filter: blur(24px) saturate(112%);
@@ -312,14 +315,15 @@
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 2;
     border-radius: inherit;
     padding: 1px;
     pointer-events: none;
     background: linear-gradient(
       to bottom,
-      rgb(255 255 255 / 0.18) 0%,
-      rgb(255 255 255 / 0.09) 46%,
-      rgb(255 255 255 / 0.035) 100%
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.06) 46%,
+      rgba(255, 255, 255, 0.02) 100%
     );
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
@@ -329,6 +333,55 @@
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     mask-composite: exclude;
+  }
+
+  .testimonial-card-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 25rem;
+    margin: 0;
+    color: rgb(255 255 255 / 0.88);
+    font-size: clamp(1.125rem, 1.55vw, 1.5rem);
+    font-weight: 420;
+    letter-spacing: -0.025em;
+    line-height: 1.36;
+    text-wrap: pretty;
+  }
+
+  .testimonial-card-footer {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .testimonial-card-footer > div {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .testimonial-card-footer strong {
+    color: rgb(255 255 255 / 0.86);
+    font-size: 0.875rem;
+    font-weight: 540;
+    letter-spacing: -0.01em;
+  }
+
+  .testimonial-card-footer div > span {
+    color: rgb(255 255 255 / 0.42);
+    font-size: 0.75rem;
+    font-weight: 380;
+    line-height: 1.35;
+  }
+
+  .testimonial-card-index {
+    color: rgb(255 255 255 / 0.28);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
   }
 
   @keyframes testimonial-marquee-right {
