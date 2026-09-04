@@ -39,8 +39,7 @@ void main() {
   vec2 frag = gl_FragCoord.xy;
   float aspect = uResolution.x / max(uResolution.y, 1.0);
   float reveal = clamp(uReveal, 0.0, 1.0);
-  float arrival = easeOutCubic(smoothstep(0.0, 0.76, reveal));
-  float energy = pow(smoothstep(0.05, 1.0, reveal), 1.35);
+  float progress = easeOutCubic(reveal);
   float responsiveMix = smoothstep(0.72, 1.24, aspect);
 
   // The original Strands profile, warped onto one fixed orbital curve.
@@ -48,8 +47,8 @@ void main() {
   float curveX = (frag.x - uResolution.x * 0.5) / halfSpan;
   float sag = uResolution.x * mix(0.118, 0.153, responsiveMix);
   float finalApex = uResolution.y * mix(0.69, 0.742, responsiveMix);
-  float startApex = uResolution.y * mix(0.43, 0.46, responsiveMix);
-  float apex = mix(startApex, finalApex, arrival);
+  float startApex = finalApex - uResolution.y * mix(0.040, 0.055, responsiveMix);
+  float apex = mix(startApex, finalApex, progress);
   float curveY = apex - sag * curveX * curveX;
 
   // Keep the light profile perpendicular to the curve at every point.
@@ -60,8 +59,8 @@ void main() {
   // This is the same non-linear light falloff used by Strands.tsx. The
   // envelope affects both width and energy, creating the heavy luminous crown
   // and the fine, blue shoulders without introducing a separate blur layer.
-  float baseThickness = mix(0.55, 6.4, energy);
-  float thickness = baseThickness * (0.24 + envelope * 1.56);
+  float baseThickness = mix(0.95, 7.2, progress);
+  float thickness = baseThickness * (0.74 + envelope * 1.56);
   float lowerGlowScale = mix(1.42, 1.0, smoothstep(-6.0, 12.0, signedDistance));
   float distanceToStrand = abs(signedDistance) * lowerGlowScale;
   float strand = thickness / (distanceToStrand + thickness * 0.45);
@@ -69,7 +68,7 @@ void main() {
 
   // A much wider falloff from the same strand supplies the large atmospheric
   // halo. It inherits the center envelope and the reduced lower-side reach.
-  float outerThickness = thickness * (2.6 + envelope * 3.4);
+  float outerThickness = thickness * (3.1 + envelope * 3.1);
   float outerGlow = outerThickness
     / (distanceToStrand + outerThickness * 0.72);
   outerGlow *= outerGlow;
@@ -80,11 +79,11 @@ void main() {
     vec3(0.49, 0.64, 1.0),
     envelope
   );
-  float intensity = 0.06 + energy * 0.61;
-  vec3 color = strandColor * strand * envelope;
-  color += outerColor * outerGlow * envelope * energy * 0.24;
+  float intensity = 0.06 + progress * 0.61;
+  vec3 color = strandColor * strand * envelope * progress;
+  color += outerColor * outerGlow * envelope * progress * 0.24;
   color *= 0.45 + 0.7 * intensity;
-  color = 1.0 - exp(-color * mix(0.34, 2.75, energy));
+  color = 1.0 - exp(-color * 2.75);
 
   float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
   fragColor = vec4(color, alpha);
@@ -104,8 +103,8 @@ interface OrbitalHorizonProps {
  */
 export default function OrbitalHorizon({
   active,
-  revealDelayMs = 120,
-  revealDurationMs = 2500,
+  revealDelayMs = 250,
+  revealDurationMs = 1500,
 }: OrbitalHorizonProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)
