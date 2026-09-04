@@ -307,7 +307,7 @@
     padding: clamp(1.4rem, 2.35vw, 2.35rem);
     border-radius: var(--radius-card);
     background-color: rgb(255 255 255 / 0.04);
-    backdrop-filter: blur(24px) saturate(112%);
+    backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px) saturate(112%);
   }
 
