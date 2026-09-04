@@ -308,7 +308,6 @@
     border-radius: var(--radius-card);
     background-color: rgb(255 255 255 / 0.04);
     backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
   }
 
   .testimonial-card::before {
