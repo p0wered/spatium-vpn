@@ -16,27 +16,63 @@ const textItem: Variants = {
 const testimonials = [
   {
     quote:
-      'It disappears into the background. I connect once, forget about it, and everything simply keeps moving.',
+      'Spatium stays out of the way. I connect once and rarely need to open the app again.',
+    name: 'Daria Morozova',
+    detail: 'Product designer, Moscow',
+  },
+  {
+    quote:
+      'Switching locations is quick, and the connection stays steady while I work with large files.',
+    name: 'Mikhail Sokolov',
+    detail: 'Backend engineer, Saint Petersburg',
+  },
+  {
+    quote:
+      'Public Wi-Fi feels less stressful when the tunnel is active and easy to check.',
+    name: 'Alina Volkova',
+    detail: 'Photographer, Kazan',
+  },
+  {
+    quote:
+      'I can join evening matches without spending ten minutes testing servers before every session.',
+    name: 'Ilya Lebedev',
+    detail: 'Game developer, Novosibirsk',
+  },
+  {
+    quote:
+      'The interface is calm, clear, and never turns basic privacy into another technical project.',
+    name: 'Sofia Orlova',
+    detail: 'Marketing strategist, Yekaterinburg',
+  },
+  {
+    quote:
+      'It is fast enough for daily editing work and simple enough that I never have to troubleshoot it.',
+    name: 'Artem Kuznetsov',
+    detail: 'Film editor, Kaliningrad',
+  },
+  {
+    quote:
+      'Everything important is visible at a glance, while the rest stays quietly in the background.',
     name: 'Mara Voss',
     detail: 'Product designer, Berlin',
   },
   {
     quote:
-      'Server changes feel immediate, and the interface tells me exactly what matters without getting in the way.',
+      'The server list feels responsive and predictable when I move between networks during the day.',
     name: 'Kenji Arai',
     detail: 'Independent developer, Kyoto',
   },
   {
     quote:
-      'I wanted privacy without another complicated tool to manage. This feels calm, fast, and easy to trust.',
-    name: 'Nadia Petrenko',
-    detail: 'Creative director, Warsaw',
+      'I wanted a VPN that felt like a utility, not a dashboard I had to keep managing.',
+    name: 'Tomás Vidal',
+    detail: 'Film editor, Lisbon',
   },
   {
     quote:
-      'It is the rare utility I do not have to think about after setup. That is exactly what I wanted.',
-    name: 'Tomás Vidal',
-    detail: 'Film editor, Lisbon',
+      'The experience is understated and dependable. That is exactly what I want from privacy software.',
+    name: 'Noor El-Sayed',
+    detail: 'UX researcher, Amsterdam',
   },
 ] as const
 
@@ -52,7 +88,9 @@ function CardSequence() {
               <strong>{testimonial.name}</strong>
               <span>{testimonial.detail}</span>
             </div>
-            <span className="testimonial-card-index">0{index + 1}</span>
+            <span className="testimonial-card-index">
+              {String(index + 1).padStart(2, '0')}
+            </span>
           </footer>
         </article>
       ))}
