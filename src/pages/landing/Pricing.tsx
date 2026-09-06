@@ -1,7 +1,8 @@
 import { useRef } from 'react'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
-import { Check } from 'lucide-react'
+import { ArrowUpRight, Check } from 'lucide-react'
 import { Button } from '../../components/Button'
+import { GlassCard } from '../../components/GlassCard'
 
 type Feature = {
   included: boolean
@@ -99,7 +100,7 @@ function PlanCard({
 }) {
   return (
     <motion.article
-      className="pricing-card flex h-full flex-col"
+      className="h-full"
       aria-labelledby={`plan-${plan.name.toLowerCase()}`}
       initial={reduced ? { opacity: 0 } : { opacity: 0, y: 28, filter: 'blur(8px)' }}
       animate={
@@ -115,45 +116,47 @@ function PlanCard({
         ease: [0.22, 1, 0.36, 1],
       }}
     >
-      <div className="pricing-card-body">
-        <h3 id={`plan-${plan.name.toLowerCase()}`} className="pricing-card-name">
-          {plan.name}
-        </h3>
-        <p className="pricing-card-tagline">{plan.tagline}</p>
+      <GlassCard halo className="pricing-card flex h-full flex-col">
+        <div className="pricing-card-body">
+          <h3 id={`plan-${plan.name.toLowerCase()}`} className="pricing-card-name">
+            {plan.name}
+          </h3>
+          <p className="pricing-card-tagline">{plan.tagline}</p>
 
-        <p className="pricing-card-price">
-          <span>{plan.price}</span>
-          <span>/day</span>
-        </p>
+          <p className="pricing-card-price">
+            <span>{plan.price}</span>
+            <span>/day</span>
+          </p>
 
-        <ul className="pricing-card-features">
-          {plan.features.map((feature) => (
-            <li
-              key={feature.label}
-              className={feature.included ? 'is-included' : 'is-excluded'}
-            >
-              {feature.included ? (
-                <Check size={16} strokeWidth={1.75} aria-hidden />
-              ) : (
-                <DashMark />
-              )}
-              <span>
-                {feature.label}
-                {!feature.included && <span className="sr-only"> (not included)</span>}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+          <ul className="pricing-card-features">
+            {plan.features.map((feature) => (
+              <li
+                key={feature.label}
+                className={feature.included ? 'is-included' : 'is-excluded'}
+              >
+                {feature.included ? (
+                  <Check size={16} strokeWidth={1.75} aria-hidden />
+                ) : (
+                  <DashMark />
+                )}
+                <span>
+                  {feature.label}
+                  {!feature.included && <span className="sr-only"> (not included)</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      <Button
-        type="button"
-        size="lg"
-        variant={plan.featured ? 'primary' : 'secondary'}
-        className={`pricing-card-cta rounded-full! ${plan.featured ? '' : 'bg-white/10!'}`}
-      >
-        Get {plan.name}
-      </Button>
+        <Button
+          type="button"
+          size="lg"
+          variant={plan.featured ? 'primary' : 'secondary'}
+          className="pricing-card-cta"
+        >
+          Get {plan.name}
+        </Button>
+      </GlassCard>
     </motion.article>
   )
 }
@@ -172,7 +175,7 @@ export function Pricing() {
       id="pricing"
       ref={sectionRef}
       aria-labelledby="pricing-title"
-      className="relative scroll-mt-24 overflow-hidden bg-black py-24 sm:py-28 lg:py-[132px]"
+      className="relative scroll-mt-24 bg-black py-24 sm:py-28 lg:py-[132px]"
     >
       <motion.div
         className="mx-auto w-full max-w-[1240px] px-5 sm:px-6"
@@ -205,6 +208,25 @@ export function Pricing() {
             />
           ))}
         </div>
+
+        <motion.p
+          variants={textItem}
+          className="mx-auto mt-8 max-w-[480px] text-center text-sm leading-6 font-light text-white/46 sm:mt-10"
+        >
+          Each extra device is +0.02$ /day
+          <span aria-hidden className="mx-2 text-white/28">
+            ·
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-auto gap-0.5 px-0! font-light text-white/46! hover:text-fg!"
+          >
+            Full terms
+            <ArrowUpRight size={13} strokeWidth={1.75} aria-hidden />
+          </Button>
+        </motion.p>
       </motion.div>
     </section>
   )

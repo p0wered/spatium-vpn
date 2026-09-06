@@ -40,7 +40,6 @@ export function GlassCard({
         const dy = y - rect.height / 2
         let deg = Math.atan2(dy, dx) * (180 / Math.PI) + 90
         if (deg < 0) deg += 360
-        // Близость к краю: 0 в центре, 1 на границе карточки
         const kx = dx === 0 ? Infinity : rect.width / 2 / Math.abs(dx)
         const ky = dy === 0 ? Infinity : rect.height / 2 / Math.abs(dy)
         const proximity = Math.min(Math.max(1 / Math.min(kx, ky), 0), 1)

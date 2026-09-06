@@ -15,7 +15,7 @@ import { TrafficChart } from './TrafficChart'
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <GlassCard className="p-5">
+    <GlassCard halo className="p-5">
       <div>
         <div className="text-xs text-fg-muted">{label}</div>
         <div className={`mt-2 font-normal text-xl tracking-tight lg:text-2xl`}>{value}</div>

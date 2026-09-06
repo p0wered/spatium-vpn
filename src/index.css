@@ -422,43 +422,15 @@
   }
 
   /*
-   * Pricing plates. Same glass edge as testimonials, but a slightly lifted
-   * fill so the three cards read on a quiet black close after OrbitalHorizon.
+   * Pricing plates sit on GlassCard: keep the lifted fill so they read on
+   * black, drop overflow so the halo can breathe past the edge.
    */
-  .pricing-card {
-    position: relative;
-    isolation: isolate;
+  .glass-card.pricing-card {
     display: flex;
     flex-direction: column;
     min-height: 100%;
-    overflow: hidden;
     padding: 2.15rem 2rem 1.9rem;
-    border-radius: var(--radius-card);
     background-color: rgb(255 255 255 / 0.055);
-  }
-
-  .pricing-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    border-radius: inherit;
-    padding: 1px;
-    pointer-events: none;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.12) 0%,
-      rgba(255, 255, 255, 0.06) 46%,
-      rgba(255, 255, 255, 0.02) 100%
-    );
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    mask-composite: exclude;
   }
 
   .pricing-card-body {
@@ -552,17 +524,16 @@
     z-index: 1;
     width: 100%;
     margin-top: 2.15rem;
-    border-radius: 999px;
   }
 
   @media (min-width: 640px) {
-    .pricing-card {
+    .glass-card.pricing-card {
       padding: 2.35rem 2.15rem 2.1rem;
     }
   }
 
   @media (prefers-reduced-transparency: reduce) {
-    .pricing-card {
+    .glass-card.pricing-card {
       background-color: rgb(18 18 20);
     }
   }
@@ -756,12 +727,14 @@
    * Внешний ореол GlassCard (проп halo, по мотивам React Bits BorderGlow):
    * многослойный box-shadow, обрезанный conic-маской по углу курсора
    * (--halo-angle) относительно центра. --halo-opacity растёт у краёв.
-   * Цвет холодно-белый — общий --halo-color из :root.
+   * Ядро — холодно-белое, спад — лёд Hero/IceRidge (#b4d2ff / #aaccff).
    */
   .glass-card {
     --halo-angle: 45deg;
     --halo-opacity: 0;
     --halo-radius: 40px;
+    --halo-arc: 2.5%;
+    --halo-arc-fade: 10%;
   }
 
   .glass-card-halo {
@@ -776,17 +749,17 @@
     opacity: var(--halo-opacity);
     -webkit-mask-image: conic-gradient(
       from var(--halo-angle) at center,
-      #fff 2.5%,
-      transparent 10%,
-      transparent 90%,
-      #fff 97.5%
+      #fff var(--halo-arc),
+      transparent var(--halo-arc-fade),
+      transparent calc(100% - var(--halo-arc-fade)),
+      #fff calc(100% - var(--halo-arc))
     );
     mask-image: conic-gradient(
       from var(--halo-angle) at center,
-      #fff 2.5%,
-      transparent 10%,
-      transparent 90%,
-      #fff 97.5%
+      #fff var(--halo-arc),
+      transparent var(--halo-arc-fade),
+      transparent calc(100% - var(--halo-arc-fade)),
+      #fff calc(100% - var(--halo-arc))
     );
     transition: opacity 0.3s ease-out;
   }
@@ -796,16 +769,16 @@
     inset: var(--halo-radius);
     border-radius: var(--radius-card);
     box-shadow:
-      inset 0 0 1px 0 hsl(var(--halo-color) / 50%),
-      inset 0 0 3px 0 hsl(var(--halo-color) / 40%),
-      inset 0 0 6px 0 hsl(var(--halo-color) / 30%),
-      inset 0 0 15px 0 hsl(var(--halo-color) / 20%),
-      inset 0 0 25px 2px hsl(var(--halo-color) / 12%),
-      inset 0 0 50px 2px hsl(var(--halo-color) / 6%),
-      0 0 3px 0 hsl(var(--halo-color) / 35%),
-      0 0 6px 0 hsl(var(--halo-color) / 30%),
-      0 0 15px 0 hsl(var(--halo-color) / 22%),
-      0 0 25px 2px hsl(var(--halo-color) / 15%),
-      0 0 50px 2px hsl(var(--halo-color) / 8%);
+      inset 0 0 1px 0 rgb(255 255 255 / 70%),
+      inset 0 0 3px 0 rgb(255 255 255 / 45%),
+      inset 0 0 8px 0 rgb(180 210 255 / 32%),
+      inset 0 0 18px 0 rgb(170 204 255 / 20%),
+      inset 0 0 32px 2px rgb(170 204 255 / 10%),
+      0 0 2px 0 rgb(255 255 255 / 55%),
+      0 0 6px 0 rgb(180 210 255 / 40%),
+      0 0 16px 1px rgb(170 204 255 / 28%),
+      0 0 32px 2px rgb(170 204 255 / 16%),
+      0 0 56px 4px rgb(130 155 255 / 10%);
   }
+
 }
