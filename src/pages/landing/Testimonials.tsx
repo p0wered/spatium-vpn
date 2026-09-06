@@ -1,5 +1,6 @@
 import { lazy, Suspense, useRef } from 'react'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
+import { GlassCard } from '../../components/GlassCard'
 
 const OrbitalHorizon = lazy(() => import('../../components/backgrounds/OrbitalHorizon'))
 
@@ -80,7 +81,7 @@ function CardSequence() {
   return (
     <div className="testimonial-sequence">
       {testimonials.map((testimonial, index) => (
-        <article className="testimonial-card" key={testimonial.name}>
+        <GlassCard halo className="testimonial-card" key={testimonial.name}>
           <p className="testimonial-card-copy">{testimonial.quote}</p>
 
           <footer className="testimonial-card-footer">
@@ -92,7 +93,7 @@ function CardSequence() {
               {String(index + 1).padStart(2, '0')}
             </span>
           </footer>
-        </article>
+        </GlassCard>
       ))}
     </div>
   )
@@ -164,7 +165,7 @@ export function Testimonials() {
         ))}
       </ul>
 
-      <div className="relative z-10 mt-24 space-y-5 sm:mt-28 sm:space-y-6 lg:mt-[168px] lg:space-y-7">
+      <div className="testimonial-ribbons relative z-10 mt-24 sm:mt-28 lg:mt-[168px]">
         <MarqueeRow direction="right" />
         <MarqueeRow direction="left" />
       </div>

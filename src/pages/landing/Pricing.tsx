@@ -175,7 +175,7 @@ export function Pricing() {
       id="pricing"
       ref={sectionRef}
       aria-labelledby="pricing-title"
-      className="relative scroll-mt-24 bg-black py-24 sm:py-28 lg:py-[132px]"
+      className="relative scroll-mt-24 py-24 sm:py-28 lg:py-[132px]"
     >
       <motion.div
         className="mx-auto w-full max-w-[1240px] px-5 sm:px-6"
