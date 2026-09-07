@@ -66,7 +66,7 @@ export function Privacy() {
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto grid w-full max-w-[1320px] gap-10 px-5 sm:px-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[420px_720px] xl:justify-center xl:gap-24"
+        className="landing-container relative z-10 grid gap-10 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[420px_720px] xl:justify-center xl:gap-[52px]"
         variants={revealContainer}
         initial={reduced ? false : 'hidden'}
         animate={reduced || inView ? 'show' : 'hidden'}

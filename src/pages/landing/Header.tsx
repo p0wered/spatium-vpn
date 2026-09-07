@@ -73,7 +73,7 @@ export function Header() {
       >
         <GradualBlur />
 
-        <div className="relative mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-4">
+        <div className="landing-container relative grid h-16 grid-cols-[1fr_auto_1fr] items-center">
           <Wordmark className="justify-self-start" />
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Landing sections">
@@ -136,7 +136,7 @@ export function Header() {
             exit={{ opacity: 0 }}
             transition={{ duration: reduced ? 0 : 0.25 }}
           >
-            <div className="flex h-16 items-center justify-between px-6">
+            <div className="landing-container flex h-16 items-center justify-between">
               <Wordmark onClick={() => setOpen(false)} />
               <button
                 type="button"
@@ -148,7 +148,10 @@ export function Header() {
               </button>
             </div>
 
-            <nav className="flex flex-1 flex-col justify-center gap-2 px-8" aria-label="Landing sections">
+            <nav
+              className="landing-container flex flex-1 flex-col justify-center gap-2"
+              aria-label="Landing sections"
+            >
               {links.map((l, i) => (
                 <motion.a
                   key={l.id}
@@ -168,7 +171,7 @@ export function Header() {
             </nav>
 
             <motion.div
-              className="px-8 pb-12"
+              className="landing-container pb-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.4, delay: 0.3 }}

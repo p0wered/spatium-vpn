@@ -141,8 +141,8 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
       <motion.div
         className={
           isLeftAligned
-            ? 'relative z-10 mx-auto flex h-full w-full max-w-6xl flex-col px-6 text-left'
-            : 'relative z-10 flex h-full flex-col items-center px-6 text-center'
+            ? 'landing-container relative z-10 flex h-full flex-col text-left'
+            : 'landing-container relative z-10 flex h-full flex-col items-center text-center'
         }
         variants={container}
         initial="hidden"
