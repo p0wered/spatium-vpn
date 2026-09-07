@@ -41,6 +41,8 @@ const blockVeil: Variants = {
  */
 export function Bypass() {
   const sectionRef = useRef<HTMLElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const lightInView = useInView(panelRef, { once: true, amount: 0.12 })
   // 8% срабатывали ещё до появления контента: верхний padding секции больше
   // этого порога, поэтому reveal успевал завершиться за нижней кромкой экрана.
   const inView = useInView(sectionRef, { once: true, amount: 0.12 })
@@ -76,13 +78,14 @@ export function Bypass() {
         </motion.p>
 
         <motion.div
+          ref={panelRef}
           aria-hidden
           className="relative isolate mx-auto mt-11 aspect-[360/430] min-h-[420px] w-full max-w-[480px] lg:aspect-[1060/563] lg:min-h-0 lg:max-w-none"
           variants={blockItem}
         >
           <div className="pointer-events-none absolute inset-x-[-28%] top-0 z-0 h-40 -translate-y-1/2 sm:inset-x-[-15%] sm:h-56 lg:inset-x-[-11%] lg:h-64">
             <Suspense fallback={null}>
-              <IceRidge active={Boolean(reduced || inView)} />
+              <IceRidge active={Boolean(reduced || lightInView)} />
             </Suspense>
           </div>
 

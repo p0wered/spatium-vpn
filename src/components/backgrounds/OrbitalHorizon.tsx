@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { startRenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
+import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -102,8 +103,8 @@ interface OrbitalHorizonProps {
  */
 export default function OrbitalHorizon({
   active,
-  revealDelayMs = 250,
-  revealDurationMs = 1500,
+  revealDelayMs = LIGHT_REVEAL_DELAY_MS,
+  revealDurationMs = LIGHT_REVEAL_DURATION_MS,
 }: OrbitalHorizonProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)

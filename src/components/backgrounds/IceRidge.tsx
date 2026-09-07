@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { startRenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
+import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -37,7 +38,7 @@ void main() {
   float envelope = pow(max(1.0 - ridgeX * ridgeX, 0.0), 1.8);
   float center = exp(-ridgeX * ridgeX * 4.2);
   float crown = exp(-ridgeX * ridgeX * 9.0);
-  float breathe = 0.965 + sin(uTime * 0.28) * 0.035;
+  float breathe = 0.988 + sin(uTime * 0.34) * 0.012;
 
   // Keep the white ridge visibly dense without widening the surrounding blue bloom.
   float core = exp(-abs(y) * 66.0) * envelope;
@@ -45,9 +46,9 @@ void main() {
   float haze = exp(-abs(y) * 4.8) * center * envelope * 0.34;
   float centralHaze = exp(-abs(y) * 2.7) * crown * envelope * 0.14;
 
-  vec3 col = (haze + centralHaze) * haloBlue * 3.9
-    + body * paleBlue * 0.9
-    + core * coreWhite * 1.1;
+  vec3 col = (haze + centralHaze) * haloBlue * 2.2
+    + body * paleBlue * 0.78
+    + core * coreWhite * 1.45;
   col *= breathe;
 
   // The ridge propagates as light, not as a center-out clip. A concentrated
@@ -100,8 +101,8 @@ interface IceRidgeProps {
 
 export default function IceRidge({
   active,
-  revealDelayMs = 1050,
-  revealDurationMs = 600,
+  revealDelayMs = LIGHT_REVEAL_DELAY_MS,
+  revealDurationMs = LIGHT_REVEAL_DURATION_MS,
 }: IceRidgeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)
