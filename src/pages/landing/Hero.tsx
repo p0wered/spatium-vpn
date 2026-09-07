@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { Button } from '../../components/Button'
 import { GrainOverlay } from '../../components/GrainOverlay'
 import { scrollToSection } from '../../lib/scroll'
+import { LANDING_STRAND_COLORS } from '../../components/backgrounds/lightPalette'
 
 // WebGL-фон — ленивым чанком, чтобы не тормозить первый рендер
 const Strands = lazy(() => import('../../components/backgrounds/Strands'))
@@ -120,7 +121,7 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
         >
           <Suspense fallback={null}>
             <Strands
-              colors={['#b4d2ff', '#426eff', '#ffffff']}
+              colors={LANDING_STRAND_COLORS}
               count={5}
               speed={0.35}
               thickness={0.5}

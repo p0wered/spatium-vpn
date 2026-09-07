@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { startRenderLoop } from './loop'
+import { LIGHT_PALETTE_GLSL } from './lightPalette'
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -19,6 +20,7 @@ uniform float uRidgeWidth;
 uniform vec2 uResolution;
 
 out vec4 fragColor;
+${LIGHT_PALETTE_GLSL}
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
@@ -43,13 +45,9 @@ void main() {
   float haze = exp(-abs(y) * 4.8) * center * envelope * 0.34;
   float centralHaze = exp(-abs(y) * 2.7) * crown * envelope * 0.14;
 
-  vec3 ice = vec3(0.56, 0.68, 0.92);
-  vec3 frost = vec3(0.80, 0.87, 1.0);
-  vec3 white = vec3(1.0);
-
-  vec3 col = (haze + centralHaze) * ice * 3.9
-    + body * frost * 0.9
-    + core * white * 1.1;
+  vec3 col = (haze + centralHaze) * haloBlue * 3.9
+    + body * paleBlue * 0.9
+    + core * coreWhite * 1.1;
   col *= breathe;
 
   // The ridge propagates as light, not as a center-out clip. A concentrated
@@ -80,8 +78,8 @@ void main() {
     * 0.7;
 
   col = col * lightField
-    + (sourceCore * 1.05 + sourceBloom * 0.26) * sourcePulse * frost
-    + transientRay * white;
+    + (sourceCore * coreWhite * 1.05 + sourceBloom * paleBlue * 0.26) * sourcePulse
+    + transientRay * coreWhite;
   col = 1.0 - exp(-col * 2.5);
 
   float alpha = clamp(max(max(col.r, col.g), col.b), 0.0, 1.0);

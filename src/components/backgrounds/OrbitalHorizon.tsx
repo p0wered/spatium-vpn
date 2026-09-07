@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { startRenderLoop } from './loop'
+import { LIGHT_PALETTE_GLSL } from './lightPalette'
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -19,20 +20,18 @@ uniform vec2 uResolution;
 out vec4 fragColor;
 
 const float PI = 3.14159265;
+${LIGHT_PALETTE_GLSL}
 
 float easeOutCubic(float value) {
   return 1.0 - pow(1.0 - value, 3.0);
 }
 
 vec3 sampleStrandPalette(float t) {
-  vec3 paleBlue = vec3(0.58, 0.72, 1.0);
-  vec3 electricBlue = vec3(0.19, 0.35, 0.94);
-  vec3 white = vec3(0.82, 0.90, 1.0);
   float scaled = fract(t) * 3.0;
 
   if (scaled < 1.0) return mix(paleBlue, electricBlue, scaled);
-  if (scaled < 2.0) return mix(electricBlue, white, scaled - 1.0);
-  return mix(white, paleBlue, scaled - 2.0);
+  if (scaled < 2.0) return mix(electricBlue, iceWhite, scaled - 1.0);
+  return mix(iceWhite, paleBlue, scaled - 2.0);
 }
 
 void main() {
@@ -75,8 +74,8 @@ void main() {
 
   vec3 strandColor = sampleStrandPalette(0.665 - abs(curveX) * 0.18);
   vec3 outerColor = mix(
-    vec3(0.17, 0.28, 0.58),
-    vec3(0.49, 0.64, 1.0),
+    haloShadow,
+    haloBlue,
     envelope
   );
   float intensity = 0.06 + progress * 0.61;

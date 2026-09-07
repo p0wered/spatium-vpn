@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { startRenderLoop } from './loop'
+import { LIGHT_PALETTE_GLSL } from './lightPalette'
 
 const REVEAL_DELAY_MS = 160
 const REVEAL_DURATION_MS = 1080
@@ -47,6 +48,7 @@ uniform vec2 uImpact;
 uniform vec2 uResolution;
 
 out vec4 fragColor;
+${LIGHT_PALETTE_GLSL}
 
 float easeOut(float t) {
   return 1.0 - pow(1.0 - clamp(t, 0.0, 1.0), 3.0);
@@ -132,17 +134,13 @@ void main() {
     + (sourceCore * 0.82 + sourceBloom * 0.22) * arrivalPulse;
 
   float breathe = 0.988 + sin(uTime * 0.34) * 0.012;
-  vec3 ice = vec3(0.56, 0.68, 0.92);
-  vec3 frost = vec3(0.80, 0.87, 1.0);
-  vec3 white = vec3(1.0);
-
-  vec3 rayColor = rayHaze * fieldReveal * ice * 0.30
-    + rayBody * fieldReveal * frost * 0.68
-    + rayCore * coreReveal * white * 1.58;
-  vec3 ridgeColor = (ridgeHaze + ridgeCentralHaze) * ice
-    + ridgeBody * frost * 0.78
-    + ridgeCore * white * 1.65;
-  vec3 col = rayColor + ridgeColor * ridgeField + source * frost;
+  vec3 rayColor = rayHaze * fieldReveal * haloBlue * 0.30
+    + rayBody * fieldReveal * paleBlue * 0.68
+    + rayCore * coreReveal * coreWhite * 1.58;
+  vec3 ridgeColor = (ridgeHaze + ridgeCentralHaze) * haloBlue
+    + ridgeBody * paleBlue * 0.78
+    + ridgeCore * coreWhite * 1.65;
+  vec3 col = rayColor + ridgeColor * ridgeField + source * iceWhite;
   col *= breathe;
   col = 1.0 - exp(-col * 1.05);
 
