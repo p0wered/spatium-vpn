@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
-import { startRenderLoop } from './loop'
+import { startRenderLoop, type RenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
 import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
@@ -18,7 +18,6 @@ void main() {
 const FRAG = `#version 300 es
 precision highp float;
 
-uniform float uTime;
 uniform float uReveal;
 uniform float uBeamStart;
 uniform float uBeamFadeEnd;
@@ -31,11 +30,23 @@ uniform vec2 uResolution;
 out vec4 fragColor;
 ${LIGHT_PALETTE_GLSL}
 
+// Прежде яркость дышала как 0.988 + sin(uTime * 0.34) * 0.012 — колебание в
+// 1.2% с периодом 18 секунд. На глаз оно неразличимо, но заставляло шейдер
+// считаться вечно. Константа равна середине этого колебания.
+const float breathe = 0.988;
+
 float easeOut(float t) {
   return 1.0 - pow(1.0 - clamp(t, 0.0, 1.0), 3.0);
 }
 
 void main() {
+  // Все слагаемые цвета проходят через beamIgnition, handoff или arrivalPulse,
+  // и каждый из них равен нулю при uReveal = 0.
+  if (uReveal <= 0.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
+
   vec2 pixel = gl_FragCoord.xy;
   vec2 impact = vec2(uImpact.x, uResolution.y - uImpact.y);
   // On stacked layouts, the same ray arrives from above and diffuses along
@@ -125,7 +136,6 @@ void main() {
   vec3 source = (sourceCore * iceWhite * 0.82 + sourceBloom * haloBlue * 0.22)
     * arrivalPulse;
 
-  float breathe = 0.988 + sin(uTime * 0.34) * 0.012;
   vec3 rayColor = rayHaze * handoff * haloBlue * 0.18
     + rayBody * handoff * paleBlue * 0.52
     + rayCore * handoff * coreWhite * 1.58;
@@ -150,12 +160,15 @@ interface PrivacyLightProps {
  * A fullscreen light field aligned to the Privacy panel's left edge. The
  * travelling ray and vertical ridge are one event: arrival energy becomes an
  * Ice-Ridge-style diffusion along the glass boundary.
+ *
+ * Кадр зависит только от uReveal и геометрии панели, поэтому после вступления
+ * цикл останавливается — до следующего resize или смены active.
  */
 export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)
   const revealStartRef = useRef<number | null>(null)
-  const renderOnceRef = useRef<(() => void) | null>(null)
+  const loopRef = useRef<RenderLoop | null>(null)
 
   useEffect(() => {
     revealStartRef.current = active ? performance.now() + LIGHT_REVEAL_DELAY_MS : null
@@ -163,7 +176,7 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
 
   useEffect(() => {
     activeRef.current = active
-    if (active) requestAnimationFrame(() => renderOnceRef.current?.())
+    loopRef.current?.invalidate()
   }, [active])
 
   useEffect(() => {
@@ -175,6 +188,8 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
       alpha: true,
       premultipliedAlpha: true,
       antialias: false,
+      depth: false,
+      powerPreference: 'low-power',
     })
     const gl = renderer.gl
     if (!('drawBuffers' in gl)) return
@@ -193,7 +208,6 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
       vertex: VERT,
       fragment: FRAG,
       uniforms: {
-        uTime: { value: 0 },
         uReveal: { value: 0 },
         uBeamStart: { value: 0 },
         uBeamFadeEnd: { value: 1 },
@@ -204,6 +218,8 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
         uResolution: { value: [1, 1] },
       },
       transparent: true,
+      depthTest: false,
+      depthWrite: false,
     })
     const mesh = new Mesh(gl, { geometry, program })
 
@@ -237,8 +253,9 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
         ? (anchorRect.width * scaleX) / profileScale
         : anchorRect.height * scaleY
       program.uniforms.uImpact.value = [impactX * scaleX, impactY * scaleY]
-      // Reduced motion renders one frame; keep it aligned after a breakpoint change.
-      renderOnceRef.current?.()
+      // Кадр остановленного цикла остаётся от прежней геометрии и размера
+      // канваса — после resize его нужно перерисовать.
+      loopRef.current?.invalidate()
     }
 
     const resizeObserver = new ResizeObserver(resize)
@@ -247,25 +264,28 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
     resize()
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const renderFrame = (timeMs: number) => {
-      program.uniforms.uTime.value = timeMs * 0.001
+    const loop = startRenderLoop(
+      container,
+      (timeMs) => {
+        const revealStart = revealStartRef.current
+        const reveal =
+          reducedMotion && activeRef.current
+            ? 1
+            : revealStart === null
+              ? 0
+              : Math.min(Math.max((timeMs - revealStart) / LIGHT_REVEAL_DURATION_MS, 0), 1)
+        program.uniforms.uReveal.value = reveal
+        renderer.render({ scene: mesh })
 
-      const revealStart = revealStartRef.current
-      const reveal =
-        reducedMotion && activeRef.current
-          ? 1
-          : revealStart === null
-            ? 0
-            : Math.min(Math.max((timeMs - revealStart) / LIGHT_REVEAL_DURATION_MS, 0), 1)
-      program.uniforms.uReveal.value = reveal
-      renderer.render({ scene: mesh })
-    }
-    renderOnceRef.current = () => renderFrame(performance.now())
-    const stopLoop = startRenderLoop(container, renderFrame)
+        return revealStart !== null && timeMs < revealStart + LIGHT_REVEAL_DURATION_MS
+      },
+      { idleFps: 0 },
+    )
+    loopRef.current = loop
 
     return () => {
-      renderOnceRef.current = null
-      stopLoop()
+      loopRef.current = null
+      loop.stop()
       resizeObserver.disconnect()
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()

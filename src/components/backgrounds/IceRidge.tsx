@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
-import { startRenderLoop } from './loop'
+import { startRenderLoop, type RenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
 import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
@@ -15,13 +15,17 @@ void main() {
 const FRAG = `#version 300 es
 precision highp float;
 
-uniform float uTime;
 uniform float uReveal;
 uniform float uRidgeWidth;
 uniform vec2 uResolution;
 
 out vec4 fragColor;
 ${LIGHT_PALETTE_GLSL}
+
+// Прежде яркость дышала как 0.988 + sin(uTime * 0.34) * 0.012 — колебание в
+// 1.2% с периодом 18 секунд. На глаз оно неразличимо, но заставляло шейдер
+// считаться вечно. Константа равна середине этого колебания.
+const float breathe = 0.988;
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
@@ -33,12 +37,22 @@ void main() {
   float y = p.y;
   float ridgeX = x / uRidgeWidth;
 
+  // Ignition обнуляет и свет, и вспышку, и луч: до старта reveal кадр пустой.
+  float ignition = smoothstep(0.0, 0.16, uReveal);
+  if (ignition <= 0.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
+
   // uRidgeWidth changes the line's actual shader-space width. The canvas stays
   // oversized so the vertical bloom is not clipped at the container edge.
   float envelope = pow(max(1.0 - ridgeX * ridgeX, 0.0), 1.8);
+  if (envelope <= 0.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
   float center = exp(-ridgeX * ridgeX * 4.2);
   float crown = exp(-ridgeX * ridgeX * 9.0);
-  float breathe = 0.988 + sin(uTime * 0.34) * 0.012;
 
   // Keep the white ridge visibly dense without widening the surrounding blue bloom.
   float core = exp(-abs(y) * 66.0) * envelope;
@@ -55,7 +69,6 @@ void main() {
   // source ignites first; its horizontal decay lengthens and leaves the final
   // line behind. Every point has a soft tail, so no moving "curtain" edge is
   // ever visible.
-  float ignition = smoothstep(0.0, 0.16, uReveal);
   float travelInput = smoothstep(0.04, 0.88, uReveal);
   float travel = 1.0 - pow(1.0 - travelInput, 3.0);
   float settle = smoothstep(0.48, 1.0, uReveal);
@@ -91,7 +104,9 @@ void main() {
 /**
  * Один холодный световой ridge для верхней кромки Bypass-контейнера.
  * Это самостоятельный fullscreen-pass: без геометрии, post-processing и
- * второго framebuffer. Общий render loop останавливает canvas вне viewport.
+ * второго framebuffer. Общий render loop останавливает canvas вне viewport
+ * и совсем гасит его, когда вступление доиграно: кадр зависит только от
+ * uReveal и дальше не меняется.
  */
 interface IceRidgeProps {
   active: boolean
@@ -107,11 +122,13 @@ export default function IceRidge({
   const containerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)
   const revealStartRef = useRef<number | null>(null)
+  const loopRef = useRef<RenderLoop | null>(null)
 
   useEffect(() => {
     activeRef.current = active
     if (active && revealStartRef.current === null) {
       revealStartRef.current = performance.now() + revealDelayMs
+      loopRef.current?.invalidate()
     }
   }, [active, revealDelayMs])
 
@@ -124,6 +141,8 @@ export default function IceRidge({
       alpha: true,
       premultipliedAlpha: true,
       antialias: false,
+      depth: false,
+      powerPreference: 'low-power',
     })
     const gl = renderer.gl
     if (!('drawBuffers' in gl)) return
@@ -142,11 +161,12 @@ export default function IceRidge({
       vertex: VERT,
       fragment: FRAG,
       uniforms: {
-        uTime: { value: 0 },
         uReveal: { value: 0 },
         uRidgeWidth: { value: 0.8 },
         uResolution: { value: [1, 1] },
       },
+      depthTest: false,
+      depthWrite: false,
     })
     const mesh = new Mesh(gl, { geometry, program })
 
@@ -160,6 +180,8 @@ export default function IceRidge({
       program.uniforms.uRidgeWidth.value = Number.isFinite(configuredWidth)
         ? configuredWidth
         : 0.8
+      // Смена размера сбрасывает канвас: остановленному циклу нужен новый кадр.
+      loopRef.current?.invalidate()
     }
 
     const observer = new ResizeObserver(resize)
@@ -167,21 +189,28 @@ export default function IceRidge({
     resize()
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const stopLoop = startRenderLoop(container, (timeMs) => {
-      program.uniforms.uTime.value = timeMs * 0.001
-      const revealStart = revealStartRef.current
-      const rawReveal =
-        reducedMotion && activeRef.current
-          ? 1
-          : revealStart === null
-            ? 0
-            : Math.min(Math.max((timeMs - revealStart) / revealDurationMs, 0), 1)
-      program.uniforms.uReveal.value = rawReveal
-      renderer.render({ scene: mesh })
-    })
+    const loop = startRenderLoop(
+      container,
+      (timeMs) => {
+        const revealStart = revealStartRef.current
+        const rawReveal =
+          reducedMotion && activeRef.current
+            ? 1
+            : revealStart === null
+              ? 0
+              : Math.min(Math.max((timeMs - revealStart) / revealDurationMs, 0), 1)
+        program.uniforms.uReveal.value = rawReveal
+        renderer.render({ scene: mesh })
+
+        return revealStart !== null && timeMs < revealStart + revealDurationMs
+      },
+      { idleFps: 0 },
+    )
+    loopRef.current = loop
 
     return () => {
-      stopLoop()
+      loopRef.current = null
+      loop.stop()
       observer.disconnect()
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()

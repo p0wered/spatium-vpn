@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { Color, Mesh, Program, Renderer, RenderTarget, Triangle } from 'ogl'
-import { startRenderLoop } from './loop'
+import { startRenderLoop, type RenderLoop } from './loop'
 
 /**
  * Адаптация React Bits Strands под SpatiumVPN: светящиеся нити + опциональная
  * стеклянная линза (glass) с рефракцией и дисперсией у кромки — «призма».
  * Изменения к оригиналу: общий цикл из loop.ts (в оригинале паузы не было),
- * uniforms ставятся один раз при монтировании (оригинал пересобирал палитру
- * с аллокациями каждый кадр), требуется WebGL2 — иначе фон просто пустой.
+ * фрагментный шейдер собирается под конкретные props (см. buildFragment),
+ * требуется WebGL2 — иначе фон просто пустой.
  */
 
 const MAX_STRANDS = 12
@@ -20,95 +20,164 @@ void main() {
 }
 `
 
-const FRAG = `#version 300 es
+/** GLSL требует точку в литерале float: 1 → "1.000000". */
+const f = (value: number) => (Number.isFinite(value) ? value.toFixed(6) : '0.000000')
+
+const vec3Literal = (hex: string) => {
+  const c = new Color(hex)
+  return `vec3(${f(c.r)}, ${f(c.g)}, ${f(c.b)})`
+}
+
+/**
+ * Палитра как цепочка сравнений вместо uniform-массива с динамическим
+ * индексом: samplePalette читал uColors[idx] дважды за нить, а динамическая
+ * индексация не даёт драйверу держать массив в регистрах.
+ */
+const buildStrandColor = (colors: string[]) => {
+  if (colors.length === 0) {
+    return `vec3 strandColor(float t) {
+  return 0.5 + 0.5 * cos(2.0 * PI * (t + vec3(0.00, 0.33, 0.67)));
+}`
+  }
+  if (colors.length === 1) {
+    return `vec3 strandColor(float t) {
+  return ${vec3Literal(colors[0])};
+}`
+  }
+
+  const stops = colors.map(vec3Literal)
+  const branches = stops.map((stop, i) => {
+    const next = stops[(i + 1) % stops.length]
+    const blend = `scaled - ${f(i)}`
+    return i === stops.length - 1
+      ? `  return mix(${stop}, ${next}, ${blend});`
+      : `  if (scaled < ${f(i + 1)}) return mix(${stop}, ${next}, ${blend});`
+  })
+
+  return `vec3 strandColor(float t) {
+  float scaled = fract(t) * ${f(stops.length)};
+${branches.join('\n')}
+}`
+}
+
+/**
+ * pow() с целой степенью драйвер разворачивает не всегда, а log2/exp2 здесь
+ * лишние: цепочка умножений и короче, и точнее.
+ */
+const buildEnvelope = (taper: number) => {
+  const base = 'max(cos(uv.x * PI * 1.3), 0.0)'
+  if (!Number.isInteger(taper) || taper < 1 || taper > 4) {
+    return `  float env = pow(${base}, ${f(taper)});`
+  }
+  if (taper === 1) return `  float env = ${base};`
+  return `  float envBase = ${base};
+  float env = ${Array.from({ length: taper }, () => 'envBase').join(' * ')};`
+}
+
+type FragmentConfig = Required<
+  Pick<
+    StrandsProps,
+    | 'colors'
+    | 'count'
+    | 'speed'
+    | 'amplitude'
+    | 'waviness'
+    | 'thickness'
+    | 'glow'
+    | 'taper'
+    | 'spread'
+    | 'hueShift'
+    | 'intensity'
+    | 'saturation'
+    | 'opacity'
+    | 'scale'
+  >
+>
+
+/**
+ * Из всех uniform'ов кадр к кадру меняются только uTime и uResolution —
+ * остальные заданы props и фиксируются на монтировании. Вшивая их в исходник,
+ * мы отдаём компилятору драйвера цикл с константной границей: он сворачивает
+ * частоты, фазы и шаг палитры каждой нити в литералы, а ветку saturation и
+ * умножения на opacity выкидывает целиком, когда они нейтральны.
+ */
+const buildFragment = (config: FragmentConfig) => {
+  const colors = config.colors.slice(0, MAX_COLORS)
+  const count = Math.min(Math.max(Math.round(config.count), 1), MAX_STRANDS)
+  const e = 0.06 + config.intensity * 0.94
+
+  const saturation =
+    config.saturation === 1
+      ? '  col = max(col, 0.0);'
+      : `  float gray = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  col = max(mix(vec3(gray), col, ${f(config.saturation)}), 0.0);`
+
+  const output =
+    config.opacity === 1
+      ? '  fragColor = vec4(col, clamp(lum, 0.0, 1.0));'
+      : `  fragColor = vec4(col * ${f(config.opacity)}, clamp(lum, 0.0, 1.0) * ${f(config.opacity)});`
+
+  return `#version 300 es
 precision highp float;
 
 uniform float uTime;
 uniform vec2 uResolution;
-uniform vec3 uColors[${MAX_COLORS}];
-uniform int uColorCount;
-uniform int uStrandCount;
-uniform float uSpeed;
-uniform float uAmplitude;
-uniform float uWaviness;
-uniform float uThickness;
-uniform float uGlow;
-uniform float uTaper;
-uniform float uSpread;
-uniform float uHueShift;
-uniform float uIntensity;
-uniform float uOpacity;
-uniform float uScale;
-uniform float uSaturation;
 
 out vec4 fragColor;
 
 const float PI = 3.14159265;
 
-vec3 spectrum(float t) {
-  return 0.5 + 0.5 * cos(2.0 * PI * (t + vec3(0.00, 0.33, 0.67)));
-}
-
-vec3 samplePalette(float t) {
-  t = fract(t);
-  float scaled = t * float(uColorCount);
-  int idx = int(floor(scaled));
-  float blend = fract(scaled);
-  int nextIdx = idx + 1;
-  if (nextIdx >= uColorCount) nextIdx = 0;
-  return mix(uColors[idx], uColors[nextIdx], blend);
-}
-
-vec3 strandColor(float t) {
-  if (uColorCount > 0) return samplePalette(t);
-  return spectrum(t);
-}
+${buildStrandColor(colors)}
 
 void main() {
-  vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
-  uv /= max(uScale, 0.0001);
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y * ${f(1 / Math.max(config.scale, 0.0001))};
 
-  float e = 0.06 + uIntensity * 0.94;
-  float env = pow(max(cos(uv.x * PI * 1.3), 0.0), uTaper);
+${buildEnvelope(config.taper)}
+
+  // Огибающая обнуляет вклад каждой нити, поэтому за её пределами кадр
+  // гарантированно прозрачный. На 16:9 это около трети пикселей, которые
+  // иначе прошли бы весь цикл ради нулевого результата.
+  if (env <= 0.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
+
+  // Амплитуда, толщина, фаза времени и база оттенка не зависят от номера
+  // нити — в оригинале они пересчитывались на каждой итерации.
+  float amp = ${f((0.1 + 0.02 * e) * config.amplitude)} * env;
+  float thick = ${f((0.001 + 0.05 * e) * config.thickness)} * (0.35 + env);
+  float bias = thick * 0.45;
+  float tt = uTime * ${f(config.speed)};
+  float hue = uv.x * 0.30 + uTime * 0.04 + ${f(config.hueShift)};
 
   vec3 col = vec3(0.0);
 
-  for (int i = 0; i < ${MAX_STRANDS}; i++) {
-    if (i >= uStrandCount) break;
-
+  for (int i = 0; i < ${count}; i++) {
     float fi = float(i);
-    float ph = fi * 1.7 * uSpread;
-    float freq = (2.0 + fi * 0.35) * uWaviness;
+    float ph = fi * ${f(1.7 * config.spread)};
+    float freq = (2.0 + fi * 0.35) * ${f(config.waviness)};
     float spd = 1.4 + fi * 1.2;
 
-    float tt = uTime * uSpeed;
     float w = sin(uv.x * freq + tt * spd + ph) * 0.60
             + sin(uv.x * freq * 1.1 - tt * spd * 0.7 + ph * 1.7) * 0.40;
 
-    float amp = (0.1 + 0.02 * e) * env * uAmplitude;
-    float y = w * amp;
+    float d = abs(uv.y - w * amp);
+    float g = thick / (d + bias);
 
-    float d = abs(uv.y - y);
-    float thick = (0.001 + 0.05 * e) * (0.35 + env) * uThickness;
-    float g = thick / (d + thick * 0.45);
-    g = g * g;
-
-    float h = fi / float(uStrandCount) + uv.x * 0.30 + uTime * 0.04 + uHueShift;
-    col += strandColor(h) * g * env;
+    col += strandColor(hue + fi * ${f(1 / count)}) * (g * g);
   }
 
-  col *= 0.45 + 0.7 * e;
-  col = 1.0 - exp(-col * uGlow);
+  // env вынесен из суммы: множитель у всех нитей общий.
+  col *= env * ${f(0.45 + 0.7 * e)};
+  col = 1.0 - exp(-col * ${f(config.glow)});
 
-  float gray = dot(col, vec3(0.2126, 0.7152, 0.0722));
-  col = max(mix(vec3(gray), col, uSaturation), 0.0);
+${saturation}
 
   float lum = max(max(col.r, col.g), col.b);
-  float alpha = clamp(lum, 0.0, 1.0) * uOpacity;
-
-  fragColor = vec4(col * uOpacity, alpha);
+${output}
 }
 `
+}
 
 const GLASS_FRAG = `#version 300 es
 precision highp float;
@@ -207,17 +276,6 @@ export interface StrandsProps {
   className?: string
 }
 
-const buildPalette = (colors: string[]): number[][] => {
-  const filled = colors && colors.length ? colors : ['#ffffff']
-  const padded: number[][] = []
-  for (let i = 0; i < MAX_COLORS; i++) {
-    const hex = filled[i] ?? filled[filled.length - 1]
-    const c = new Color(hex)
-    padded.push([c.r, c.g, c.b])
-  }
-  return padded
-}
-
 export default function Strands({
   colors = ['#c1dbff', '#426eff', '#ffffff'],
   count = 5,
@@ -256,6 +314,11 @@ export default function Strands({
       // Полноэкранный треугольник не имеет видимых геометрических рёбер —
       // MSAA здесь расходует память, но не улучшает изображение.
       antialias: false,
+      // Сцена — один проход без глубины. Иначе OGL заводит depth-буфер
+      // размером с канвас и очищает его каждый кадр.
+      depth: false,
+      // Декоративный фон не повод будить дискретную видеокарту.
+      powerPreference: 'low-power',
       // Только export-режиму нужно читать пиксели после завершения кадра.
       preserveDrawingBuffer,
     })
@@ -273,26 +336,28 @@ export default function Strands({
 
     const program = new Program(gl, {
       vertex: VERT,
-      fragment: FRAG,
+      fragment: buildFragment({
+        colors,
+        count,
+        speed,
+        amplitude,
+        waviness,
+        thickness,
+        glow,
+        taper,
+        spread,
+        hueShift,
+        intensity,
+        saturation,
+        opacity,
+        scale,
+      }),
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: [1, 1] },
-        uColors: { value: buildPalette(colors) },
-        uColorCount: { value: Math.min(colors.length, MAX_COLORS) },
-        uStrandCount: { value: Math.min(Math.max(Math.round(count), 1), MAX_STRANDS) },
-        uSpeed: { value: speed },
-        uAmplitude: { value: amplitude },
-        uWaviness: { value: waviness },
-        uThickness: { value: thickness },
-        uGlow: { value: glow },
-        uTaper: { value: taper },
-        uSpread: { value: spread },
-        uHueShift: { value: hueShift },
-        uIntensity: { value: intensity },
-        uOpacity: { value: opacity },
-        uScale: { value: scale },
-        uSaturation: { value: saturation },
       },
+      depthTest: false,
+      depthWrite: false,
     })
     const mesh = new Mesh(gl, { geometry, program })
 
@@ -311,6 +376,8 @@ export default function Strands({
             uDispersion: { value: dispersion },
             uCenter: { value: [glassCenter[0], 1 - glassCenter[1]] },
           },
+          depthTest: false,
+          depthWrite: false,
         })
       : null
     const glassMesh = glassProgram ? new Mesh(gl, { geometry, program: glassProgram }) : null
@@ -326,7 +393,11 @@ export default function Strands({
       renderTarget?.setSize(pw, ph)
       if (glassProgram) glassProgram.uniforms.uResolution.value = [pw, ph]
     }
-    const ro = new ResizeObserver(resize)
+    let loop: RenderLoop | null = null
+    const ro = new ResizeObserver(() => {
+      resize()
+      loop?.invalidate()
+    })
     ro.observe(container)
     resize()
 
@@ -341,10 +412,11 @@ export default function Strands({
       }
     }
 
-    let stopLoop = () => {}
     let staticRaf = 0
     if (staticTime === undefined) {
-      stopLoop = startRenderLoop(container, (t) => renderFrame(t * 0.001))
+      // Нити дрейфуют медленно: самая быстрая проходит период примерно за три
+      // секунды. Выше 60 кадров разницы не видно, а стоимость кадра линейна.
+      loop = startRenderLoop(container, (t) => renderFrame(t * 0.001), { fps: 60 })
     } else {
       // ResizeObserver отрабатывает асинхронно. Следующий rAF гарантирует,
       // что canvas уже получил итоговый размер перед единственным кадром.
@@ -359,7 +431,7 @@ export default function Strands({
     }
 
     return () => {
-      stopLoop()
+      loop?.stop()
       cancelAnimationFrame(staticRaf)
       ro.disconnect()
       gl.getExtension('WEBGL_lose_context')?.loseContext()

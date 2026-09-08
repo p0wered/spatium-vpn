@@ -214,7 +214,7 @@ export default function ColorBends({
     window.addEventListener('pointermove', onPointerMove)
 
     let lastT = 0
-    const stopLoop = startRenderLoop(container, (t) => {
+    const loop = startRenderLoop(container, (t) => {
       const elapsed = t * 0.001
       const dt = Math.min(elapsed - lastT, 0.1)
       lastT = elapsed
@@ -233,7 +233,7 @@ export default function ColorBends({
     })
 
     return () => {
-      stopLoop()
+      loop.stop()
       ro.disconnect()
       window.removeEventListener('pointermove', onPointerMove)
       gl.getExtension('WEBGL_lose_context')?.loseContext()

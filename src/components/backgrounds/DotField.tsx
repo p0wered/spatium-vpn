@@ -218,10 +218,10 @@ const DotField = memo(function DotField({
     resize()
     window.addEventListener('pointermove', onPointerMove, { passive: true })
     const speedInterval = window.setInterval(updateMouseSpeed, 20)
-    const stopLoop = startRenderLoop(container, render)
+    const loop = startRenderLoop(container, render)
 
     return () => {
-      stopLoop()
+      loop.stop()
       resizeObserver.disconnect()
       clearInterval(speedInterval)
       clearTimeout(resizeTimer)

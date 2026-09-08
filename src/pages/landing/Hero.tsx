@@ -130,6 +130,10 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
               scale={isNarrow ? 1.2 : 1.95}
               refraction={1}
               dispersion={1.2}
+              // Нити — мягкое свечение шириной в десятки пикселей, резких
+              // кромок в кадре нет. Полный retina-буфер даёт вдвое больше
+              // пикселей, чем нужно этой картинке.
+              dpr={1.5}
             />
           </Suspense>
         </motion.div>

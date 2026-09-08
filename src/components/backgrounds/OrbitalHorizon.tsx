@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
-import { startRenderLoop } from './loop'
+import { startRenderLoop, type RenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
 import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
@@ -42,6 +42,13 @@ void main() {
   float progress = easeOutCubic(reveal);
   float responsiveMix = smoothstep(0.72, 1.24, aspect);
 
+  // Каждое слагаемое цвета умножается на progress, так что до старта reveal
+  // кадр заведомо пустой. Ветка одинакова для всего прохода — она свободна.
+  if (progress <= 0.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
+
   // The original Strands profile, warped onto one fixed orbital curve.
   float halfSpan = uResolution.x * mix(0.56, 0.395, responsiveMix);
   float curveX = (frag.x - uResolution.x * 0.5) / halfSpan;
@@ -55,6 +62,12 @@ void main() {
   float slope = -2.0 * sag * curveX / halfSpan;
   float signedDistance = (frag.y - curveY) / sqrt(1.0 + slope * slope);
   float envelope = pow(max(cos(curveX * PI * 0.5), 0.0), 1.72);
+
+  // Envelope входит множителем и в нить, и в гало: за краем дуги — прозрачность.
+  if (envelope <= 0.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
 
   // This is the same non-linear light falloff used by Strands.tsx. The
   // envelope affects both width and energy, creating the heavy luminous crown
@@ -100,6 +113,10 @@ interface OrbitalHorizonProps {
  * A single transparent OGL pass for the testimonial-section horizon. The
  * shared render loop pauses it offscreen and resolves reduced motion to a
  * composed final frame instead of removing the graphic.
+ *
+ * Кадр зависит только от uReveal: как только вступление доиграно, картинка
+ * перестаёт меняться, и цикл останавливается вместо того, чтобы бесконечно
+ * пересчитывать один и тот же кадр.
  */
 export default function OrbitalHorizon({
   active,
@@ -109,11 +126,13 @@ export default function OrbitalHorizon({
   const containerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)
   const revealStartRef = useRef<number | null>(null)
+  const loopRef = useRef<RenderLoop | null>(null)
 
   useEffect(() => {
     activeRef.current = active
     if (active && revealStartRef.current === null) {
       revealStartRef.current = performance.now() + revealDelayMs
+      loopRef.current?.invalidate()
     }
   }, [active, revealDelayMs])
 
@@ -126,6 +145,8 @@ export default function OrbitalHorizon({
       alpha: true,
       premultipliedAlpha: true,
       antialias: false,
+      depth: false,
+      powerPreference: 'low-power',
     })
     const gl = renderer.gl
     if (!('drawBuffers' in gl)) return
@@ -147,6 +168,8 @@ export default function OrbitalHorizon({
         uReveal: { value: 0 },
         uResolution: { value: [1, 1] },
       },
+      depthTest: false,
+      depthWrite: false,
     })
     const mesh = new Mesh(gl, { geometry, program })
 
@@ -154,6 +177,8 @@ export default function OrbitalHorizon({
       const { clientWidth: width, clientHeight: height } = container
       renderer.setSize(width, height)
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
+      // Смена размера сбрасывает канвас: остановленному циклу нужен новый кадр.
+      loopRef.current?.invalidate()
     }
 
     const observer = new ResizeObserver(resize)
@@ -161,21 +186,30 @@ export default function OrbitalHorizon({
     resize()
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const stopLoop = startRenderLoop(container, (timeMs) => {
-      const revealStart = revealStartRef.current
-      const rawReveal =
-        reducedMotion && activeRef.current
-          ? 1
-          : revealStart === null
-            ? 0
-            : Math.min(Math.max((timeMs - revealStart) / revealDurationMs, 0), 1)
+    const loop = startRenderLoop(
+      container,
+      (timeMs) => {
+        const revealStart = revealStartRef.current
+        const rawReveal =
+          reducedMotion && activeRef.current
+            ? 1
+            : revealStart === null
+              ? 0
+              : Math.min(Math.max((timeMs - revealStart) / revealDurationMs, 0), 1)
 
-      program.uniforms.uReveal.value = rawReveal
-      renderer.render({ scene: mesh })
-    })
+        program.uniforms.uReveal.value = rawReveal
+        renderer.render({ scene: mesh })
+
+        // Пока секция не активна, ждать нечего — цикл разбудит invalidate.
+        return revealStart !== null && timeMs < revealStart + revealDurationMs
+      },
+      { idleFps: 0 },
+    )
+    loopRef.current = loop
 
     return () => {
-      stopLoop()
+      loopRef.current = null
+      loop.stop()
       observer.disconnect()
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()
