@@ -9,9 +9,9 @@ import { formatDate, formatGB } from '../../lib/format'
  * ResizeObserver'ом: viewBox-растяжение искажало бы штрих и точки.
  */
 
-// Blur the filled silhouette, then retain its inner and outer edges, like box-shadow.
-// Blurring a thin stroke loses intensity as the radius grows.
-// SVG blur uses standard deviation, approximately half the CSS shadow blur radius.
+// Blur the filled silhouette, then keep its inner and outer edges — the same
+// inset + outset stack as GlassCard / BorderGlow. SVG stdDeviation is ~half
+// the CSS box-shadow blur radius.
 const HALO_LAYERS = [
   { blur: 1, color: '#ffffff', opacity: 0.55 },
   { blur: 3, color: '#b4d2ff', opacity: 0.4 },
@@ -21,7 +21,10 @@ const HALO_LAYERS = [
 ]
 
 const H = 240
-const PAD = { top: 16, right: 8, bottom: 28, left: 8 }
+const PAD = { top: 16, right: 0, bottom: 28, left: 0 }
+// Extra canvas on each side so closing edges of the halo live outside the
+// visible plot; the wrapper clips them with overflow: hidden.
+const GLOW_EXTENT = 84
 
 /** Округление потолка оси до «красивого» значения */
 function niceMax(v: number) {
@@ -49,8 +52,6 @@ function smoothPath(pts: { x: number; y: number }[]) {
 export function TrafficChart({ days }: { days: TrafficDay[] }) {
   const glowId = useId()
   const fillId = useId()
-  const edgeGradientId = useId()
-  const edgeMaskId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const [hover, setHover] = useState<number | null>(null)
@@ -67,24 +68,28 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
   const max = niceMax(Math.max(...days.map((d) => d.gb)))
   const innerW = width - PAD.left - PAD.right
   const innerH = H - PAD.top - PAD.bottom
-  const px = (i: number) => PAD.left + (n === 1 ? innerW / 2 : (i * innerW) / (n - 1))
+  const svgW = width + 2 * GLOW_EXTENT
+  const px = (i: number) => GLOW_EXTENT + PAD.left + (n === 1 ? innerW / 2 : (i * innerW) / (n - 1))
   const py = (gb: number) => PAD.top + (1 - gb / max) * innerH
 
   const pts = days.map((d, i) => ({ x: px(i), y: py(d.gb) }))
   const line = smoothPath(pts)
-  const area = line ? `${line} L ${px(n - 1)} ${H - PAD.bottom} L ${px(0)} ${H - PAD.bottom} Z` : ''
+  const area = line
+    ? `${line} L ${px(n - 1)} ${H - PAD.bottom} L ${px(0)} ${H - PAD.bottom} Z`
+    : ''
 
-  // Move the silhouette's closing edges beyond the filter so only the data curve glows.
+  // Continue the silhouette past the plot so only the data curve is an edge
+  // inside the filter; overflow: hidden on the wrapper drops the rest.
   const haloArea =
     pts.length > 1
-      ? `M -100 ${pts[0].y} ${line.replace(/^M/, 'L')} L ${width + 100} ${pts[n - 1].y} L ${width + 100} ${H + 240} L -100 ${H + 240} Z`
+      ? `M 0 ${pts[0].y} ${line.replace(/^M/, 'L')} L ${svgW} ${pts[n - 1].y} L ${svgW} ${H + 240} L 0 ${H + 240} Z`
       : ''
 
   // Подписи X: для 7 дней — каждый второй, для 30 — каждый седьмой
   const labelEvery = n <= 7 ? 2 : 7
   const gridValues = [max / 2, max]
 
-  const onPointerMove = (e: PointerEvent<SVGSVGElement>) => {
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const i = Math.round(((x - PAD.left) / innerW) * (n - 1))
@@ -94,22 +99,21 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
   const hovered = hover !== null ? days[hover] : null
 
   return (
-    <div ref={containerRef} className="relative">
+    <div
+      ref={containerRef}
+      className="relative overflow-hidden touch-none select-none"
+      onPointerMove={onPointerMove}
+      onPointerLeave={() => setHover(null)}
+    >
       {width > 0 && (
-        <svg
-          width={width}
-          height={H}
-          onPointerMove={onPointerMove}
-          onPointerLeave={() => setHover(null)}
-          className="block overflow-hidden touch-none select-none"
-        >
+        <svg width={svgW} height={H} className="pointer-events-none block" style={{ marginLeft: -GLOW_EXTENT }}>
           <defs>
             <filter
               id={glowId}
               filterUnits="userSpaceOnUse"
               x={-84}
               y={-84}
-              width={width + 168}
+              width={svgW + 168}
               height={H + 168}
               colorInterpolationFilters="sRGB"
             >
@@ -148,29 +152,6 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
               </feMerge>
             </filter>
             <linearGradient
-              id={edgeGradientId}
-              gradientUnits="userSpaceOnUse"
-              x1={PAD.left}
-              x2={width - PAD.right}
-              y1="0"
-              y2="0"
-            >
-              <stop offset="0" stopColor="white" stopOpacity="0" />
-              <stop offset={Math.min(0.45, 24 / Math.max(1, innerW))} stopColor="white" />
-              <stop offset={1 - Math.min(0.45, 24 / Math.max(1, innerW))} stopColor="white" />
-              <stop offset="1" stopColor="white" stopOpacity="0" />
-            </linearGradient>
-            <mask
-              id={edgeMaskId}
-              maskUnits="userSpaceOnUse"
-              x="0"
-              y="-84"
-              width={width}
-              height={H + 168}
-            >
-              <rect x="0" y="-84" width={width} height={H + 168} fill={`url(#${edgeGradientId})`} />
-            </mask>
-            <linearGradient
               id={fillId}
               gradientUnits="userSpaceOnUse"
               x1="0"
@@ -186,8 +167,8 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
           {gridValues.map((v) => (
             <g key={v}>
               <line
-                x1={PAD.left}
-                x2={width - PAD.right}
+                x1={px(0)}
+                x2={px(n - 1)}
                 y1={py(v)}
                 y2={py(v)}
                 stroke="white"
@@ -195,7 +176,7 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
                 strokeDasharray="3 5"
               />
               <text
-                x={PAD.left}
+                x={px(0)}
                 y={py(v) - 6}
                 fill="var(--color-fg-muted)"
                 fillOpacity="0.7"
@@ -207,8 +188,7 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
             </g>
           ))}
 
-          {/* Fade the complete chart artwork together so no bare stroke or fill edge remains. */}
-          <g mask={`url(#${edgeMaskId})`} pointerEvents="none">
+          <g>
             <path d={area} fill={`url(#${fillId})`} />
             <path
               d={haloArea}
@@ -270,7 +250,7 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
         <div
           className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-xl border border-white/10 bg-surface-2/90 px-3 py-2 text-center backdrop-blur-xl"
           style={{
-            left: Math.min(Math.max(px(hover), 52), width - 52),
+            left: Math.min(Math.max(px(hover) - GLOW_EXTENT, 52), width - 52),
             top: py(hovered.gb) - 62,
           }}
         >
