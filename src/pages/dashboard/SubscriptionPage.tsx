@@ -1,5 +1,6 @@
 import { InputHalo } from '../../components/Input'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Copy, RotateCcw } from 'lucide-react'
 import { Button } from '../../components/Button'
@@ -11,51 +12,6 @@ import { plan, subLink } from '../../data/mock'
 import { formatDateFull, formatMoney } from '../../lib/format'
 import { useDashboard } from './DashboardContext'
 import { PageHeader } from './PageHeader'
-
-/**
- * Фейковый QR: детерминированная матрица из токена + finder-паттерны по
- * углам. Реальной кодировкой не является — для мока достаточно силуэта.
- */
-function FakeQR({ token }: { token: string }) {
-  const cells = useMemo(() => {
-    const N = 21
-    let h = 2166136261
-    for (const ch of token) h = Math.imul(h ^ ch.charCodeAt(0), 16777619)
-    const grid: boolean[][] = []
-    for (let y = 0; y < N; y++) {
-      grid.push([])
-      for (let x = 0; x < N; x++) {
-        h = Math.imul(h ^ (y * N + x), 16777619)
-        grid[y].push(((h >>> 13) & 3) === 0 ? false : (h & 1) === 1)
-      }
-    }
-    return grid
-  }, [token])
-
-  const N = 21
-  const finder = (cx: number, cy: number) => (
-    <g key={`${cx}-${cy}`}>
-      <rect x={cx} y={cy} width={7} height={7} fill="none" stroke="white" strokeWidth={1} />
-      <rect x={cx + 2} y={cy + 2} width={3} height={3} fill="white" />
-    </g>
-  )
-
-  return (
-    <svg viewBox={`-1 -1 ${N + 2} ${N + 2}`} className="size-36" role="img" aria-label="Subscription QR code">
-      {cells.map((row, y) =>
-        row.map((on, x) => {
-          const inFinder = (x < 8 && y < 8) || (x > N - 9 && y < 8) || (x < 8 && y > N - 9)
-          return on && !inFinder ? (
-            <rect key={`${x}-${y}`} x={x} y={y} width={0.82} height={0.82} rx={0.2} fill="white" fillOpacity={0.9} />
-          ) : null
-        }),
-      )}
-      {finder(0, 0)}
-      {finder(N - 7, 0)}
-      {finder(0, N - 7)}
-    </svg>
-  )
-}
 
 function TopUpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { topUp } = useDashboard()
@@ -233,7 +189,17 @@ export function SubscriptionPage() {
               Paste it into any client — or scan the QR.
             </p>
             <div className="mt-4 flex items-center justify-center rounded-2xl bg-surface-2 py-6">
-              <FakeQR token={subToken} />
+              <QRCodeSVG
+                value={link}
+                size={164}
+                level="M"
+                marginSize={4}
+                bgColor="#ffffff"
+                fgColor="#151515"
+                className="rounded-lg"
+                role="img"
+                aria-label="Subscription QR code"
+              />
             </div>
             <code className="mt-4 block truncate rounded-xl bg-surface-2 px-3.5 py-2.5 font-mono text-xs text-fg-muted">
               {link}
