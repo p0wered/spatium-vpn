@@ -1,63 +1,10 @@
 import { useRef } from 'react'
+import { Link } from 'react-router'
+import { plans, type Plan } from './plans'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
 import { ArrowUpRight, Check } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { GlassCard } from '../../components/GlassCard'
-
-type Feature = {
-  included: boolean
-  label: string
-}
-
-type Plan = {
-  name: string
-  tagline: string
-  price: string
-  featured: boolean
-  features: Feature[]
-}
-
-const plans: Plan[] = [
-  {
-    name: 'Orbis',
-    tagline: 'Everyday essentials',
-    price: '0.12$',
-    featured: false,
-    features: [
-      { included: true, label: '3 devices included' },
-      { included: true, label: 'Unlimited traffic' },
-      { included: true, label: 'Up to 100 Mbps' },
-      { included: false, label: 'Two hop extended access' },
-      { included: false, label: 'Gaming-optimized routes' },
-    ],
-  },
-  {
-    name: 'Sidus',
-    tagline: 'A wider orbit',
-    price: '0.21$',
-    featured: true,
-    features: [
-      { included: true, label: '5 devices included' },
-      { included: true, label: 'Unlimited traffic' },
-      { included: true, label: 'Up to 300 Mbps' },
-      { included: true, label: 'Two hop extended access' },
-      { included: false, label: 'Gaming-optimized routes' },
-    ],
-  },
-  {
-    name: 'Aether',
-    tagline: 'The open sky',
-    price: '0.33$',
-    featured: false,
-    features: [
-      { included: true, label: '10 devices included' },
-      { included: true, label: 'Unlimited traffic' },
-      { included: true, label: 'Unlimited speed' },
-      { included: true, label: 'Two hop extended access' },
-      { included: true, label: 'Gaming-optimized routes' },
-    ],
-  },
-]
 
 const revealContainer: Variants = {
   hidden: {},
@@ -130,10 +77,7 @@ function PlanCard({
 
           <ul className="pricing-card-features">
             {plan.features.map((feature) => (
-              <li
-                key={feature.label}
-                className={feature.included ? 'is-included' : 'is-excluded'}
-              >
+              <li key={feature.label} className={feature.included ? 'is-included' : 'is-excluded'}>
                 {feature.included ? (
                   <Check size={16} strokeWidth={1.75} aria-hidden />
                 ) : (
@@ -215,17 +159,15 @@ export function Pricing() {
         >
           Each extra device is +0.02$ /day
           <span aria-hidden className="mx-2 text-white/28">
-            ·
+            •
           </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-auto gap-0.5 px-0! font-light text-white/46! hover:text-fg!"
+          <Link
+            to="/pricing/terms"
+            className="inline-flex items-center gap-0.5 rounded-sm text-white/60 transition-colors hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fg"
           >
             Full terms
             <ArrowUpRight size={13} strokeWidth={1.75} aria-hidden />
-          </Button>
+          </Link>
         </motion.p>
       </motion.div>
     </section>

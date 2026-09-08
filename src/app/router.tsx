@@ -11,6 +11,12 @@ import { SettingsPage } from '../pages/dashboard/SettingsPage'
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
+  {
+    path: '/pricing/terms',
+    lazy: async () => ({
+      Component: (await import('../pages/landing/PricingTermsPage')).PricingTermsPage,
+    }),
+  },
   { path: '/login', element: <LoginPage /> },
   {
     path: '/app',
