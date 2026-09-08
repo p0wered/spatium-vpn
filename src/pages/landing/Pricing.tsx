@@ -116,7 +116,7 @@ function PlanCard({
         ease: [0.22, 1, 0.36, 1],
       }}
     >
-      <GlassCard halo className="pricing-card flex h-full flex-col">
+      <GlassCard className="pricing-card flex h-full flex-col">
         <div className="pricing-card-body">
           <h3 id={`plan-${plan.name.toLowerCase()}`} className="pricing-card-name">
             {plan.name}

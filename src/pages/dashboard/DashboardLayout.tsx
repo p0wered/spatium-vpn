@@ -68,7 +68,7 @@ function NavItems({ collapsed = false, onNavigate }: { collapsed?: boolean; onNa
               }`
             }
           >
-            <Icon size={18} strokeWidth={1.75} className="shrink-0" aria-hidden />
+            <Icon size={18} strokeWidth={1.75} className="sidebar-nav-icon shrink-0" aria-hidden />
             <motion.span
               initial={false}
               animate={{ opacity: collapsed ? 0 : 1 }}

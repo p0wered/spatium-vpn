@@ -81,7 +81,7 @@ function CardSequence() {
   return (
     <div className="testimonial-sequence">
       {testimonials.map((testimonial, index) => (
-        <GlassCard halo className="testimonial-card" key={testimonial.name}>
+        <GlassCard className="testimonial-card" key={testimonial.name}>
           <p className="testimonial-card-copy">{testimonial.quote}</p>
 
           <footer className="testimonial-card-footer">

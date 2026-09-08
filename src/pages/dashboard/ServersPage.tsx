@@ -1,3 +1,4 @@
+import { InputHalo } from '../../components/Input'
 import { useMemo, useState } from 'react'
 import { Gamepad2, Search } from 'lucide-react'
 import { Flag } from '../../components/Flag'
@@ -39,7 +40,7 @@ export function ServersPage() {
       <Reveal delay={0.05}>
         <div className="flex flex-wrap items-center gap-3">
           <PillTabs value={filter} onChange={setFilter} options={filters} ariaLabel="Server type" />
-          <label className="relative flex-1 sm:max-w-64">
+          <label className="input-halo-frame flex-1 rounded-full sm:max-w-64">
             <Search
               size={15}
               strokeWidth={1.75}
@@ -51,8 +52,9 @@ export function ServersPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search city or country"
-              className="w-full rounded-full bg-surface-1 py-2 pr-4 pl-9.5 text-sm placeholder:text-fg-muted focus:outline-2 focus:outline-white/25"
+              className="input-halo w-full rounded-full bg-surface-1 py-2 pr-4 pl-9.5 text-sm placeholder:text-fg-muted"
             />
+            <InputHalo />
           </label>
         </div>
       </Reveal>

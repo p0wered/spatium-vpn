@@ -15,12 +15,12 @@ export function Input({ label, id, className = '', ...props }: InputProps) {
   const inputId = id ?? fallbackId
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`input-halo-frame rounded-xl ${className}`}>
       <input
         id={inputId}
         placeholder=" "
-        className="peer w-full rounded-xl bg-surface-2 px-4 pt-5.5 pb-2
-        text-sm text-fg focus:outline-1 focus:outline-white/25 disabled:opacity-50"
+        className="input-halo peer w-full rounded-xl bg-surface-2 px-4 pt-5.5 pb-2
+        text-sm text-fg disabled:opacity-50"
         {...props}
       />
       <label
@@ -29,6 +29,16 @@ export function Input({ label, id, className = '', ...props }: InputProps) {
       >
         {label}
       </label>
+      <InputHalo />
     </div>
+  )
+}
+
+/** Separate additive light layer; place after the input inside .input-halo-frame. */
+export function InputHalo() {
+  return (
+    <span aria-hidden className="input-halo-light">
+      <span />
+    </span>
   )
 }

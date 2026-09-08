@@ -1,3 +1,4 @@
+import { InputHalo } from '../../components/Input'
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Copy, RotateCcw } from 'lucide-react'
@@ -114,7 +115,7 @@ function TopUpDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
                   ${v}
                 </button>
               ))}
-              <div className="relative min-w-0 flex-1">
+              <div className="input-halo-frame min-w-0 flex-1 rounded-xl">
                 {custom !== '' && (
                   <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center font-mono text-sm text-fg">
                     $
@@ -129,10 +130,11 @@ function TopUpDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
                   inputMode="numeric"
                   placeholder="Custom"
                   aria-label="Custom amount in dollars"
-                  className={`w-full rounded-xl border py-2.5 pr-4 font-mono text-sm text-fg transition-colors placeholder:text-fg-muted focus:outline-none ${
-                    custom !== '' ? 'border-white/25 bg-white/12 pl-7' : 'border-white/8 pl-4 focus:border-white/25'
+                  className={`input-halo w-full rounded-xl border py-2.5 pr-4 font-mono text-sm text-fg placeholder:text-fg-muted ${
+                    custom !== '' ? 'border-white/25 bg-white/12 pl-7' : 'border-white/8 pl-4'
                   }`}
                 />
+                <InputHalo />
               </div>
             </div>
             <div className="w-full mt-8 flex justify-between gap-2">

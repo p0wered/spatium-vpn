@@ -1,3 +1,4 @@
+import { InputHalo } from '../../components/Input'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Check, Laptop, Monitor, Pencil, Smartphone, Terminal, Trash2, Tv } from 'lucide-react'
@@ -57,20 +58,23 @@ function DeviceRow({
 
       <div className="min-w-0 flex-1 basis-40">
         {editing ? (
-          <input
-            autoFocus
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commit()
-              if (e.key === 'Escape') {
-                setDraft(device.name)
-                setEditing(false)
-              }
-            }}
-            className="w-full max-w-52 text-sm focus:outline-none"
-          />
+          <span className="input-halo-frame block w-full max-w-52 rounded-sm">
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commit()
+                if (e.key === 'Escape') {
+                  setDraft(device.name)
+                  setEditing(false)
+                }
+              }}
+              className="input-halo w-full rounded-sm text-sm"
+            />
+            <InputHalo />
+          </span>
         ) : (
           <span className="flex items-center gap-2 text-sm">
             <span className="truncate">{device.name}</span>

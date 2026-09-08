@@ -590,6 +590,15 @@
    * покоя, а box-shadow один на элемент. Inset-слоёв ореола здесь нет — внутри
    * кнопки текст, свет должен лежать только снаружи.
    */
+  /* Compact white core and icy falloff, matching the GlassCard halo palette. */
+  [aria-current='page'] > .sidebar-nav-icon {
+    color: #fff;
+    filter:
+      drop-shadow(0 0 1px rgb(255 255 255 / 55%))
+      drop-shadow(0 0 3px rgb(180 210 255 / 40%))
+      drop-shadow(0 0 6px rgb(170 204 255 / 28%));
+  }
+
   .btn-glow {
     position: relative;
   }
@@ -737,16 +746,14 @@
 
   /*
    * Внешний ореол GlassCard (проп halo, по мотивам React Bits BorderGlow):
-   * многослойный box-shadow, обрезанный conic-маской по углу курсора
-   * (--halo-angle) относительно центра. --halo-opacity растёт у краёв.
+   * Маска фиксированного радиуса следует за курсором: размер пятна и
+   * затухание у края не зависят от размеров карточки.
    * Ядро — холодно-белое, спад — светлый лёд интерфейса (#b4d2ff / #aaccff).
    */
   .glass-card {
-    --halo-angle: 45deg;
     --halo-opacity: 0;
     --halo-radius: 40px;
-    --halo-arc: 2.5%;
-    --halo-arc-fade: 10%;
+    --halo-spot-radius: 160px;
   }
 
   .glass-card-halo {
@@ -759,21 +766,78 @@
     pointer-events: none;
     mix-blend-mode: plus-lighter;
     opacity: var(--halo-opacity);
-    -webkit-mask-image: conic-gradient(
-      from var(--halo-angle) at center,
-      #fff var(--halo-arc),
-      transparent var(--halo-arc-fade),
-      transparent calc(100% - var(--halo-arc-fade)),
-      #fff calc(100% - var(--halo-arc))
+    -webkit-mask-image: radial-gradient(
+      circle var(--halo-spot-radius) at
+        calc(var(--spot-x) + var(--halo-radius)) calc(var(--spot-y) + var(--halo-radius)),
+      #fff 0%,
+      #fff 15%,
+      transparent 100%
     );
-    mask-image: conic-gradient(
-      from var(--halo-angle) at center,
-      #fff var(--halo-arc),
-      transparent var(--halo-arc-fade),
-      transparent calc(100% - var(--halo-arc-fade)),
-      #fff calc(100% - var(--halo-arc))
+    mask-image: radial-gradient(
+      circle var(--halo-spot-radius) at
+        calc(var(--spot-x) + var(--halo-radius)) calc(var(--spot-y) + var(--halo-radius)),
+      #fff 0%,
+      #fff 15%,
+      transparent 100%
     );
     transition: opacity 0.3s ease-out;
+  }
+
+  .input-halo-frame {
+    --input-glow-scale: 0.4;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .input-halo-light {
+    position: absolute;
+    z-index: 2;
+    inset: -40px;
+    border-radius: inherit;
+    pointer-events: none;
+    mix-blend-mode: plus-lighter;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .input-halo-light > span {
+    position: absolute;
+    inset: 40px;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--halo-color)),
+      inset 0 0 calc(1px * var(--input-glow-scale)) 0 rgb(255 255 255 / 70%),
+      inset 0 0 calc(3px * var(--input-glow-scale)) 0 rgb(255 255 255 / 45%),
+      inset 0 0 calc(8px * var(--input-glow-scale)) 0 rgb(215 231 255 / 0.32),
+      inset 0 0 calc(18px * var(--input-glow-scale)) 0 rgb(200 223 255 / 0.2),
+      inset 0 0 calc(32px * var(--input-glow-scale)) calc(2px * var(--input-glow-scale)) rgb(207 227 255 / 0.1),
+      0 0 calc(2px * var(--input-glow-scale)) 0 rgb(255 255 255 / 55%),
+      0 0 calc(6px * var(--input-glow-scale)) 0 rgb(209 228 255 / 0.4),
+      0 0 calc(16px * var(--input-glow-scale)) calc(1px * var(--input-glow-scale)) rgb(210 228 255 / 0.28),
+      0 0 calc(32px * var(--input-glow-scale)) calc(2px * var(--input-glow-scale)) rgb(204 224 255 / 0.16),
+      0 0 calc(56px * var(--input-glow-scale)) calc(4px * var(--input-glow-scale)) rgb(185 201 255 / 0.1);
+  }
+
+  .input-halo:focus:not(:disabled) {
+    outline: none;
+  }
+
+  .input-halo:focus:not(:disabled) ~ .input-halo-light {
+    opacity: 0.8;
+    transition-duration: 0.16s;
+  }
+
+  @media (forced-colors: active) {
+    .input-halo:focus:not(:disabled) {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .input-halo-light {
+      transition: none;
+    }
   }
 
   .glass-card-halo > span {

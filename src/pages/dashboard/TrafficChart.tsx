@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { Fragment, useEffect, useId, useRef, useState, type PointerEvent } from 'react'
 import type { TrafficDay } from '../../data/mock'
 import { formatDate, formatGB } from '../../lib/format'
 
@@ -8,6 +8,17 @@ import { formatDate, formatGB } from '../../lib/format'
  * вертикальная направляющая с точкой и glass-tooltip. Ширина меряется
  * ResizeObserver'ом: viewBox-растяжение искажало бы штрих и точки.
  */
+
+// Blur the filled silhouette, then retain its inner and outer edges, like box-shadow.
+// Blurring a thin stroke loses intensity as the radius grows.
+// SVG blur uses standard deviation, approximately half the CSS shadow blur radius.
+const HALO_LAYERS = [
+  { blur: 1, color: '#ffffff', opacity: 0.55 },
+  { blur: 3, color: '#b4d2ff', opacity: 0.4 },
+  { blur: 8, color: '#aaccff', opacity: 0.28 },
+  { blur: 16, color: '#aaccff', opacity: 0.16 },
+  { blur: 28, color: '#829bff', opacity: 0.1 },
+]
 
 const H = 240
 const PAD = { top: 16, right: 8, bottom: 28, left: 8 }
@@ -36,6 +47,10 @@ function smoothPath(pts: { x: number; y: number }[]) {
 }
 
 export function TrafficChart({ days }: { days: TrafficDay[] }) {
+  const glowId = useId()
+  const fillId = useId()
+  const edgeGradientId = useId()
+  const edgeMaskId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const [hover, setHover] = useState<number | null>(null)
@@ -57,7 +72,13 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
 
   const pts = days.map((d, i) => ({ x: px(i), y: py(d.gb) }))
   const line = smoothPath(pts)
-  const area = `${line} L ${px(n - 1)} ${PAD.top + innerH} L ${px(0)} ${PAD.top + innerH} Z`
+  const area = line ? `${line} L ${px(n - 1)} ${H - PAD.bottom} L ${px(0)} ${H - PAD.bottom} Z` : ''
+
+  // Move the silhouette's closing edges beyond the filter so only the data curve glows.
+  const haloArea =
+    pts.length > 1
+      ? `M -100 ${pts[0].y} ${line.replace(/^M/, 'L')} L ${width + 100} ${pts[n - 1].y} L ${width + 100} ${H + 240} L -100 ${H + 240} Z`
+      : ''
 
   // Подписи X: для 7 дней — каждый второй, для 30 — каждый седьмой
   const labelEvery = n <= 7 ? 2 : 7
@@ -80,14 +101,85 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
           height={H}
           onPointerMove={onPointerMove}
           onPointerLeave={() => setHover(null)}
-          className="block touch-none select-none"
+          className="block overflow-hidden touch-none select-none"
         >
           <defs>
-            {/* Заливка «цвет живёт в свете»: белое ядро у линии → ледяной спад */}
-            <linearGradient id="traffic-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="white" stopOpacity="0.14" />
-              <stop offset="45%" stopColor="var(--color-ice)" stopOpacity="0.17" />
-              <stop offset="100%" stopColor="var(--color-ice)" stopOpacity="0" />
+            <filter
+              id={glowId}
+              filterUnits="userSpaceOnUse"
+              x={-84}
+              y={-84}
+              width={width + 168}
+              height={H + 168}
+              colorInterpolationFilters="sRGB"
+            >
+              {HALO_LAYERS.map(({ blur, color, opacity }, i) => (
+                <Fragment key={blur}>
+                  <feGaussianBlur in="SourceAlpha" stdDeviation={blur} result={`blur-${i}`} />
+                  <feComposite
+                    in={`blur-${i}`}
+                    in2="SourceAlpha"
+                    operator="out"
+                    result={`outer-${i}`}
+                  />
+                  <feComposite
+                    in="SourceAlpha"
+                    in2={`blur-${i}`}
+                    operator="out"
+                    result={`inner-${i}`}
+                  />
+                  <feMerge result={`edge-${i}`}>
+                    <feMergeNode in={`outer-${i}`} />
+                    <feMergeNode in={`inner-${i}`} />
+                  </feMerge>
+                  <feFlood floodColor={color} floodOpacity={opacity} result={`color-${i}`} />
+                  <feComposite
+                    in={`color-${i}`}
+                    in2={`edge-${i}`}
+                    operator="in"
+                    result={`halo-${i}`}
+                  />
+                </Fragment>
+              ))}
+              <feMerge>
+                {HALO_LAYERS.map((layer, i) => (
+                  <feMergeNode key={layer.blur} in={`halo-${i}`} />
+                ))}
+              </feMerge>
+            </filter>
+            <linearGradient
+              id={edgeGradientId}
+              gradientUnits="userSpaceOnUse"
+              x1={PAD.left}
+              x2={width - PAD.right}
+              y1="0"
+              y2="0"
+            >
+              <stop offset="0" stopColor="white" stopOpacity="0" />
+              <stop offset={Math.min(0.45, 24 / Math.max(1, innerW))} stopColor="white" />
+              <stop offset={1 - Math.min(0.45, 24 / Math.max(1, innerW))} stopColor="white" />
+              <stop offset="1" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+            <mask
+              id={edgeMaskId}
+              maskUnits="userSpaceOnUse"
+              x="0"
+              y="-84"
+              width={width}
+              height={H + 168}
+            >
+              <rect x="0" y="-84" width={width} height={H + 168} fill={`url(#${edgeGradientId})`} />
+            </mask>
+            <linearGradient
+              id={fillId}
+              gradientUnits="userSpaceOnUse"
+              x1="0"
+              x2="0"
+              y1={PAD.top}
+              y2={H - PAD.bottom}
+            >
+              <stop offset="0" stopColor="#aaccff" stopOpacity="0.24" />
+              <stop offset="1" stopColor="#aaccff" stopOpacity="0" />
             </linearGradient>
           </defs>
 
@@ -115,15 +207,25 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
             </g>
           ))}
 
-          <path d={area} fill="url(#traffic-fill)" />
-          <path
-            d={line}
-            fill="none"
-            stroke="white"
-            strokeOpacity="0.9"
-            strokeWidth="1.5"
-            style={{ filter: 'drop-shadow(0 0 6px rgb(180 210 255 / 0.75))' }}
-          />
+          {/* Fade the complete chart artwork together so no bare stroke or fill edge remains. */}
+          <g mask={`url(#${edgeMaskId})`} pointerEvents="none">
+            <path d={area} fill={`url(#${fillId})`} />
+            <path
+              d={haloArea}
+              fill="white"
+              filter={`url(#${glowId})`}
+              style={{ mixBlendMode: 'plus-lighter' }}
+            />
+            <path
+              d={line}
+              fill="none"
+              stroke="white"
+              strokeOpacity="0.9"
+              strokeWidth="0.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
 
           {days.map((d, i) =>
             i % labelEvery === 0 ? (
@@ -155,9 +257,9 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
               <circle
                 cx={px(hover)}
                 cy={py(days[hover].gb)}
-                r="3.5"
+                r="2.5"
                 fill="white"
-                style={{ filter: 'drop-shadow(0 0 6px rgb(180 210 255 / 0.7))' }}
+                style={{ filter: 'drop-shadow(0 0 3px #b4d2ff)' }}
               />
             </g>
           )}

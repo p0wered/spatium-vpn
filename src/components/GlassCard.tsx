@@ -3,7 +3,7 @@ import { useRef, type ComponentPropsWithoutRef, type MouseEvent } from 'react'
 type GlassCardProps = ComponentPropsWithoutRef<'div'> & {
   /**
    * Внешний ореол свечения у края возле курсора (по мотивам React Bits
-   * BorderGlow). Опционален: для featured-карточек, не для всего bento.
+   * BorderGlow). Включён по умолчанию; halo={false} отключает эффект.
    */
   halo?: boolean
 }
@@ -15,7 +15,7 @@ type GlassCardProps = ComponentPropsWithoutRef<'div'> & {
  * трекинг мыши через CSS-переменные, без React-state и ре-рендеров.
  */
 export function GlassCard({
-  halo = false,
+  halo = true,
   className = '',
   children,
   onMouseMove,
@@ -27,7 +27,7 @@ export function GlassCard({
 
   const setVar = (name: string, value: string) => ref.current?.style.setProperty(name, value)
 
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+  const updateLight = (e: MouseEvent<HTMLDivElement>) => {
     const rect = ref.current?.getBoundingClientRect()
     if (rect) {
       const x = e.clientX - rect.left
@@ -36,28 +36,24 @@ export function GlassCard({
       setVar('--spot-y', `${y}px`)
 
       if (halo) {
-        const dx = x - rect.width / 2
-        const dy = y - rect.height / 2
-        let deg = Math.atan2(dy, dx) * (180 / Math.PI) + 90
-        if (deg < 0) deg += 360
-        const kx = dx === 0 ? Infinity : rect.width / 2 / Math.abs(dx)
-        const ky = dy === 0 ? Infinity : rect.height / 2 / Math.abs(dy)
-        const proximity = Math.min(Math.max(1 / Math.min(kx, ky), 0), 1)
-        const sensitivity = 30
-        const opacity = Math.max(0, (proximity * 100 - sensitivity) / (100 - sensitivity))
-        setVar('--halo-angle', `${deg.toFixed(1)}deg`)
+        // Fixed CSS-pixel reach keeps the same falloff on every card size.
+        const edgeDistance = Math.max(0, Math.min(x, y, rect.width - x, rect.height - y))
+        const opacity = Math.max(0, 1 - edgeDistance / 80)
         setVar('--halo-opacity', opacity.toFixed(3))
       }
     }
-    onMouseMove?.(e)
   }
 
   return (
     <div
       ref={ref}
       className={`glass-card ${className}`}
-      onMouseMove={handleMouseMove}
+      onMouseMove={(e) => {
+        updateLight(e)
+        onMouseMove?.(e)
+      }}
       onMouseEnter={(e) => {
+        updateLight(e)
         setVar('--spot-opacity', '1')
         onMouseEnter?.(e)
       }}
