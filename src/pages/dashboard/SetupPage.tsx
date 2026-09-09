@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Copy, QrCode } from 'lucide-react'
-import connectedApp from '../../assets/connected.png'
+/** Макет приложения в рамке телефона — WebP под экранный размер карточки. */
+import connectedApp from '../../assets/connected.webp'
 import { Button } from '../../components/Button'
 import { GlassCard } from '../../components/GlassCard'
 import { PillTabs } from '../../components/PillTabs'
@@ -104,7 +105,11 @@ export function SetupPage() {
               <img
                 src={connectedApp}
                 alt="SpatiumVPN app on iPhone"
-                className="pointer-events-none max-h-76 object-contain object-bottom select-none sm:max-h-115"
+                width={675}
+                height={1380}
+                decoding="async"
+                fetchPriority="high"
+                className="pointer-events-none h-auto w-auto max-h-76 object-contain object-bottom select-none sm:max-h-115"
               />
             </div>
           </div>

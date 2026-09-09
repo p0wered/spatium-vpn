@@ -15,7 +15,7 @@ import { TrafficChart } from './TrafficChart'
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <GlassCard className="p-5">
+    <GlassCard className="w-[min(19rem,calc(100vw-5.25rem))] shrink-0 snap-start overflow-hidden p-5 last:snap-end sm:w-auto sm:min-w-0 sm:overflow-visible">
       <div>
         <div className="text-xs text-fg-muted">{label}</div>
         <div className={`mt-2 font-normal text-xl tracking-tight lg:text-2xl`}>{value}</div>
@@ -63,11 +63,18 @@ export function OverviewPage() {
       {daysLeft <= 7 && (
         <Reveal delay={0.05}>
           <GlassCard className="flex flex-wrap items-center gap-3 px-5 py-4">
-            <TriangleAlert size={17} strokeWidth={1.75} className="ml-2 shrink-0 text-fg" aria-hidden />
+            <TriangleAlert
+              size={17}
+              strokeWidth={1.75}
+              className="ml-2 shrink-0 text-fg"
+              aria-hidden
+            />
+
             <p className="min-w-0 flex-1 text-sm">
               Subscription expires in <span className="font-mono">{daysLeft} days</span>
               <span className="text-fg-muted"> — top up to keep your devices connected.</span>
             </p>
+
             <Link to="/dashboard/subscription">
               <Button variant="secondary" className="h-9 px-6">
                 Top up
@@ -78,15 +85,40 @@ export function OverviewPage() {
       )}
 
       <Reveal delay={0.1}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Balance" value={formatMoney(balance)} sub={`≈ ${daysLeft} days of ${plan.name}`} />
-          <StatCard label="Active until" value={formatDateFull(expiresAt)} sub={`${formatMoney(plan.dailyRate)} charged daily`} />
-          <StatCard
-            label="Devices"
-            value={`${devices.length} of ${plan.deviceLimit}`}
-            sub="connected to your plan"
-          />
-          <StatCard label={`Traffic · ${period}d`} value={formatGB(totalGB)} sub="through SpatiumVPN" />
+        {/*
+          На телефоне — горизонтальный snap-слайдер: карточка уже контентной
+          колонки, следующая выглядывает справа. С sm сетка как раньше.
+        */}
+        <div className="stats-slider -mx-5 sm:mx-0">
+          <div
+            role="region"
+            aria-label="Account stats"
+            className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x px-5 scroll-px-5 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:scroll-px-0 sm:touch-auto xl:grid-cols-4"
+          >
+            <StatCard
+              label="Balance"
+              value={formatMoney(balance)}
+              sub={`≈ ${daysLeft} days of ${plan.name}`}
+            />
+
+            <StatCard
+              label="Active until"
+              value={formatDateFull(expiresAt)}
+              sub={`${formatMoney(plan.dailyRate)} charged daily`}
+            />
+
+            <StatCard
+              label="Devices"
+              value={`${devices.length} of ${plan.deviceLimit}`}
+              sub="connected to your plan"
+            />
+
+            <StatCard
+              label={`Traffic · ${period}d`}
+              value={formatGB(totalGB)}
+              sub="through SpatiumVPN"
+            />
+          </div>
         </div>
       </Reveal>
 
@@ -95,8 +127,12 @@ export function OverviewPage() {
           <GlassCard className="h-full p-5 lg:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-sm font-semibold">Traffic</h2>
-                <p className="mt-0.5 text-xs text-fg-muted">GB per day, last {period} days</p>
+                <h2 className="text-sm font-semibold">
+                  Traffic
+                </h2>
+                <p className="mt-0.5 text-xs text-fg-muted">
+                  GB per day, last {period} days
+                </p>
               </div>
               <PeriodSwitch value={period} onChange={setPeriod} />
             </div>
@@ -109,8 +145,12 @@ export function OverviewPage() {
         <Reveal delay={0.2}>
           <GlassCard className="flex h-full flex-col p-5 lg:p-6">
             <div>
-              <h2 className="text-sm font-semibold">Recommended servers</h2>
-              <p className="mt-0.5 text-xs text-fg-muted">nearest to you · estimated ping</p>
+              <h2 className="text-sm font-semibold">
+                Recommended servers
+              </h2>
+              <p className="mt-0.5 text-xs text-fg-muted">
+                nearest to you · estimated ping
+              </p>
             </div>
             <ul className="mt-4 flex flex-1 flex-col">
               {nearest.map((s) => (

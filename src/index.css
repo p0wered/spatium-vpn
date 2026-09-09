@@ -639,6 +639,51 @@
     display: none;
   }
 
+  /*
+   * Края мобильного слайдера метрик: те же чёрные оверлеи, что у
+   * .testimonial-marquee, только короче — карточка остаётся читаемой.
+   */
+  .stats-slider {
+    position: relative;
+  }
+
+  .stats-slider::before,
+  .stats-slider::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    z-index: 2;
+    width: 1.125rem;
+    pointer-events: none;
+  }
+
+  .stats-slider::before {
+    left: 0;
+    background: linear-gradient(
+      to right,
+      #000 0%,
+      rgb(0 0 0 / 0.55) 45%,
+      transparent 100%
+    );
+  }
+
+  .stats-slider::after {
+    right: 0;
+    background: linear-gradient(
+      to left,
+      #000 0%,
+      rgb(0 0 0 / 0.55) 45%,
+      transparent 100%
+    );
+  }
+
+  @media (min-width: 640px) {
+    .stats-slider::before,
+    .stats-slider::after {
+      content: none;
+    }
+  }
+
   .connect-disc::before {
     content: '';
     position: absolute;

@@ -183,7 +183,7 @@ export function SubscriptionPage() {
 
         {/* Ссылка-подписка + QR */}
         <Reveal delay={0.15}>
-          <GlassCard className="flex flex-col pb-2 lg:pb-3 p-6 lg:p-7">
+          <GlassCard className="flex flex-col p-5 lg:p-6">
             <h2 className="text-sm font-medium">Subscription link</h2>
             <p className="mt-1 text-xs leading-relaxed text-fg-muted">
               Paste it into any client — or scan the QR.
@@ -204,14 +204,13 @@ export function SubscriptionPage() {
             <code className="mt-4 block truncate rounded-xl bg-surface-2 px-3.5 py-2.5 font-mono text-xs text-fg-muted">
               {link}
             </code>
-            <div className="mt-4 flex flex-col gap-2">
-              <Button variant="secondary" onClick={copyLink}>
+            <div className="mt-4 flex gap-2">
+              <Button variant="secondary" onClick={copyLink} className="w-full">
                 <Copy size={14} strokeWidth={1.75} className="mr-2" aria-hidden />
                 Copy link
               </Button>
-              <Button variant="ghost" onClick={() => setResetOpen(true)}>
-                <RotateCcw size={14} strokeWidth={1.75} className="mr-2" aria-hidden />
-                Reset link
+              <Button variant="secondary" onClick={() => setResetOpen(true)}>
+                <RotateCcw size={14} strokeWidth={1.75} aria-hidden />
               </Button>
             </div>
           </GlassCard>

@@ -64,14 +64,14 @@ export function SettingsPage() {
             <div>
               <h2 className="text-sm font-medium">Language</h2>
               <p className="mt-1 text-xs text-fg-muted">
-                Interface language. Russian arrives together with i18n.
+                Interface language
               </p>
             </div>
             <PillTabs
               value={language}
               onChange={(lang) => {
                 setLanguage(lang)
-                if (lang === 'ru') toast('Русский появится вместе с i18n')
+                if (lang === 'ru') toast('Russian is not ready yet.')
               }}
               options={[
                 { id: 'en', label: 'en' },

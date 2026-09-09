@@ -1,4 +1,3 @@
-import { InputHalo } from '../../components/Input'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Check, Laptop, Monitor, Pencil, Smartphone, Terminal, Trash2, Tv } from 'lucide-react'
@@ -58,23 +57,20 @@ function DeviceRow({
 
       <div className="min-w-0 flex-1 basis-40">
         {editing ? (
-          <span className="input-halo-frame block w-full max-w-52 rounded-sm">
-            <input
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={commit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commit()
-                if (e.key === 'Escape') {
-                  setDraft(device.name)
-                  setEditing(false)
-                }
-              }}
-              className="input-halo w-full rounded-sm text-sm"
-            />
-            <InputHalo />
-          </span>
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commit()
+              if (e.key === 'Escape') {
+                setDraft(device.name)
+                setEditing(false)
+              }
+            }}
+            className="w-full max-w-52 appearance-none border-0 bg-transparent p-0 text-sm text-fg shadow-none outline-none ring-0"
+          />
         ) : (
           <span className="flex items-center gap-2 text-sm">
             <span className="truncate">{device.name}</span>
@@ -140,8 +136,7 @@ export function DevicesPage() {
             title="Devices"
             sub="Everything connected with your subscription link, identified by device ID."
           />
-          {/* Индикатор лимита тарифа: занятые слоты — мостик к Subscription */}
-          <div className="pr-2">
+          <div className="px-3">
             <span className="font-mono text-sm">
               {devices.length}
               <span className="text-fg-muted"> of {plan.deviceLimit} devices</span>

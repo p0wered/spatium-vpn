@@ -130,19 +130,27 @@ export function Pricing() {
         <motion.h2
           id="pricing-title"
           variants={textItem}
-          className="mx-auto max-w-[720px] bg-[linear-gradient(180deg,#fff_8%,rgb(255_255_255/0.72)_100%)] bg-clip-text text-center text-4xl leading-[1.06] font-semibold tracking-[-0.03em] text-transparent text-balance sm:text-5xl lg:text-[64px] lg:leading-[68px]"
+          className="mx-auto max-w-[720px] bg-clip-text text-center
+          bg-[linear-gradient(180deg,#fff_8%,rgb(255_255_255/0.72)_100%)]
+          text-4xl leading-[1.06] font-semibold tracking-[-0.03em]
+          text-transparent text-balance sm:text-5xl lg:text-[64px]
+          lg:leading-[68px]"
         >
           Your pace, your plan
         </motion.h2>
 
         <motion.p
           variants={textItem}
-          className="mx-auto mt-3.5 max-w-[520px] text-center text-base leading-6 font-light text-white/75 sm:text-lg sm:leading-7"
+          className="mx-auto mt-3.5 max-w-[520px] text-center text-base leading-6 font-light
+          text-white/75 sm:text-lg sm:leading-7"
         >
           Billed daily from your balance. Stay connected for as long as it lasts.
         </motion.p>
 
-        <div className="mt-14 grid gap-4 sm:mt-16 sm:gap-5 lg:mt-[72px] lg:grid-cols-3 lg:items-stretch lg:gap-6">
+        <div
+          className="mt-14 grid gap-4 sm:mt-16 sm:gap-5
+          lg:mt-[72px]lg:grid-cols-3 lg:items-stretch lg:gap-6"
+        >
           {plans.map((plan) => (
             <PlanCard
               key={plan.name}
@@ -155,7 +163,8 @@ export function Pricing() {
 
         <motion.p
           variants={textItem}
-          className="mx-auto mt-8 max-w-[480px] text-center text-sm leading-6 font-light text-white/46 sm:mt-10"
+          className="mx-auto mt-8 max-w-[480px] text-center text-sm
+          leading-6 font-light text-white/46 sm:mt-10"
         >
           Each extra device is +0.02$ /day
           <span aria-hidden className="mx-2 text-white/28">
@@ -163,7 +172,9 @@ export function Pricing() {
           </span>
           <Link
             to="/pricing/terms"
-            className="inline-flex items-center gap-0.5 rounded-sm text-white/60 transition-colors hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fg"
+            className="inline-flex items-center gap-0.5 rounded-sm
+            text-white/60transition-colors hover:text-fg focus-visible:outline-2
+            focus-visible:outline-offset-4 focus-visible:outline-fg"
           >
             Full terms
             <ArrowUpRight size={13} strokeWidth={1.75} aria-hidden />
