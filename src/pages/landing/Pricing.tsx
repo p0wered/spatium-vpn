@@ -1,12 +1,10 @@
-import { lazy, Suspense, useRef, type Ref } from 'react'
+import { useRef } from 'react'
 import { Link } from 'react-router'
 import { plans, type Plan } from './plans'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
 import { ArrowUpRight, Check } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { GlassCard } from '../../components/GlassCard'
-
-const StarSystem = lazy(() => import('../../components/backgrounds/StarSystem'))
 
 const revealContainer: Variants = {
   hidden: {},
@@ -42,24 +40,19 @@ function PlanCard({
   plan,
   visible,
   reduced,
-  ref,
 }: {
   plan: Plan
   visible: boolean
   reduced: boolean | null
-  ref?: Ref<HTMLElement>
 }) {
   return (
     <motion.article
-      ref={ref}
       className="h-full"
       aria-labelledby={`plan-${plan.name.toLowerCase()}`}
       initial={reduced ? { opacity: 0 } : { opacity: 0, y: 28, filter: 'blur(8px)' }}
       animate={
         visible
-          ? // Остаточный filter: blur(0px) делает article backdrop root, и
-            // backdrop-filter карточки перестаёт видеть свет за секцией.
-            { opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } }
+          ? { opacity: 1, y: 0, filter: 'blur(0px)' }
           : reduced
             ? { opacity: 0 }
             : { opacity: 0, y: 28, filter: 'blur(8px)' }
@@ -118,7 +111,6 @@ function PlanCard({
  */
 export function Pricing() {
   const sectionRef = useRef<HTMLElement>(null)
-  const featuredRef = useRef<HTMLElement>(null)
   const inView = useInView(sectionRef, { once: true, amount: 0.18 })
   const reduced = useReducedMotion()
 
@@ -127,16 +119,10 @@ export function Pricing() {
       id="pricing"
       ref={sectionRef}
       aria-labelledby="pricing-title"
-      className="relative isolate overflow-hidden bg-black scroll-mt-24 py-24 sm:py-28 lg:py-[132px]"
+      className="relative overflow-hidden scroll-mt-24 py-24 sm:py-28 lg:py-[132px]"
     >
-      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-        <Suspense fallback={null}>
-          <StarSystem active={Boolean(reduced || inView)} anchorRef={featuredRef} />
-        </Suspense>
-      </div>
-
       <motion.div
-        className="landing-container relative z-10"
+        className="landing-container"
         variants={revealContainer}
         initial={reduced ? false : 'hidden'}
         animate={reduced || inView ? 'show' : 'hidden'}
@@ -163,12 +149,11 @@ export function Pricing() {
 
         <div
           className="mt-14 grid gap-4 sm:mt-16 sm:gap-5
-          lg:mt-[72px] lg:grid-cols-3 lg:items-stretch lg:gap-6"
+          lg:mt-[72px]lg:grid-cols-3 lg:items-stretch lg:gap-6"
         >
           {plans.map((plan) => (
             <PlanCard
               key={plan.name}
-              ref={plan.featured ? featuredRef : undefined}
               plan={plan}
               visible={Boolean(reduced || inView)}
               reduced={reduced}
@@ -188,7 +173,7 @@ export function Pricing() {
           <Link
             to="/pricing/terms"
             className="inline-flex items-center gap-0.5 rounded-sm
-            text-white/60 transition-colors hover:text-fg focus-visible:outline-2
+            text-white/60transition-colors hover:text-fg focus-visible:outline-2
             focus-visible:outline-offset-4 focus-visible:outline-fg"
           >
             Full terms

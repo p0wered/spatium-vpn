@@ -443,9 +443,6 @@
     min-height: 100%;
     padding: 2.15rem 2rem 1.9rem;
     background-color: rgb(255 255 255 / 0.055);
-    /* Свет StarSystem проходит под карточками: стекло размывает орбиты,
-       в зазорах между карточками они остаются резкими */
-    backdrop-filter: blur(24px);
   }
 
   .pricing-card-body {
@@ -550,7 +547,6 @@
   @media (prefers-reduced-transparency: reduce) {
     .glass-card.pricing-card {
       background-color: rgb(18 18 20);
-      backdrop-filter: none;
     }
   }
 
