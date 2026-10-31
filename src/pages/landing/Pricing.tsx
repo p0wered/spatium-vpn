@@ -149,7 +149,7 @@ export function Pricing() {
 
         <div
           className="mt-14 grid gap-4 sm:mt-16 sm:gap-5
-          lg:mt-[72px]lg:grid-cols-3 lg:items-stretch lg:gap-6"
+          lg:mt-[72px] lg:grid-cols-3 lg:items-stretch lg:gap-6"
         >
           {plans.map((plan) => (
             <PlanCard
@@ -173,7 +173,7 @@ export function Pricing() {
           <Link
             to="/pricing/terms"
             className="inline-flex items-center gap-0.5 rounded-sm
-            text-white/60transition-colors hover:text-fg focus-visible:outline-2
+            text-white/60 transition-colors hover:text-fg focus-visible:outline-2
             focus-visible:outline-offset-4 focus-visible:outline-fg"
           >
             Full terms

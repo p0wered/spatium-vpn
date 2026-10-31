@@ -411,12 +411,8 @@ export function PrivacyDiagram({ active, reducedMotion }: PrivacyDiagramProps) {
   return (
     <motion.div
       className="privacy-diagram-fade absolute inset-0"
-      initial={reducedMotion ? false : { opacity: 0, transform: 'translateY(10px)' }}
-      animate={
-        reducedMotion || active
-          ? { opacity: 1, transform: 'translateY(0px)' }
-          : { opacity: 0, transform: 'translateY(10px)' }
-      }
+      initial={reducedMotion ? false : { opacity: 0 }}
+      animate={reducedMotion || active ? { opacity: 1 } : { opacity: 0 }}
       transition={reducedMotion ? { duration: 0 } : diagramTransition}
     >
       <DesktopDiagram />
