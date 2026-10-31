@@ -1,9 +1,8 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router'
-import { ArrowLeft, ArrowUpRight } from 'lucide-react'
-import { Header } from './Header'
+import { ArrowUpRight } from 'lucide-react'
+import { LegalDocument, legalLinkStyle, type LegalSection } from '../legal/LegalDocument'
 
-const sections = [
+const sections: LegalSection[] = [
   {
     id: 'billing',
     title: 'Daily billing & your balance',
@@ -47,79 +46,18 @@ const sections = [
   },
 ]
 
-const linkStyle =
-  'inline-flex items-center gap-2 rounded-sm text-sm text-fg-muted transition-colors hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fg'
-
 export function PricingTermsPage() {
-  useEffect(() => {
-    const previousTitle = document.title
-    document.title = 'Plan terms — Spatium'
-    window.scrollTo(0, 0)
-    return () => {
-      document.title = previousTitle
-    }
-  }, [])
-
   return (
-    <>
-      <Header />
-      <main className="landing-container pt-28 pb-16 sm:pt-36 sm:pb-24">
-        <div>
-          <a href="/#pricing" className={linkStyle}>
-            <ArrowLeft size={15} aria-hidden /> Back to plans
-          </a>
-          <div className="mt-8">
-            <h1 className="text-3xl font-medium tracking-tight">Plan terms</h1>
-            <p className="mt-3 text-base leading-7 text-fg-muted">
-              Billing, device limits, plan changes, and payments.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-10 border-t border-white/10 pt-10 lg:grid-cols-[200px_1fr] lg:gap-16">
-            <nav aria-label="Plan terms sections" className="lg:sticky lg:top-24 lg:self-start">
-              <p className="mb-5 text-xs font-medium tracking-[0.14em] text-fg-muted uppercase">
-                On this page
-              </p>
-              <ol className="space-y-4">
-                {sections.map((section, index) => (
-                  <li key={section.id}>
-                    <a href={`#${section.id}`} className={`${linkStyle} items-baseline! leading-5`}>
-                      <span className="font-mono text-xs text-white/40">0{index + 1}</span>
-                      {section.title}
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </nav>
-            <div>
-              {sections.map((section, index) => (
-                <section
-                  key={section.id}
-                  id={section.id}
-                  aria-labelledby={`${section.id}-title`}
-                  className="scroll-mt-24 border-b border-white/10 pb-10 not-first:pt-10 sm:pb-12 sm:not-first:pt-12"
-                >
-                  <p className="mb-3 font-mono text-xs text-fg-muted">0{index + 1}</p>
-                  <h2
-                    id={`${section.id}-title`}
-                    className="text-2xl font-medium tracking-tight sm:text-[28px]"
-                  >
-                    {section.title}
-                  </h2>
-                  <div className="mt-5 space-y-4 text-base leading-7 font-light text-white/70">
-                    {section.paragraphs.map((paragraph) => (
-                      <p key={paragraph}>{paragraph}</p>
-                    ))}
-                  </div>
-                </section>
-              ))}
-              <Link to="/dashboard/subscription" className={`${linkStyle} mt-8`}>
-                Manage your plan <ArrowUpRight size={15} aria-hidden />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </main>
-    </>
+    <LegalDocument
+      title="Plan terms"
+      lead="Billing, device limits, plan changes, and payments."
+      documentTitle="Plan terms — Spatium"
+      back={{ href: '/#pricing', label: 'Back to plans' }}
+      sections={sections}
+    >
+      <Link to="/dashboard/subscription" className={`${legalLinkStyle} mt-8`}>
+        Manage your plan <ArrowUpRight size={15} aria-hidden />
+      </Link>
+    </LegalDocument>
   )
 }
