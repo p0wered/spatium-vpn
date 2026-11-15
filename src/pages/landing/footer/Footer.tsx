@@ -1,8 +1,10 @@
 import { lazy, Suspense, useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
+import { useLocation } from 'react-router'
 import { Wordmark } from '../../../components/Wordmark'
-import { FooterLink, StatusDot } from './FooterLink'
-import { footerGroups, STATUS_LABEL, SUPPORT_EMAIL, SUPPORT_TELEGRAM } from './links'
+import { scrollToTop } from '../../../lib/scroll'
+import { FooterLink } from './FooterLink'
+import { footerGroups, SUPPORT_EMAIL, SUPPORT_TELEGRAM } from './links'
 
 const HorizonLight = lazy(() => import('../../../components/backgrounds/HorizonLight'))
 
@@ -18,6 +20,7 @@ const LIGHT_HEIGHT = 420
  * тот же «рассвет», что у Testimonials, только прямой.
  */
 export function Footer() {
+  const { pathname } = useLocation()
   const ref = useRef<HTMLElement>(null)
   const inView = useInView(ref, { once: true, amount: 0.15 })
   const reduced = useReducedMotion()
@@ -38,7 +41,16 @@ export function Footer() {
     <footer ref={ref} className="relative overflow-hidden bg-black pt-16 sm:pt-24">
       <div className="landing-container grid gap-14 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-20">
         <motion.div {...fade(0)} className="flex flex-col gap-5">
-          <Wordmark />
+          <Wordmark
+            onClick={(e) => {
+              // Мы уже на лендинге — Link на тот же роут ничего не делает,
+              // поэтому вместо него плавно возвращаемся к началу страницы.
+              // На страницах документов отрабатывает обычный переход на «/»
+              if (pathname !== '/') return
+              e.preventDefault()
+              scrollToTop()
+            }}
+          />
           <p className="max-w-[300px] text-sm leading-6 font-light text-white/50">
             Fast, private VPN that just works — on any network.
           </p>
@@ -101,17 +113,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-
-      <motion.div
-        {...fade(0.9)}
-        className={`landing-container ${label} relative flex flex-col gap-3 py-7 sm:flex-row sm:items-center sm:justify-between`}
-      >
-        <span className="flex items-center gap-2.5 text-white/55">
-          <StatusDot />
-          {STATUS_LABEL}
-        </span>
-        <span>© {new Date().getFullYear()} Spatium</span>
-      </motion.div>
     </footer>
   )
 }

@@ -49,5 +49,3 @@ export const footerGroups: FooterGroup[] = [
     ],
   },
 ]
-
-export const STATUS_LABEL = 'All systems operational'

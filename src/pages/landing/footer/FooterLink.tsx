@@ -49,13 +49,3 @@ export function FooterLink({ link, className = '' }: { link: FooterLinkItem; cla
     </a>
   )
 }
-
-/** Пульсирующая точка статуса — ледяной свет, а не «зелёный светофор» */
-export function StatusDot() {
-  return (
-    <span className="relative flex size-1.5 shrink-0" aria-hidden>
-      <span className="absolute inset-0 animate-ping rounded-full bg-ice/60 motion-reduce:hidden" />
-      <span className="size-1.5 rounded-full bg-ice shadow-[0_0_8px] shadow-ice" />
-    </span>
-  )
-}
