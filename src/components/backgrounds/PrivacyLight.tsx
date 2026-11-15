@@ -4,8 +4,10 @@ import { startRenderLoop, type RenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
 import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
-const BEAM_LENGTH_PX = 620
-const BEAM_FADE_LENGTH_PX = 240
+// Хвост луча заканчивается у левого края текстовой колонки и гаснет на
+// большей части своей длины, а не выходит за пределы секции.
+const BEAM_LENGTH_PX = 550
+const BEAM_FADE_LENGTH_PX = 320
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -22,7 +24,6 @@ uniform float uReveal;
 uniform float uBeamStart;
 uniform float uBeamFadeEnd;
 uniform float uPanelHeight;
-uniform float uVertical;
 uniform float uProfileScale;
 uniform vec2 uImpact;
 uniform vec2 uResolution;
@@ -49,19 +50,15 @@ void main() {
 
   vec2 pixel = gl_FragCoord.xy;
   vec2 impact = vec2(uImpact.x, uResolution.y - uImpact.y);
-  // On stacked layouts, the same ray arrives from above and diffuses along
-  // the top edge. Rotation and uniform scaling preserve the light's silhouette.
-  if (uVertical > 0.5) {
-    pixel = vec2(uResolution.y - pixel.y, pixel.x);
-    impact = vec2(uImpact.y, uImpact.x);
-  }
   pixel = impact + (pixel - impact) / uProfileScale;
   float x = pixel.x;
   float y = pixel.y;
   float leftDistance = max(impact.x - x, 0.0);
   float verticalDistance = abs(y - impact.y);
   float beamLength = max(impact.x - uBeamStart, 1.0);
-  float leftExtinction = smoothstep(uBeamStart, uBeamFadeEnd, x);
+  float tailFade = smoothstep(uBeamStart, uBeamFadeEnd, x);
+  // Квадрат делает исчезновение хвоста пологим: он растворяется, а не обрывается.
+  float leftExtinction = tailFade * tailFade;
   float rightDistance = max(x - impact.x, 0.0);
 
   // Contact is the exact endpoint of travel. Only then can the beam broaden
@@ -89,17 +86,21 @@ void main() {
     * leftExtinction * beamIgnition * (1.0 - handoff);
 
   // Pressure at the contact point grows into the approved final ray profile.
-  float proximity = exp(-leftDistance / max(beamLength * 0.30, 1.0));
+  // Луч короче исходного; коэффициент сохраняет прежний силуэт у панели.
+  float proximity = exp(-leftDistance / max(beamLength * 0.34, 1.0));
   float cusp = pow(proximity, 2.15);
-  float coreWidth = mix(0.65, 34.0, cusp * pressure);
-  float bodyWidth = mix(2.2, 62.0, pow(proximity, 1.58) * pressure);
+  // Вдали от панели луч шире и мягче: тонкая резкая нить читалась как царапина.
+  float coreWidth = mix(1.5, 34.0, cusp * pressure);
+  float bodyWidth = mix(4.2, 62.0, pow(proximity, 1.58) * pressure);
+  float tailSoftness = mix(0.42, 1.0, sqrt(proximity));
   float hazeWidth = mix(8.0, 190.0, pow(proximity, 1.02) * bloom);
   float coreTransmission = exp(-rightDistance / 18.0);
   float bodyTransmission = exp(-rightDistance / 46.0);
   float hazeTransmission = exp(-rightDistance / 104.0);
   float rayCore = exp(-pow(verticalDistance / coreWidth, 1.42))
     * leftExtinction
-    * coreTransmission;
+    * coreTransmission
+    * tailSoftness;
   float rayBody = exp(-verticalDistance / bodyWidth)
     * leftExtinction
     * bodyTransmission;
@@ -212,7 +213,6 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
         uBeamStart: { value: 0 },
         uBeamFadeEnd: { value: 1 },
         uPanelHeight: { value: 1 },
-        uVertical: { value: 0 },
         uProfileScale: { value: 1 },
         uImpact: { value: [1, 1] },
         uResolution: { value: [1, 1] },
@@ -236,22 +236,18 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
       const scaleY = gl.canvas.height / height
       const compact = window.matchMedia('(max-width: 1023px)').matches
       const profileScale = compact ? 0.5 : 1
-      const impactX = anchorRect.left - containerRect.left + (compact ? anchorRect.width * 0.5 : 0)
-      const impactY = anchorRect.top - containerRect.top + (compact ? 0 : anchorRect.height * 0.515)
-      const impactAxis = compact ? impactY * scaleY : impactX * scaleX
-      const axisScale = compact ? scaleY : scaleX
-      const beamLength = compact ? 88 : BEAM_LENGTH_PX
-      const fadeLength = compact ? 36 : BEAM_FADE_LENGTH_PX
-      const beamStart = impactAxis - (beamLength * axisScale) / profileScale
+      // На узких экранах панель стоит под текстом, но луч приходит так же, как
+      // на десктопе — слева, к её левому краю; хвост уходит за край экрана.
+      const impactX = anchorRect.left - containerRect.left
+      const impactY = anchorRect.top - containerRect.top + anchorRect.height * 0.515
+      const beamStart = impactX * scaleX - (BEAM_LENGTH_PX * scaleX) / profileScale
 
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
-      program.uniforms.uVertical.value = compact ? 1 : 0
       program.uniforms.uProfileScale.value = profileScale
       program.uniforms.uBeamStart.value = beamStart
-      program.uniforms.uBeamFadeEnd.value = beamStart + (fadeLength * axisScale) / profileScale
-      program.uniforms.uPanelHeight.value = compact
-        ? (anchorRect.width * scaleX) / profileScale
-        : anchorRect.height * scaleY
+      program.uniforms.uBeamFadeEnd.value =
+        beamStart + (BEAM_FADE_LENGTH_PX * scaleX) / profileScale
+      program.uniforms.uPanelHeight.value = (anchorRect.height * scaleY) / profileScale
       program.uniforms.uImpact.value = [impactX * scaleX, impactY * scaleY]
       // Кадр остановленного цикла остаётся от прежней геометрии и размера
       // канваса — после resize его нужно перерисовать.
