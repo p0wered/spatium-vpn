@@ -255,7 +255,13 @@ function DashboardShell() {
         )}
       </AnimatePresence>
 
-      <main className="relative min-w-0 flex-1 px-5 pt-20 pb-10 lg:px-10 lg:pt-10">
+      {/*
+        overflow-y: clip — невидимые ореолы карточек (40px за краем) вместе со
+        стартовым смещением Reveal (y: 32) иначе удлиняют документ: внизу
+        страница докручивается дальше, а после появления блока прыгает назад.
+        clip не создаёт контейнер прокрутки, sticky и горизонталь не страдают.
+      */}
+      <main className="relative min-w-0 flex-1 overflow-y-clip px-5 pt-20 pb-10 lg:px-10 lg:pt-10">
         <div className="relative mx-auto max-w-5xl">
           <Outlet />
         </div>
