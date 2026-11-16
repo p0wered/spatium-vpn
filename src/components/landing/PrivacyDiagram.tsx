@@ -7,6 +7,7 @@ import {
   useTransform,
   type MotionValue,
 } from 'motion/react'
+import { DESKTOP_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 
 interface PrivacyDiagramProps {
   active: boolean
@@ -649,6 +650,9 @@ export function PrivacyDiagram({ active, reducedMotion }: PrivacyDiagramProps) {
   const visible = useInView(rootRef, { amount: 0.15 })
   const time = useMotionValue(reducedMotion ? STATIC : 0)
   const startedRef = useRef(false)
+  // В DOM живёт только макет текущего брейкпоинта: скрытый через display: none
+  // иначе каждый кадр пересчитывал бы свои motion values впустую.
+  const layout = useMediaQuery(DESKTOP_QUERY) ? desktopLayout : mobileLayout
 
   useEffect(() => {
     if (reducedMotion) {
@@ -677,11 +681,9 @@ export function PrivacyDiagram({ active, reducedMotion }: PrivacyDiagramProps) {
       animate={reducedMotion || active ? { opacity: 1 } : { opacity: 0 }}
       transition={reducedMotion ? { duration: 0 } : diagramTransition}
     >
-      {[desktopLayout, mobileLayout].map((layout) => (
-        <TimelineProvider key={layout.geo.id} time={time} geo={layout.geo}>
-          <Diagram layout={layout} />
-        </TimelineProvider>
-      ))}
+      <TimelineProvider key={layout.geo.id} time={time} geo={layout.geo}>
+        <Diagram layout={layout} />
+      </TimelineProvider>
     </motion.div>
   )
 }

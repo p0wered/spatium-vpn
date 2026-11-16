@@ -50,7 +50,10 @@ export function Header() {
           <Button
             size="sm"
             variant="secondary"
-            className="bg-white/5! backdrop-blur-md rounded-full flex gap-1.5"
+            // Собственного backdrop-blur у кнопки нет: она целиком лежит в зоне
+            // GradualBlur, где подложка уже размыта сильнее, чем это сделал бы
+            // blur-md, — второй проход стоил кадра и не менял картинку.
+            className="bg-white/5! rounded-full flex gap-1.5"
             onClick={() => navigate('/login')}
           >
             <LogIn size={14} />

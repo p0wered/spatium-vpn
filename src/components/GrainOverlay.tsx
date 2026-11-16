@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 /**
  * Едва заметный статичный grain.
  * SVG feTurbulence как data-URI тайл 128×128. Родитель должен быть relative;
@@ -17,9 +19,12 @@ const noiseTile = encodeURIComponent(
 export function GrainOverlay({
   opacity = 0.04,
   className = '',
+  style,
 }: {
   opacity?: number
   className?: string
+  /** Правки геометрии и фазы тайла, когда оверлей занимает часть родителя. */
+  style?: CSSProperties
 }) {
   return (
     <div
@@ -29,6 +34,7 @@ export function GrainOverlay({
         opacity,
         backgroundImage: `url("data:image/svg+xml,${noiseTile}")`,
         backgroundSize: '128px 128px',
+        ...style,
       }}
     />
   )

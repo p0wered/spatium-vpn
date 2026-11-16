@@ -7,6 +7,7 @@ import {
   useTransform,
   type MotionValue,
 } from 'motion/react'
+import { DESKTOP_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 
 interface BypassDiagramProps {
   active: boolean
@@ -766,6 +767,10 @@ export function BypassDiagram({ active, reducedMotion }: BypassDiagramProps) {
   const visible = useInView(rootRef, { amount: 0.15 })
   const time = useMotionValue(reducedMotion ? STATIC : 0)
   const startedRef = useRef(false)
+  // В DOM живёт только макет текущего брейкпоинта. Раньше монтировались оба,
+  // и скрытый через display: none всё равно каждый кадр пересчитывал свои
+  // motion values и писал стили — вдвое больше работы на анимацию схемы.
+  const layout = useMediaQuery(DESKTOP_QUERY) ? desktopLayout : mobileLayout
 
   useEffect(() => {
     if (reducedMotion) {
@@ -794,11 +799,9 @@ export function BypassDiagram({ active, reducedMotion }: BypassDiagramProps) {
       animate={reducedMotion || active ? { opacity: 1 } : { opacity: 0 }}
       transition={reducedMotion ? { duration: 0 } : diagramTransition}
     >
-      {[desktopLayout, mobileLayout].map((layout) => (
-        <TimelineContext.Provider key={layout.id} value={{ time, layout }}>
-          <Diagram />
-        </TimelineContext.Provider>
-      ))}
+      <TimelineContext.Provider key={layout.id} value={{ time, layout }}>
+        <Diagram />
+      </TimelineContext.Provider>
     </motion.div>
   )
 }

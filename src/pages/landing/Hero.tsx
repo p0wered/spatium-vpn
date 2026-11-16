@@ -110,11 +110,12 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
         /* Свет поверх контента (z-20) — «наезжает» на текст; pointer-events-none
            обязателен, иначе слой перехватывает клики по кнопкам и выделение.
            Из-за translate кромки канваса попадают в кадр (верхняя — сверху,
-           нижняя — на границе со следующей секцией) — гасим обе градиентной
-           маской, чтобы свечение не обрывалось ступенькой */
+           нижняя — на границе со следующей секцией) — обе гасит сам шейдер
+           (verticalFade), чтобы свечение не обрывалось ступенькой. CSS-маска
+           здесь стоила полноэкранной внеэкранной поверхности на каждый кадр */
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-20 translate-y-[5%] mask-[linear-gradient(to_bottom,transparent,black_30%,black_72%,transparent_94%)]"
+          className="pointer-events-none absolute inset-0 z-20 translate-y-[5%]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.6, delay: 0.1 }}
@@ -130,6 +131,7 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
               scale={isNarrow ? 1.2 : 1.95}
               refraction={1}
               dispersion={1.2}
+              verticalFade={[0.3, 0.72, 0.94]}
               // Нити — мягкое свечение шириной в десятки пикселей, резких
               // кромок в кадре нет. Полный retina-буфер даёт вдвое больше
               // пикселей, чем нужно этой картинке.
@@ -140,8 +142,16 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
       )}
 
       {/* Grain — верхним слоем, чтобы ложился и на свет; к низу секции гаснет,
-          иначе на границе с чёрной страницей виден перепад яркости */}
-      <GrainOverlay className="z-30 mask-[linear-gradient(to_bottom,black_82%,transparent)]" />
+          иначе на границе с чёрной страницей виден перепад яркости.
+          Слоя два: маска нужна только нижним 18%, где зерно затухает, а её
+          растр браузер пересчитывает при каждой перерисовке секции — на всю
+          высоту экрана это было впятеро дороже. Сдвиг фона на высоту верхнего
+          слоя (секция — ровно 100svh) продолжает тот же тайл без шва */}
+      <GrainOverlay className="z-30" style={{ bottom: '18%' }} />
+      <GrainOverlay
+        className="z-30 mask-[linear-gradient(to_bottom,black,transparent)]"
+        style={{ top: '82%', backgroundPositionY: '-82svh' }}
+      />
 
       <motion.div
         className={

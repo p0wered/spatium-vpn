@@ -92,7 +92,33 @@ type FragmentConfig = Required<
     | 'opacity'
     | 'scale'
   >
->
+> &
+  Pick<StrandsProps, 'verticalFade'>
+
+/**
+ * Вертикальное затухание кадра — то же, что дала бы CSS-маска
+ * linear-gradient(to bottom, transparent, black top, black bottomStart,
+ * transparent bottomEnd) на контейнере. Маска на анимированном канвасе
+ * заставляет браузер каждый кадр собирать его во внеэкранную поверхность и
+ * умножать на растр маски; в шейдере это одно умножение на пиксель.
+ */
+const buildVerticalFade = (fade: StrandsProps['verticalFade']) => {
+  if (!fade) return ''
+  const [top, bottomStart, bottomEnd] = fade
+  const rise = top > 0 ? `clamp(v / ${f(top)}, 0.0, 1.0)` : '1.0'
+  const fall =
+    bottomEnd > bottomStart
+      ? `(1.0 - clamp((v - ${f(bottomStart)}) / ${f(bottomEnd - bottomStart)}, 0.0, 1.0))`
+      : '1.0'
+  return `  // v — доля высоты от верхней кромки: gl_FragCoord отсчитывает снизу.
+  float v = 1.0 - gl_FragCoord.y / uResolution.y;
+  float fade = ${rise} * ${fall};
+  if (fade <= 0.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
+`
+}
 
 /**
  * Из всех uniform'ов кадр к кадру меняются только uTime и uResolution —
@@ -112,10 +138,14 @@ const buildFragment = (config: FragmentConfig) => {
       : `  float gray = dot(col, vec3(0.2126, 0.7152, 0.0722));
   col = max(mix(vec3(gray), col, ${f(config.saturation)}), 0.0);`
 
-  const output =
-    config.opacity === 1
-      ? '  fragColor = vec4(col, clamp(lum, 0.0, 1.0));'
-      : `  fragColor = vec4(col * ${f(config.opacity)}, clamp(lum, 0.0, 1.0) * ${f(config.opacity)});`
+  // Цвет премультиплицирован, поэтому и opacity, и fade умножают все четыре
+  // канала — так же, как маска умножила бы готовый пиксель.
+  const gain = [config.opacity === 1 ? '' : f(config.opacity), config.verticalFade ? 'fade' : '']
+    .filter(Boolean)
+    .join(' * ')
+  const output = gain
+    ? `  fragColor = vec4(col, clamp(lum, 0.0, 1.0)) * ${gain};`
+    : '  fragColor = vec4(col, clamp(lum, 0.0, 1.0));'
 
   return `#version 300 es
 precision highp float;
@@ -142,6 +172,7 @@ ${buildEnvelope(config.taper)}
     return;
   }
 
+${buildVerticalFade(config.verticalFade)}
   // Амплитуда, толщина, фаза времени и база оттенка не зависят от номера
   // нити — в оригинале они пересчитывались на каждой итерации.
   float amp = ${f((0.1 + 0.02 * e) * config.amplitude)} * env;
@@ -267,6 +298,13 @@ export interface StrandsProps {
   glassSize?: number
   /** Центр линзы в долях ширины/высоты от левого верхнего угла (default 0.5/0.5) */
   glassCenter?: [number, number]
+  /**
+   * Затухание к верхней и нижней кромке, вшитое в шейдер: [конец верхнего
+   * разгона, начало нижнего спада, конец нижнего спада] в долях высоты от
+   * верхнего края. Замена CSS-маски на контейнере. На проход линзы (glass)
+   * не распространяется.
+   */
+  verticalFade?: [number, number, number]
   /** Фиксированный момент в секундах: один кадр вместо постоянного rAF-цикла. */
   staticTime?: number
   /** Верхняя граница DPR. Для мягкого фонового света 1–1.5 обычно достаточно. */
@@ -296,6 +334,7 @@ export default function Strands({
   dispersion = 1,
   glassSize = 1,
   glassCenter = [0.5, 0.5],
+  verticalFade,
   staticTime,
   dpr = 2,
   preserveDrawingBuffer = false,
@@ -351,6 +390,7 @@ export default function Strands({
         saturation,
         opacity,
         scale,
+        verticalFade,
       }),
       uniforms: {
         uTime: { value: 0 },
