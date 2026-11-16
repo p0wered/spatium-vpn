@@ -4,7 +4,7 @@ import { scrollToSection } from '../../../lib/scroll'
 import type { FooterLinkItem } from './links'
 
 const base =
-  'inline-flex items-center gap-1 rounded-sm transition-colors duration-200 ' +
+  'link-glow inline-flex items-center gap-1 rounded-sm ' +
   'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fg'
 
 /** Ссылка футера: якорь секции, роут или внешний адрес — по форме данных */

@@ -147,7 +147,7 @@ export function SetupPage() {
                 <span className="text-fg-muted">
                   {' '}
                   — or scan the QR code from the{' '}
-                  <Link to="/dashboard/subscription" className="text-fg underline underline-offset-4">
+                  <Link to="/dashboard/subscription" className="link-glow text-fg underline underline-offset-4">
                     Subscription page
                   </Link>
                   .

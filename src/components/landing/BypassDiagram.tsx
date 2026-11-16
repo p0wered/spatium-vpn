@@ -52,6 +52,8 @@ const HATCH_PERIOD = 11
 // поэтому перезапуск цикла не даёт скачка.
 const HATCH_FLOW = FADE_AT + FADE - TUNNEL_AT
 const HATCH_SPEED = (HATCH_PERIOD * 4) / HATCH_FLOW
+/** Яркость свечения активной точки и знака — едва заметный ореол. */
+const GLOW_OPACITY = 0.55
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 const rise = (x: number, at: number, duration = 0.18) => clamp01((x - at) / duration)
@@ -156,7 +158,7 @@ const desktopLayout: Layout = {
     spacing: 1.7,
     text: ['ONE ENDPOINT · TWO OBSERVER STATES', 'AUTHENTICATED CAMOUFLAGE'],
   },
-  tag: { x: 306, y: 139, font: 10, text: 'SPATIUM ENDPOINT · PORT 443' },
+  tag: { x: 302, y: 143, font: 10, text: 'SPATIUM ENDPOINT · PORT 443' },
   caption: {
     y: 498,
     font: 12,
@@ -170,7 +172,8 @@ const desktopLayout: Layout = {
     { x: 834, y: 168, w: 170, h: 82 },
     { x: 834, y: 328, w: 170, h: 82 },
   ],
-  server: { x: 306, y: 153, w: 448, h: 272 },
+  // Внутренний отступ 20 по обеим осям — как зазоры между ячейками и шаг точечной сетки.
+  server: { x: 302, y: 157, w: 456, h: 264 },
   cells: {
     handshake: { x: 322, y: 257, w: 132, h: 64 },
     verify: { x: 474, y: 257, w: 82, h: 64 },
@@ -515,17 +518,25 @@ function Endpoint({
   const { layout } = useTimeline()
   const lit = useLevel(level)
   const dotOpacity = useTransform(lit, (value) => 0.28 + 0.72 * value)
+  const glowOpacity = useTransform(lit, (value) => value * GLOW_OPACITY)
+  const dotShape = {
+    cx: rect.x + rect.w - layout.box.padX - 2,
+    cy: rect.y + layout.box.capDy - layout.box.cap * 0.36,
+    r: layout.inlineCells ? 3.5 : 4.5,
+    fill: '#f5f5f5',
+  }
   return (
     <Frame rect={rect} rx={layout.radius.box} fill="#090909" level={lit} hatch={hatch}>
       <Labels rect={rect} type={layout.box} level={lit} caption={copy[0]} main={copy[1]} />
       {dot ? (
-        <motion.circle
-          cx={rect.x + rect.w - layout.box.padX - 2}
-          cy={rect.y + layout.box.capDy - layout.box.cap * 0.36}
-          r={layout.inlineCells ? 3.5 : 4.5}
-          fill="#f5f5f5"
-          style={{ opacity: dotOpacity }}
-        />
+        <>
+          <motion.circle
+            {...dotShape}
+            filter={`url(#bypass-glow-${layout.id})`}
+            style={{ opacity: glowOpacity }}
+          />
+          <motion.circle {...dotShape} style={{ opacity: dotOpacity }} />
+        </>
       ) : null}
     </Frame>
   )
@@ -566,10 +577,11 @@ function VerifyCell() {
   const rect = layout.cells.verify
   const lit = useLevel(levels.verify)
   const verified = useLevel(levels.mark)
+  const glowOpacity = useTransform(verified, (value) => value * GLOW_OPACITY)
   const type = layout.cell
   // На десктопе подпись и знак — одна группа, отцентрированная в ячейке по обеим осям.
   const capHeight = type.cap * 0.72
-  const gap = 5
+  const gap = layout.inlineCells ? 5 : 9
   const stackTop = rect.y + (rect.h - (capHeight + gap + layout.mark.h)) / 2
   const centerX = rect.x + rect.w / 2
   const mark = {
@@ -612,6 +624,11 @@ function VerifyCell() {
         </LitText>
       )}
       <image {...mark} filter={`url(#bypass-mark-dim-${layout.id})`} />
+      <motion.image
+        {...mark}
+        filter={`url(#bypass-glow-${layout.id})`}
+        style={{ opacity: glowOpacity }}
+      />
       <motion.image {...mark} style={{ opacity: verified }} />
     </Frame>
   )
@@ -665,6 +682,10 @@ function Diagram() {
                     0 0 0 0.4 0
                     0 0 0 1 0"
           />
+        </filter>
+        {/* Мягкое свечение: размытая копия под точкой или знаком. */}
+        <filter id={`bypass-glow-${layout.id}`} x="-150%" y="-150%" width="400%" height="400%">
+          <feGaussianBlur stdDeviation={layout.inlineCells ? 2.5 : 3.5} />
         </filter>
       </defs>
 

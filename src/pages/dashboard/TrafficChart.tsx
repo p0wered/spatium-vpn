@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useId, useRef, useState, type PointerEvent } from 'react'
 import type { TrafficDay } from '../../data/mock'
 import { formatDate, formatGB } from '../../lib/format'
 
@@ -9,22 +9,11 @@ import { formatDate, formatGB } from '../../lib/format'
  * ResizeObserver'ом: viewBox-растяжение искажало бы штрих и точки.
  */
 
-// Blur the filled silhouette, then keep its inner and outer edges — the same
-// inset + outset stack as GlassCard / BorderGlow. SVG stdDeviation is ~half
-// the CSS box-shadow blur radius.
-const HALO_LAYERS = [
-  { blur: 1, color: '#ffffff', opacity: 0.55 },
-  { blur: 3, color: '#b4d2ff', opacity: 0.4 },
-  { blur: 8, color: '#aaccff', opacity: 0.28 },
-  { blur: 16, color: '#aaccff', opacity: 0.16 },
-  { blur: 28, color: '#829bff', opacity: 0.1 },
-]
+// Еле заметное свечение линии: размытая копия штриха под ней.
+const GLOW = { blur: 2.5, color: '#b4d2ff', opacity: 0.35 }
 
 const H = 240
 const PAD = { top: 16, right: 0, bottom: 28, left: 0 }
-// Extra canvas on each side so closing edges of the halo live outside the
-// visible plot; the wrapper clips them with overflow: hidden.
-const GLOW_EXTENT = 84
 
 /** Округление потолка оси до «красивого» значения */
 function niceMax(v: number) {
@@ -68,8 +57,7 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
   const max = niceMax(Math.max(...days.map((d) => d.gb)))
   const innerW = width - PAD.left - PAD.right
   const innerH = H - PAD.top - PAD.bottom
-  const svgW = width + 2 * GLOW_EXTENT
-  const px = (i: number) => GLOW_EXTENT + PAD.left + (n === 1 ? innerW / 2 : (i * innerW) / (n - 1))
+  const px = (i: number) => PAD.left + (n === 1 ? innerW / 2 : (i * innerW) / (n - 1))
   const py = (gb: number) => PAD.top + (1 - gb / max) * innerH
 
   const pts = days.map((d, i) => ({ x: px(i), y: py(d.gb) }))
@@ -77,13 +65,6 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
   const area = line
     ? `${line} L ${px(n - 1)} ${H - PAD.bottom} L ${px(0)} ${H - PAD.bottom} Z`
     : ''
-
-  // Continue the silhouette past the plot so only the data curve is an edge
-  // inside the filter; overflow: hidden on the wrapper drops the rest.
-  const haloArea =
-    pts.length > 1
-      ? `M 0 ${pts[0].y} ${line.replace(/^M/, 'L')} L ${svgW} ${pts[n - 1].y} L ${svgW} ${H + 240} L 0 ${H + 240} Z`
-      : ''
 
   // Подписи X: для 7 дней — каждый второй, для 30 — каждый седьмой
   const labelEvery = n <= 7 ? 2 : 7
@@ -106,50 +87,17 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
       onPointerLeave={() => setHover(null)}
     >
       {width > 0 && (
-        <svg width={svgW} height={H} className="pointer-events-none block" style={{ marginLeft: -GLOW_EXTENT }}>
+        <svg width={width} height={H} className="pointer-events-none block">
           <defs>
             <filter
               id={glowId}
               filterUnits="userSpaceOnUse"
-              x={-84}
-              y={-84}
-              width={svgW + 168}
-              height={H + 168}
-              colorInterpolationFilters="sRGB"
+              x={-20}
+              y={-20}
+              width={width + 40}
+              height={H + 40}
             >
-              {HALO_LAYERS.map(({ blur, color, opacity }, i) => (
-                <Fragment key={blur}>
-                  <feGaussianBlur in="SourceAlpha" stdDeviation={blur} result={`blur-${i}`} />
-                  <feComposite
-                    in={`blur-${i}`}
-                    in2="SourceAlpha"
-                    operator="out"
-                    result={`outer-${i}`}
-                  />
-                  <feComposite
-                    in="SourceAlpha"
-                    in2={`blur-${i}`}
-                    operator="out"
-                    result={`inner-${i}`}
-                  />
-                  <feMerge result={`edge-${i}`}>
-                    <feMergeNode in={`outer-${i}`} />
-                    <feMergeNode in={`inner-${i}`} />
-                  </feMerge>
-                  <feFlood floodColor={color} floodOpacity={opacity} result={`color-${i}`} />
-                  <feComposite
-                    in={`color-${i}`}
-                    in2={`edge-${i}`}
-                    operator="in"
-                    result={`halo-${i}`}
-                  />
-                </Fragment>
-              ))}
-              <feMerge>
-                {HALO_LAYERS.map((layer, i) => (
-                  <feMergeNode key={layer.blur} in={`halo-${i}`} />
-                ))}
-              </feMerge>
+              <feGaussianBlur stdDeviation={GLOW.blur} />
             </filter>
             <linearGradient
               id={fillId}
@@ -159,7 +107,7 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
               y1={PAD.top}
               y2={H - PAD.bottom}
             >
-              <stop offset="0" stopColor="#aaccff" stopOpacity="0.24" />
+              <stop offset="0" stopColor="#aaccff" stopOpacity="0.12" />
               <stop offset="1" stopColor="#aaccff" stopOpacity="0" />
             </linearGradient>
           </defs>
@@ -191,17 +139,19 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
           <g>
             <path d={area} fill={`url(#${fillId})`} />
             <path
-              d={haloArea}
-              fill="white"
+              d={line}
+              fill="none"
+              stroke={GLOW.color}
+              strokeOpacity={GLOW.opacity}
+              strokeWidth="2"
               filter={`url(#${glowId})`}
-              style={{ mixBlendMode: 'plus-lighter' }}
             />
             <path
               d={line}
               fill="none"
               stroke="white"
               strokeOpacity="0.9"
-              strokeWidth="0.8"
+              strokeWidth="1.25"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -250,7 +200,7 @@ export function TrafficChart({ days }: { days: TrafficDay[] }) {
         <div
           className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-xl border border-white/10 bg-surface-2/90 px-3 py-2 text-center backdrop-blur-xl"
           style={{
-            left: Math.min(Math.max(px(hover) - GLOW_EXTENT, 52), width - 52),
+            left: Math.min(Math.max(px(hover), 52), width - 52),
             top: py(hovered.gb) - 62,
           }}
         >

@@ -177,7 +177,7 @@ export function OverviewPage() {
             </ul>
             <Link
               to="/dashboard/servers"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs text-fg-muted transition-colors hover:text-fg"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs text-fg-muted link-glow hover:text-fg"
             >
               All servers <ArrowRight size={13} aria-hidden />
             </Link>

@@ -170,7 +170,7 @@ export function DevicesPage() {
         ) : (
           <GlassCard className="flex flex-col items-center gap-3 px-6 py-14 text-center">
             <p className="text-sm text-fg-muted">No devices connected yet.</p>
-            <Link to="/dashboard/setup" className="text-sm underline underline-offset-4">
+            <Link to="/dashboard/setup" className="link-glow text-sm underline underline-offset-4">
               Set up your first device
             </Link>
           </GlassCard>

@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef, MouseEvent } from 'react'
 
 type ButtonProps = ComponentPropsWithoutRef<'button'> & {
   variant?: 'primary' | 'secondary' | 'ghost'
@@ -22,13 +22,43 @@ const sizes = {
   lg: 'h-13 px-7 text-base',
 }
 
+/** Позиция курсора для пятна свечения primary — через CSS-переменные, без ре-рендеров. */
+function trackSpot(e: MouseEvent<HTMLButtonElement>) {
+  const el = e.currentTarget
+  const rect = el.getBoundingClientRect()
+  el.style.setProperty('--spot-x', `${e.clientX - rect.left}px`)
+  el.style.setProperty('--spot-y', `${e.clientY - rect.top}px`)
+}
+
 export function Button({
   variant = 'primary',
   size = 'md',
   className = '',
+  children,
+  onMouseMove,
+  onMouseEnter,
   ...props
 }: ButtonProps) {
+  const glow = variant === 'primary'
   return (
-    <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}{...props} />
+    <button
+      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+      onMouseMove={(e) => {
+        if (glow) trackSpot(e)
+        onMouseMove?.(e)
+      }}
+      onMouseEnter={(e) => {
+        if (glow) trackSpot(e)
+        onMouseEnter?.(e)
+      }}
+      {...props}
+    >
+      {glow && (
+        <span aria-hidden className="btn-glow-light">
+          <span />
+        </span>
+      )}
+      {children}
+    </button>
   )
 }

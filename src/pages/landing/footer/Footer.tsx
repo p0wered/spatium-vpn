@@ -59,13 +59,13 @@ export function Footer() {
               href={SUPPORT_TELEGRAM.href}
               target="_blank"
               rel="noreferrer"
-              className="w-fit transition-colors hover:text-fg"
+              className="link-glow w-fit hover:text-fg"
             >
               {SUPPORT_TELEGRAM.handle}
             </a>
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
-              className="w-fit transition-colors select-text hover:text-fg"
+              className="link-glow w-fit select-text hover:text-fg"
             >
               {SUPPORT_EMAIL}
             </a>

@@ -1,5 +1,5 @@
 import { motion, useReducedMotion, type Variants } from 'motion/react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
 import { signIn } from '../../lib/session'
@@ -35,9 +35,17 @@ export function LoginPage() {
           navigate('/dashboard')
         }}
       >
-        <motion.h1 variants={item} className="text-2xl font-semibold tracking-tight">
-          Sign in
-        </motion.h1>
+        {/* Вместо заголовка — знак проекта; «Sign in» остаётся для скринридеров */}
+        <motion.div variants={item} className="mb-4 flex justify-center">
+          <h1 className="sr-only">Sign in</h1>
+          <Link
+            to="/"
+            aria-label="Spatium home"
+            className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fg"
+          >
+            <img src="/spatium-mark.svg" alt="" aria-hidden="true" className="h-8" />
+          </Link>
+        </motion.div>
         <motion.div variants={item}>
           <Input label="Email" type="email" autoComplete="email" />
         </motion.div>

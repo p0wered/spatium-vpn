@@ -10,7 +10,7 @@ export type LegalSection = {
 }
 
 export const legalLinkStyle =
-  'inline-flex items-center gap-2 rounded-sm text-sm text-fg-muted transition-colors hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fg'
+  'link-glow inline-flex items-center gap-2 rounded-sm text-sm text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fg'
 
 /**
  * Каркас текстовых страниц (Plan terms, Privacy policy, Terms of service):

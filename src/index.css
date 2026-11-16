@@ -539,8 +539,8 @@
    * Свечение кнопки при hover — тот же свет, что ореол GlassCard
    * (.glass-card-halo): тот же холодный --halo-color и тот же стек теней с
    * квадратичным спадом (радиус вдвое → альфа вчетверо), то же plus-lighter
-   * наложение. Разница одна: у карточки свет обрезан conic-маской по углу
-   * курсора, здесь горит весь периметр сразу — без трекинга мыши.
+   * наложение. Здесь это приглушённая подложка по всему периметру; ярче
+   * всего кромка горит у курсора — это .btn-glow-light ниже.
    *
    * Живёт на ::after, а не на самой кнопке: у primary есть собственная тень
    * покоя, а box-shadow один на элемент. Inset-слоёв ореола здесь нет — внутри
@@ -553,6 +553,49 @@
       drop-shadow(0 0 1px rgb(255 255 255 / 55%))
       drop-shadow(0 0 3px rgb(180 210 255 / 40%))
       drop-shadow(0 0 6px rgb(170 204 255 / 28%));
+  }
+
+  /*
+   * Текстовые ссылки: при наведении текст и иконка получают едва заметный
+   * ореол — тот же белый центр с ледяным спадом, что у знака в схеме обхода.
+   * В покое слои те же, но прозрачные, чтобы text-shadow и filter плавно
+   * интерполировались.
+   */
+  .link-glow {
+    text-shadow:
+      0 0 1px rgb(255 255 255 / 0%),
+      0 0 4px rgb(200 223 255 / 0%),
+      0 0 10px rgb(185 210 255 / 0%);
+    transition:
+      color 0.2s ease,
+      text-shadow 0.5s ease;
+  }
+
+  .link-glow svg {
+    filter: drop-shadow(0 0 2px rgb(200 223 255 / 0%)) drop-shadow(0 0 5px rgb(185 210 255 / 0%));
+    transition: filter 0.5s ease;
+  }
+
+  @media (hover: hover) {
+    .link-glow:hover {
+      text-shadow:
+        0 0 1px rgb(255 255 255 / 35%),
+        0 0 4px rgb(200 223 255 / 28%),
+        0 0 10px rgb(185 210 255 / 16%);
+      transition-duration: 0.2s, 0.16s;
+    }
+
+    .link-glow:hover svg {
+      filter: drop-shadow(0 0 2px rgb(200 223 255 / 45%)) drop-shadow(0 0 5px rgb(185 210 255 / 25%));
+      transition-duration: 0.16s;
+    }
+  }
+
+  .link-glow:focus-visible {
+    text-shadow:
+      0 0 1px rgb(255 255 255 / 35%),
+      0 0 4px rgb(200 223 255 / 28%),
+      0 0 10px rgb(185 210 255 / 16%);
   }
 
   .btn-glow {
@@ -568,19 +611,80 @@
     mix-blend-mode: plus-lighter;
     opacity: 0;
     box-shadow:
-      0 0 3px 0 hsl(var(--halo-color) / 35%),
-      0 0 6px 0 hsl(var(--halo-color) / 30%),
-      0 0 15px 0 hsl(var(--halo-color) / 22%),
-      0 0 25px 2px hsl(var(--halo-color) / 15%),
-      0 0 50px 2px hsl(var(--halo-color) / 8%);
+      0 0 2px 0 hsl(var(--halo-color) / 35%),
+      0 0 4px 0 hsl(var(--halo-color) / 30%),
+      0 0 9px 0 hsl(var(--halo-color) / 22%),
+      0 0 15px 1px hsl(var(--halo-color) / 15%),
+      0 0 28px 1px hsl(var(--halo-color) / 8%);
     /* Свет набирается быстрее, чем уходит — как у halo и spotlight карточки */
     transition: opacity 0.5s ease;
   }
 
-  .btn-glow:hover::after,
+  /* При наведении весь периметр горит приглушённо — основной свет даёт
+     пятно у курсора (.btn-glow-light). С клавиатуры курсора нет, поэтому
+     фокус зажигает периметр целиком. */
+  .btn-glow:hover::after {
+    opacity: 0.55;
+    transition-duration: 0.16s;
+  }
+
   .btn-glow:focus-visible::after {
     opacity: 1;
     transition-duration: 0.16s;
+  }
+
+  /*
+   * Пятно у курсора — как ореол GlassCard: внешний слой шире кнопки на
+   * --btn-glow-pad, чтобы маска не обрезала тени; сами тени на внутреннем
+   * span точно по контуру кнопки. --spot-x/y ставит Button.tsx.
+   */
+  .btn-glow {
+    --spot-x: 50%;
+    --spot-y: 50%;
+    --btn-glow-pad: 36px;
+  }
+
+  .btn-glow-light {
+    position: absolute;
+    inset: calc(-1 * var(--btn-glow-pad));
+    border-radius: inherit;
+    pointer-events: none;
+    mix-blend-mode: plus-lighter;
+    opacity: 0;
+    -webkit-mask-image: radial-gradient(
+      circle 240px at
+        calc(var(--spot-x) + var(--btn-glow-pad)) calc(var(--spot-y) + var(--btn-glow-pad)),
+      #fff 0%,
+      #fff 25%,
+      rgb(255 255 255 / 0.35) 100%
+    );
+    mask-image: radial-gradient(
+      circle 240px at
+        calc(var(--spot-x) + var(--btn-glow-pad)) calc(var(--spot-y) + var(--btn-glow-pad)),
+      #fff 0%,
+      #fff 25%,
+      rgb(255 255 255 / 0.35) 100%
+    );
+    transition: opacity 0.5s ease;
+  }
+
+  .btn-glow-light > span {
+    position: absolute;
+    inset: var(--btn-glow-pad);
+    border-radius: inherit;
+    box-shadow:
+      0 0 1.5px 0 rgb(255 255 255 / 60%),
+      0 0 4px 0 hsl(var(--halo-color) / 50%),
+      0 0 9px 1px hsl(var(--halo-color) / 34%),
+      0 0 17px 1px hsl(var(--halo-color) / 20%),
+      0 0 30px 2px hsl(var(--halo-color) / 10%);
+  }
+
+  @media (hover: hover) {
+    .btn-glow:hover > .btn-glow-light {
+      opacity: 1;
+      transition-duration: 0.16s;
+    }
   }
 
   /*
@@ -785,7 +889,6 @@
   }
 
   .input-halo-frame {
-    --input-glow-scale: 0.4;
     position: relative;
     isolation: isolate;
   }
@@ -801,22 +904,20 @@
     transition: opacity 0.3s ease-out;
   }
 
+  /*
+   * Фокус: белая кромка и компактный внешний ореол — тот же холодный
+   * спад, что у primary-кнопок, без внутреннего свечения поля.
+   */
   .input-halo-light > span {
     position: absolute;
     inset: 40px;
     border-radius: inherit;
+    /* Без белого слоя у самой кромки: он сливался с рамкой и визуально
+       делал её толще 1px. Ореол начинается чуть дальше и слабее. */
     box-shadow:
-      inset 0 0 0 1px hsl(var(--halo-color)),
-      inset 0 0 calc(1px * var(--input-glow-scale)) 0 rgb(255 255 255 / 70%),
-      inset 0 0 calc(3px * var(--input-glow-scale)) 0 rgb(255 255 255 / 45%),
-      inset 0 0 calc(8px * var(--input-glow-scale)) 0 rgb(215 231 255 / 0.32),
-      inset 0 0 calc(18px * var(--input-glow-scale)) 0 rgb(200 223 255 / 0.2),
-      inset 0 0 calc(32px * var(--input-glow-scale)) calc(2px * var(--input-glow-scale)) rgb(207 227 255 / 0.1),
-      0 0 calc(2px * var(--input-glow-scale)) 0 rgb(255 255 255 / 55%),
-      0 0 calc(6px * var(--input-glow-scale)) 0 rgb(209 228 255 / 0.4),
-      0 0 calc(16px * var(--input-glow-scale)) calc(1px * var(--input-glow-scale)) rgb(210 228 255 / 0.28),
-      0 0 calc(32px * var(--input-glow-scale)) calc(2px * var(--input-glow-scale)) rgb(204 224 255 / 0.16),
-      0 0 calc(56px * var(--input-glow-scale)) calc(4px * var(--input-glow-scale)) rgb(185 201 255 / 0.1);
+      inset 0 0 0 1px rgb(255 255 255 / 80%),
+      0 0 5px 0 hsl(var(--halo-color) / 14%),
+      0 0 12px 0 hsl(var(--halo-color) / 7%);
   }
 
   .input-halo:focus:not(:disabled) {
@@ -824,7 +925,7 @@
   }
 
   .input-halo:focus:not(:disabled) ~ .input-halo-light {
-    opacity: 0.8;
+    opacity: 1;
     transition-duration: 0.16s;
   }
 
