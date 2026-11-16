@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, type PointerEvent } from 'react'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
 import { GlassCard } from '../../components/GlassCard'
 
@@ -99,10 +99,62 @@ function CardSequence() {
   )
 }
 
+/** Время затухания скорости ленты, с: за ~3τ лента почти останавливается. */
+const EASE_TAU = 0.2
+
+/**
+ * Плавно меняет playbackRate CSS-анимации ленты: при наведении на карточку
+ * скорость экспоненциально затухает до нуля, при уходе — возвращается.
+ * Следующая цель подхватывается с текущей скорости, без рывков.
+ */
+function useHoverBrake() {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const targetRef = useRef(1)
+  const frameRef = useRef(0)
+
+  useEffect(() => () => cancelAnimationFrame(frameRef.current), [])
+
+  const setTarget = useCallback((target: number) => {
+    if (targetRef.current === target) return
+    targetRef.current = target
+    const animation = trackRef.current?.getAnimations()[0]
+    if (!animation) return
+
+    cancelAnimationFrame(frameRef.current)
+    let last = performance.now()
+    const step = (now: number) => {
+      const dt = (now - last) / 1000
+      last = now
+      const goal = targetRef.current
+      const rate = animation.playbackRate
+      const next = rate + (goal - rate) * (1 - Math.exp(-dt / EASE_TAU))
+      if (Math.abs(goal - next) < 0.002) {
+        animation.playbackRate = goal
+        return
+      }
+      animation.playbackRate = next
+      frameRef.current = requestAnimationFrame(step)
+    }
+    frameRef.current = requestAnimationFrame(step)
+  }, [])
+
+  const handlers = {
+    onPointerOver: (event: PointerEvent<HTMLDivElement>) => {
+      if (event.pointerType !== 'mouse') return
+      const overCard = (event.target as Element).closest('.testimonial-card') !== null
+      setTarget(overCard ? 0 : 1)
+    },
+    onPointerLeave: () => setTarget(1),
+  }
+
+  return { trackRef, handlers }
+}
+
 function MarqueeRow({ direction }: { direction: 'left' | 'right' }) {
+  const { trackRef, handlers } = useHoverBrake()
   return (
-    <div className="testimonial-marquee" aria-hidden>
-      <div className={`testimonial-track testimonial-track-${direction}`}>
+    <div className="testimonial-marquee" aria-hidden {...handlers}>
+      <div ref={trackRef} className={`testimonial-track testimonial-track-${direction}`}>
         <CardSequence />
         <CardSequence />
       </div>

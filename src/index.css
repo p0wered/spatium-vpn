@@ -99,55 +99,14 @@
     );
   }
 
-  .bypass-shell::before,
-  .bypass-inner::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: inherit;
-    padding: 1px;
-    pointer-events: none;
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-  }
-
-  .bypass-shell::before {
-    z-index: 30;
-    background: linear-gradient(
-      to bottom,
-      rgb(255 255 255 / 12%) 0%,
-      rgb(255 255 255 / 10%) 38%,
-      rgb(255 255 255 / 3%) 68%,
-      transparent 100%
-    );
-  }
-
   .bypass-inner {
     overflow: hidden;
     border-radius: 16px;
   }
 
-  .bypass-inner::before {
-    background: linear-gradient(
-      to bottom,
-      rgb(255 255 255 / 5%) 0%,
-      rgb(255 255 255 / 3%) 42%,
-      rgb(255 255 255 / 0.8%) 70%,
-      transparent 100%
-    );
-  }
-
   /*
    * Privacy mirrors the material of Bypass, but its composition continues
-   * horizontally. Continuous gradients dissolve its material and borders
-   * toward the right.
+   * horizontally. Continuous gradients dissolve its material toward the right.
    */
   .privacy-shell {
     overflow: hidden;
@@ -163,36 +122,6 @@
     backdrop-filter: blur(48px);
   }
 
-  .privacy-shell::before,
-  .privacy-inner::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: inherit;
-    padding: 1px;
-    pointer-events: none;
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-  }
-
-  .privacy-shell::before {
-    z-index: 30;
-    background: linear-gradient(
-      to right,
-      rgb(255 255 255 / 12%) 0%,
-      rgb(255 255 255 / 10%) 36%,
-      rgb(255 255 255 / 3%) 68%,
-      transparent 100%
-    );
-  }
-
   .privacy-inner {
     overflow: hidden;
     border-radius: 16px;
@@ -201,16 +130,6 @@
       rgb(0 0 0 / 0.3) 0%,
       rgb(0 0 0 / 0.3) 64%,
       rgb(0 0 0 / 0.18) 80%,
-      transparent 100%
-    );
-  }
-
-  .privacy-inner::before {
-    background: linear-gradient(
-      to right,
-      rgb(255 255 255 / 5%) 0%,
-      rgb(255 255 255 / 3%) 42%,
-      rgb(255 255 255 / 0.8%) 70%,
       transparent 100%
     );
   }
@@ -586,8 +505,6 @@
       );
     background-clip: text;
   }
-
-
 
   /*
    * Механика плавающего лейбла Input.tsx: в покое лейбл висит по центру

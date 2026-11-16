@@ -567,12 +567,19 @@ function VerifyCell() {
   const lit = useLevel(levels.verify)
   const verified = useLevel(levels.mark)
   const type = layout.cell
+  // На десктопе подпись и знак — одна группа, отцентрированная в ячейке по обеим осям.
+  const capHeight = type.cap * 0.72
+  const gap = 5
+  const stackTop = rect.y + (rect.h - (capHeight + gap + layout.mark.h)) / 2
+  const centerX = rect.x + rect.w / 2
   const mark = {
     href: '/spatium-mark.svg',
-    x: layout.inlineCells ? rect.x + rect.w - type.padX - layout.mark.w : rect.x + type.padX,
+    x: layout.inlineCells
+      ? rect.x + rect.w - type.padX - layout.mark.w
+      : centerX - layout.mark.w / 2,
     y: layout.inlineCells
       ? rect.y + (rect.h - layout.mark.h) / 2
-      : rect.y + type.mainDy - layout.mark.h + 3,
+      : stackTop + capHeight + gap,
     width: layout.mark.w,
     height: layout.mark.h,
   }
@@ -589,7 +596,20 @@ function VerifyCell() {
           inline
         />
       ) : (
-        <Labels rect={rect} type={type} level={lit} caption={layout.copy.verify} />
+        <LitText
+          level={lit}
+          from={112}
+          to={176}
+          x={centerX}
+          // letter-spacing добавляет хвост после последней буквы — компенсируем половину.
+          dx={(type.cap * 0.09) / 2}
+          y={stackTop + capHeight}
+          fontSize={type.cap}
+          letterSpacing={type.cap * 0.09}
+          textAnchor="middle"
+        >
+          {layout.copy.verify}
+        </LitText>
       )}
       <image {...mark} filter={`url(#bypass-mark-dim-${layout.id})`} />
       <motion.image {...mark} style={{ opacity: verified }} />
