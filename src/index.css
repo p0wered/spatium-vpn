@@ -73,12 +73,17 @@
     }
   }
 
+  /*
+   * Матовость стекла — не backdrop-filter: под панелью только свет IceRidge,
+   * и канвас сам выводит его в границах панели уже размытым (frostedLight.ts,
+   * радиус и скругление там же). backdrop-filter пересчитывал тот же блюр на
+   * каждом кадре скролла, хотя свет после вступления не меняется.
+   */
   .bypass-shell {
     overflow: hidden;
     border-radius: 24px;
     isolation: isolate;
     background: rgb(255 255 255 / 0.06);
-    backdrop-filter: blur(48px);
   }
 
   /*
@@ -113,6 +118,8 @@
   /*
    * Privacy mirrors the material of Bypass, but its composition continues
    * horizontally. Continuous gradients dissolve its material toward the right.
+   * The frost is baked into the light canvas as well (PrivacyLight.tsx), so
+   * there is no backdrop-filter here either.
    */
   .privacy-shell {
     overflow: hidden;
@@ -125,7 +132,6 @@
       rgb(255 255 255 / 0.035) 78%,
       transparent 100%
     );
-    backdrop-filter: blur(48px);
   }
 
   .privacy-inner {
@@ -235,23 +241,6 @@
     );
   }
 
-  /*
-   * Матовое стекло первой ленты — одной полосой под карточками, а не
-   * backdrop-filter на каждой из них. Цена backdrop-filter считается за
-   * элемент, а не за площадь: десять видимых карточек стоили десяти проходов
-   * на каждом кадре, пока лента едет, — то есть всегда. Полоса даёт один.
-   *
-   * Второй ленте полоса не нужна: дуга горизонта до неё не опускается, под
-   * ней только чёрный фон и пологое гало, которые блюр не меняет.
-   */
-  .testimonial-frost {
-    position: absolute;
-    inset-inline: 0;
-    inset-block: var(--testimonial-halo-pad);
-    pointer-events: none;
-    backdrop-filter: blur(24px);
-  }
-
   .testimonial-track,
   .testimonial-sequence {
     display: flex;
@@ -287,6 +276,20 @@
     flex: none;
     padding: clamp(1.4rem, 2.35vw, 2.35rem);
     background-color: rgb(255 255 255 / 0.04);
+  }
+
+  /*
+   * Матовое стекло — только у карточек первой ленты. Цена backdrop-filter
+   * считается за элемент, и пока лента едет, браузер платит её на каждом
+   * кадре, поэтому блюр стоит лишь там, где под стеклом есть что размывать:
+   * концы дуги горизонта заходят под первую ленту. До второй дуга не
+   * опускается — под ней чёрный фон и пологое гало, которые блюр не меняет.
+   *
+   * Одной общей полосой под лентой это не заменить: она размывает свет и в
+   * зазорах между карточками, и там проступает сплошная подложка.
+   */
+  .testimonial-marquee-frosted .glass-card.testimonial-card {
+    backdrop-filter: blur(24px);
   }
 
   .testimonial-card-copy {
@@ -373,8 +376,8 @@
       background-color: rgb(0 0 0 / 0.92);
     }
 
-    .testimonial-frost {
-      display: none;
+    .testimonial-marquee-frosted .glass-card.testimonial-card {
+      backdrop-filter: none;
     }
   }
 

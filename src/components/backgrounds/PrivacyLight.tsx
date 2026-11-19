@@ -1,13 +1,36 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
+import { createFrostedLight } from './frostedLight'
 import { startRenderLoop, type RenderLoop } from './loop'
-import { LIGHT_PALETTE_GLSL } from './lightPalette'
 import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
-// Хвост луча заканчивается у левого края текстовой колонки и гаснет на
-// большей части своей длины, а не выходит за пределы секции.
-const BEAM_LENGTH_PX = 550
-const BEAM_FADE_LENGTH_PX = 320
+// Дальше этого расстояния от панели хвост луча доведён до нуля: на десктопе
+// он гаснет у левого края экрана, а не обрывается им.
+const BEAM_LENGTH_PX = 600
+
+/**
+ * Яркость точки пересечения нитей. 1 — как в макете; меньше — перекрестье
+ * мягче и белый клин короче, больше — ярче и шире. Влияет только на область
+ * в ~100 px вокруг удара, лучи вдали остаются прежними.
+ */
+const CROSSING_INTENSITY = 0.77
+/**
+ * Длина вертикальных нитей от точки удара в каждую сторону, в долях высоты
+ * панели. За скруглённые углы контейнера свечение не выходит при любом
+ * значении: к концам прямой кромки оно гаснет само (uEdgeExtent).
+ */
+const VERTICAL_LENGTH = 0.53
+/**
+ * Длина затухания вертикали у концов прямой кромки, в долях её длины от точки
+ * удара. Меньше — свет держится почти до угла и гаснет резче, больше — гаснет
+ * раньше и мягче.
+ */
+const EDGE_FADE = 0.5
+
+/** Размытие света под стеклом панели, CSS px — прежний backdrop-filter: blur(48px). */
+const GLASS_BLUR_PX = 48
+/** Скругление панели (.privacy-shell). */
+const GLASS_RADIUS_PX = 24
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -21,45 +44,87 @@ const FRAG = `#version 300 es
 precision highp float;
 
 uniform float uReveal;
-uniform float uBeamStart;
-uniform float uBeamFadeEnd;
+// Длина луча и высота панели — в единицах профиля: CSS px / uProfileScale.
+uniform float uBeamLength;
 uniform float uPanelHeight;
-uniform float uProfileScale;
+// Где кончается прямой участок кромки стекла — над и под точкой удара, до
+// начала скругления углов. Тоже в единицах профиля.
+uniform vec2 uEdgeExtent;
+// Пикселей канваса в единице профиля: dpr канваса × uProfileScale.
+uniform float uScale;
 uniform vec2 uImpact;
 uniform vec2 uResolution;
 
 out vec4 fragColor;
-${LIGHT_PALETTE_GLSL}
 
 // Прежде яркость дышала как 0.988 + sin(uTime * 0.34) * 0.012 — колебание в
 // 1.2% с периодом 18 секунд. На глаз оно неразличимо, но заставляло шейдер
 // считаться вечно. Константа равна середине этого колебания.
 const float breathe = 0.988;
+const float HALF_PI = 1.5707963;
+
+// Экспозиция по каналам, как у Strands: 1 - exp(-E × tint). Синий набирается
+// быстрее красного — слабый свет холодно-стальной, сильный выгорает в белый.
+// Цвет и все параметры нитей ниже сняты с макета в Figma по пикселям.
+const vec3 tint = vec3(0.592, 0.705, 1.0);
+
+// Тонкое яркое ядро нитей подобрано по контуру белого клина у панели в
+// макете: белое тянется влево ~200 px, плавно сужаясь, и вдоль кромки
+// ~90 px в каждую сторону. Ядро горизонтали гаснет быстрее тела нити (свой
+// гаусс), поэтому дальше луч — мягкая холодная линия, а не белая нить.
+const float HORIZONTAL_CORE_SIGMA = 99.3;
+const float HORIZONTAL_CORE_THICKNESS = 3.97;
+const float HORIZONTAL_CORE_GAIN = 13.19;
+const float VERTICAL_CORE_THICKNESS = 2.61;
+const float VERTICAL_CORE_GAIN = 1.112;
+// Тело вертикальных нитей. Шире горизонтали: вдали от перекрестья вдоль
+// кромки остаётся мягкое размытое свечение, а не тонкая линия.
+const float VERTICAL_THICKNESS = 46.0;
+
+const float CROSSING_INTENSITY = ${CROSSING_INTENSITY.toFixed(3)};
+const float VERTICAL_LENGTH = ${VERTICAL_LENGTH.toFixed(3)};
+const float EDGE_FADE = ${EDGE_FADE.toFixed(3)};
 
 float easeOut(float t) {
   return 1.0 - pow(1.0 - clamp(t, 0.0, 1.0), 3.0);
 }
 
+// Прямая нить Strands поперёк расстояния d: (t / (d + 0.45t))², толщина
+// t = thickness × (0.35 + env), яркость × env. Хвосты 1/d² и дают ощущение
+// источника света. env — taper вдоль нити: к концам она и тусклее, и тоньше,
+// поэтому каждый луч звезды сходится в острие.
+float strandExposure(float d, float env, float thickness, float gain) {
+  float t = thickness * (0.35 + env);
+  float g = t / (d + 0.45 * t);
+  return gain * env * g * g;
+}
+
+// Слой Strands после собственного тонмапа — то, что Figma складывает через
+// Plus lighter.
+vec3 strandLayer(float exposure) {
+  return 1.0 - exp(-exposure * tint);
+}
+
 void main() {
-  // Все слагаемые цвета проходят через beamIgnition, handoff или arrivalPulse,
-  // и каждый из них равен нулю при uReveal = 0.
+  // Все слагаемые экспозиции проходят через beamIgnition, handoff или
+  // arrivalPulse, и каждый из них равен нулю при uReveal = 0.
   if (uReveal <= 0.0) {
     fragColor = vec4(0.0);
     return;
   }
 
-  vec2 pixel = gl_FragCoord.xy;
   vec2 impact = vec2(uImpact.x, uResolution.y - uImpact.y);
-  pixel = impact + (pixel - impact) / uProfileScale;
-  float x = pixel.x;
-  float y = pixel.y;
-  float leftDistance = max(impact.x - x, 0.0);
-  float verticalDistance = abs(y - impact.y);
-  float beamLength = max(impact.x - uBeamStart, 1.0);
-  float tailFade = smoothstep(uBeamStart, uBeamFadeEnd, x);
-  // Квадрат делает исчезновение хвоста пологим: он растворяется, а не обрывается.
-  float leftExtinction = tailFade * tailFade;
-  float rightDistance = max(x - impact.x, 0.0);
+  // Точка относительно места удара о край панели, в единицах профиля.
+  vec2 p = (gl_FragCoord.xy - impact) / uScale;
+  float leftDistance = max(-p.x, 0.0);
+  float rightDistance = max(p.x, 0.0);
+  float crossDistance = abs(p.x);
+  float verticalDistance = abs(p.y);
+
+  // Taper горизонтальной нити — гаусс с центром в месте удара. К концу луча
+  // он доводится до нуля, чтобы хвост не обрывался краем экрана.
+  float beamEnvelope = exp(-0.5 * pow(leftDistance / 261.0, 2.0))
+    * (1.0 - smoothstep(uBeamLength * 0.55, uBeamLength, leftDistance));
 
   // Contact is the exact endpoint of travel. Only then can the beam broaden
   // and the panel light up; the final field is never revealed by a moving mask.
@@ -67,7 +132,7 @@ void main() {
   const float contactTime = 0.38;
   float travel = clamp(reveal / contactTime, 0.0, 1.0);
   // Accelerate into the edge instead of drifting at almost constant speed.
-  float headX = mix(uBeamStart, impact.x, pow(travel, 2.8));
+  float headX = mix(-uBeamLength, 0.0, pow(travel, 2.8));
   float contact = clamp((reveal - contactTime) / (1.0 - contactTime), 0.0, 1.0);
   float pressure = easeOut(contact);
   // The core responds first; the atmosphere follows with a slower release.
@@ -77,51 +142,40 @@ void main() {
 
   // A rounded, narrow tip leads a continuous cold-white trail. Its distance
   // field follows the head, not the eventual broad silhouette at the panel.
-  float tipDistance = length(vec2(max(x - headX, 0.0), verticalDistance));
-  float flightCore = exp(-pow(tipDistance / 0.85, 1.42));
-  float flightBody = exp(-tipDistance / 2.8);
-  float flightHaze = exp(-tipDistance / 9.0);
-  vec3 flightColor = (flightCore * coreWhite * 1.58
-    + flightBody * paleBlue * 0.52 + flightHaze * haloBlue * 0.18)
-    * leftExtinction * beamIgnition * (1.0 - handoff);
+  float tipDistance = length(vec2(max(p.x - headX, 0.0), verticalDistance));
+  float tipCore = 1.6 / (tipDistance + 0.72);
+  float tipHalo = 9.0 / (tipDistance + 9.0);
+  float flight = (tipCore * tipCore * 1.2 + tipHalo * tipHalo * 0.5)
+    * beamEnvelope * beamIgnition * (1.0 - handoff);
 
-  // Pressure at the contact point grows into the approved final ray profile.
-  // Луч короче исходного; коэффициент сохраняет прежний силуэт у панели.
-  float proximity = exp(-leftDistance / max(beamLength * 0.34, 1.0));
-  float cusp = pow(proximity, 2.15);
-  // Вдали от панели луч шире и мягче: тонкая резкая нить читалась как царапина.
-  float coreWidth = mix(1.5, 34.0, cusp * pressure);
-  float bodyWidth = mix(4.2, 62.0, pow(proximity, 1.58) * pressure);
-  float tailSoftness = mix(0.42, 1.0, sqrt(proximity));
-  float hazeWidth = mix(8.0, 190.0, pow(proximity, 1.02) * bloom);
-  float coreTransmission = exp(-rightDistance / 18.0);
-  float bodyTransmission = exp(-rightDistance / 46.0);
-  float hazeTransmission = exp(-rightDistance / 104.0);
-  float rayCore = exp(-pow(verticalDistance / coreWidth, 1.42))
-    * leftExtinction
-    * coreTransmission
-    * tailSoftness;
-  float rayBody = exp(-verticalDistance / bodyWidth)
-    * leftExtinction
-    * bodyTransmission;
-  float rayHaze = exp(-verticalDistance / hazeWidth)
-    * leftExtinction
-    * hazeTransmission;
+  // Свет собран как в макете: три прямые нити Strands — одна горизонтальная
+  // и две вертикальные вдоль кромки стекла. Каждая нить проходит свой тонмап,
+  // а слои складываются уже готовым цветом (Plus lighter). Поэтому там, где
+  // нити перекрываются, свет сливается в единую звезду-крест, а не в две
+  // наложенные палки, и синий у перехода насыщается сам, без отдельного ободка.
+  // Широкое тело нити и её тонкое яркое ядро.
+  float grow = mix(0.3, 1.0, pressure);
+  float coreEnvelope = exp(-0.5 * pow(leftDistance / HORIZONTAL_CORE_SIGMA, 2.0));
+  float beam = (strandExposure(verticalDistance, beamEnvelope, 37.0 * grow, 0.557)
+      + strandExposure(verticalDistance, coreEnvelope, HORIZONTAL_CORE_THICKNESS * grow,
+        HORIZONTAL_CORE_GAIN * pow(coreEnvelope, 0.342)))
+    * exp(-rightDistance / 40.0)
+    * handoff;
 
-  // Ice Ridge rotated ninety degrees. Its envelope and layered falloff mirror
-  // the Bypass light instead of approximating the edge with an ellipse.
-  float ridgeAxis = (y - impact.y) / max(uPanelHeight * 0.42, 1.0);
-  float ridgeEnvelope = pow(max(1.0 - ridgeAxis * ridgeAxis, 0.0), 1.8);
-  float ridgeCenter = exp(-ridgeAxis * ridgeAxis * 4.2);
-  float ridgeCrown = exp(-ridgeAxis * ridgeAxis * 9.0);
-  float crossDistance = abs(x - impact.x);
-
-  float ridgeCore = exp(-crossDistance * 1.2) * ridgeEnvelope;
-  float ridgeBody = exp(-crossDistance * 0.085)
-    * ridgeEnvelope
-    * (0.34 + ridgeCenter * 0.66);
-  float ridgeHaze = exp(-crossDistance * 0.022) * ridgeCenter * ridgeEnvelope * 0.78;
-  float ridgeCentralHaze = exp(-crossDistance * 0.011) * ridgeCrown * ridgeEnvelope * 0.97;
+  // Вертикальные нити короче и с острым taper (cos²·¹) на 231 px от удара.
+  float ridgeAxis = p.y / max(uPanelHeight * 0.5, 1.0);
+  float ridgeLength = max(uPanelHeight * VERTICAL_LENGTH, 1.0);
+  // Вертикаль гаснет к концам прямой кромки, сколько бы ни была длинной
+  // сама нить: за скруглённый угол контейнера свечение не выходит.
+  float edgeEnd = p.y > 0.0 ? uEdgeExtent.x : uEdgeExtent.y;
+  float edgeFade = 1.0 - smoothstep(edgeEnd * (1.0 - EDGE_FADE), edgeEnd, verticalDistance);
+  float ridgeEnvelope = pow(cos(HALF_PI * clamp(verticalDistance / ridgeLength, 0.0, 1.0)), 2.1)
+    * edgeFade;
+  // Ядро гаснет вдоль кромки быстрее тела (лишний множитель env): вдали от
+  // перекрестья остаётся только мягкое свечение.
+  float ridge = strandExposure(crossDistance, ridgeEnvelope, VERTICAL_THICKNESS * mix(0.3, 1.0, bloom), 0.187)
+    + strandExposure(crossDistance, ridgeEnvelope, VERTICAL_CORE_THICKNESS * grow,
+      VERTICAL_CORE_GAIN * ridgeEnvelope);
 
   // Diffusion starts at contact and spreads in both directions along the edge.
   float ridgeSettle = smoothstep(0.45, 1.0, contact);
@@ -132,20 +186,20 @@ void main() {
   // A localized, restrained flash rises after impact and settles to zero.
   float arrivalPulse = smoothstep(0.0, 0.06, contact)
     * (1.0 - smoothstep(0.06, 0.55, contact));
-  float sourceCore = exp(-crossDistance * 0.34) * exp(-verticalDistance * 0.040);
-  float sourceBloom = exp(-crossDistance * 0.052) * exp(-verticalDistance * 0.013);
-  vec3 source = (sourceCore * iceWhite * 0.82 + sourceBloom * haloBlue * 0.22)
+  float source = (exp(-crossDistance * 0.42) * exp(-verticalDistance * 0.05) * 2.4
+    + exp(-crossDistance * 0.065) * exp(-verticalDistance * 0.016) * 0.4)
     * arrivalPulse;
 
-  vec3 rayColor = rayHaze * handoff * haloBlue * 0.18
-    + rayBody * handoff * paleBlue * 0.52
-    + rayCore * handoff * coreWhite * 1.58;
-  vec3 ridgeColor = (ridgeHaze + ridgeCentralHaze) * haloBlue * 0.56
-    + ridgeBody * paleBlue * 0.68
-    + ridgeCore * coreWhite * 1.85;
-  vec3 col = flightColor + rayColor + ridgeColor * ridgeField + source;
-  col *= breathe;
-  col = 1.0 - exp(-col * 1.05);
+  // Регулятор яркости перекрестья: гауссово пятно ~70 px вокруг удара.
+  float crossing = mix(1.0, CROSSING_INTENSITY,
+    exp(-0.5 * dot(p, p) / (70.0 * 70.0)));
+  beam *= crossing;
+  ridge *= crossing;
+
+  vec3 horizontal = strandLayer((flight + beam) * breathe);
+  // Вспышка прибавляется к паре вертикальных нитей, поэтому берётся вполовину.
+  vec3 vertical = strandLayer((ridge * ridgeField + source * 0.5) * breathe);
+  vec3 col = min(horizontal + 2.0 * vertical, 1.0);
 
   float alpha = clamp(max(max(col.r, col.g), col.b), 0.0, 1.0);
   fragColor = vec4(col, alpha);
@@ -164,6 +218,10 @@ interface PrivacyLightProps {
  *
  * Кадр зависит только от uReveal и геометрии панели, поэтому после вступления
  * цикл останавливается — до следующего resize или смены active.
+ *
+ * Часть света, ушедшую под стекло панели, канвас выводит уже размытой
+ * (frostedLight) — вместо backdrop-filter на самой панели, который повторял
+ * бы тот же блюр на каждом кадре скролла.
  */
 export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -210,10 +268,10 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
       fragment: FRAG,
       uniforms: {
         uReveal: { value: 0 },
-        uBeamStart: { value: 0 },
-        uBeamFadeEnd: { value: 1 },
+        uBeamLength: { value: BEAM_LENGTH_PX },
         uPanelHeight: { value: 1 },
-        uProfileScale: { value: 1 },
+        uEdgeExtent: { value: [1, 1] },
+        uScale: { value: 1 },
         uImpact: { value: [1, 1] },
         uResolution: { value: [1, 1] },
       },
@@ -222,6 +280,7 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
       depthWrite: false,
     })
     const mesh = new Mesh(gl, { geometry, program })
+    const frost = createFrostedLight(gl, renderer, mesh)
 
     const resize = () => {
       const width = container.clientWidth
@@ -240,15 +299,31 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
       // на десктопе — слева, к её левому краю; хвост уходит за край экрана.
       const impactX = anchorRect.left - containerRect.left
       const impactY = anchorRect.top - containerRect.top + anchorRect.height * 0.515
-      const beamStart = impactX * scaleX - (BEAM_LENGTH_PX * scaleX) / profileScale
 
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
-      program.uniforms.uProfileScale.value = profileScale
-      program.uniforms.uBeamStart.value = beamStart
-      program.uniforms.uBeamFadeEnd.value =
-        beamStart + (BEAM_FADE_LENGTH_PX * scaleX) / profileScale
-      program.uniforms.uPanelHeight.value = (anchorRect.height * scaleY) / profileScale
+      program.uniforms.uScale.value = scaleX * profileScale
+      program.uniforms.uBeamLength.value = BEAM_LENGTH_PX / profileScale
+      program.uniforms.uPanelHeight.value = anchorRect.height / profileScale
+      // Прямой участок кромки: от удара до верхнего и нижнего края панели
+      // за вычетом скругления. x — вверх (gl_FragCoord растёт вверх), y — вниз.
+      const impactOffset = impactY - (anchorRect.top - containerRect.top)
+      program.uniforms.uEdgeExtent.value = [
+        Math.max(impactOffset - GLASS_RADIUS_PX, 1) / profileScale,
+        Math.max(anchorRect.height - impactOffset - GLASS_RADIUS_PX, 1) / profileScale,
+      ]
       program.uniforms.uImpact.value = [impactX * scaleX, impactY * scaleY]
+
+      frost.setSize(gl.canvas.width, gl.canvas.height)
+      frost.setGlass(
+        {
+          left: impactX * scaleX,
+          top: (anchorRect.top - containerRect.top) * scaleY,
+          width: anchorRect.width * scaleX,
+          height: anchorRect.height * scaleY,
+        },
+        GLASS_RADIUS_PX * scaleX,
+        GLASS_BLUR_PX * scaleX,
+      )
       // Кадр остановленного цикла остаётся от прежней геометрии и размера
       // канваса — после resize его нужно перерисовать.
       loopRef.current?.invalidate()
@@ -271,7 +346,7 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
               ? 0
               : Math.min(Math.max((timeMs - revealStart) / LIGHT_REVEAL_DURATION_MS, 0), 1)
         program.uniforms.uReveal.value = reveal
-        renderer.render({ scene: mesh })
+        frost.render()
 
         return revealStart !== null && timeMs < revealStart + LIGHT_REVEAL_DURATION_MS
       },

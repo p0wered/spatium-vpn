@@ -85,7 +85,7 @@ export function Bypass() {
         >
           <div className="pointer-events-none absolute inset-x-[-28%] top-0 z-0 h-40 -translate-y-1/2 sm:inset-x-[-15%] sm:h-56 lg:inset-x-[-11%] lg:h-64">
             <Suspense fallback={null}>
-              <IceRidge active={Boolean(reduced || lightInView)} />
+              <IceRidge active={Boolean(reduced || lightInView)} anchorRef={panelRef} />
             </Suspense>
           </div>
 

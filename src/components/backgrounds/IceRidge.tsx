@@ -1,8 +1,19 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
+import { createFrostedLight } from './frostedLight'
 import { startRenderLoop, type RenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
 import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
+
+/** Размытие света под стеклом панели, CSS px — прежний backdrop-filter: blur(48px). */
+const GLASS_BLUR_PX = 48
+/** Скругление панели (.bypass-shell). */
+const GLASS_RADIUS_PX = 24
+/**
+ * Насколько канвас длиннее световой полосы вниз. Блюр растягивает свет под
+ * стеклом на три сигмы дальше нижней кромки полосы — этому хвосту нужно место.
+ */
+const GLASS_BLEED_PX = GLASS_BLUR_PX * 3
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -18,6 +29,8 @@ precision highp float;
 uniform float uReveal;
 uniform float uRidgeWidth;
 uniform vec2 uResolution;
+// Высота световой полосы в пикселях канваса. Гребень лежит на её середине.
+uniform float uBandHeight;
 
 out vec4 fragColor;
 ${LIGHT_PALETTE_GLSL}
@@ -28,8 +41,18 @@ ${LIGHT_PALETTE_GLSL}
 const float breathe = 0.988;
 
 void main() {
-  vec2 uv = gl_FragCoord.xy / uResolution;
-  vec2 p = (uv - 0.5) * 2.0;
+  // Канвас длиннее полосы вниз (запас под блюр стекла), но сам свет считается
+  // в координатах полосы и за её пределами обрывается — как раньше, когда
+  // полоса и была канвасом. Иначе под стекло попал бы свет, которого не было.
+  float ridgeY = uResolution.y - uBandHeight * 0.5;
+  vec2 p = vec2(
+    (gl_FragCoord.x / uResolution.x - 0.5) * 2.0,
+    (gl_FragCoord.y - ridgeY) / (uBandHeight * 0.5)
+  );
+  if (abs(p.y) > 1.0) {
+    fragColor = vec4(0.0);
+    return;
+  }
 
   // Отдельная нормализация по осям удерживает силуэт одинаковым на mobile
   // и desktop. Ridge остаётся прямым, меняется только плотность света.
@@ -103,23 +126,28 @@ void main() {
 
 /**
  * Один холодный световой ridge для верхней кромки Bypass-контейнера.
- * Это самостоятельный fullscreen-pass: без геометрии, post-processing и
- * второго framebuffer. Общий render loop останавливает canvas вне viewport
- * и совсем гасит его, когда вступление доиграно: кадр зависит только от
- * uReveal и дальше не меняется.
+ * Нижняя половина света уходит под стекло панели и там размыта — это делает
+ * сам канвас (frostedLight), а не backdrop-filter панели. Общий render loop
+ * останавливает canvas вне viewport и совсем гасит его, когда вступление
+ * доиграно: кадр зависит только от uReveal и дальше не меняется, поэтому и
+ * блюр после вступления не стоит ничего.
  */
 interface IceRidgeProps {
   active: boolean
+  /** Панель, под которую уходит свет: в её границах он выводится размытым. */
+  anchorRef: RefObject<HTMLElement | null>
   revealDelayMs?: number
   revealDurationMs?: number
 }
 
 export default function IceRidge({
   active,
+  anchorRef,
   revealDelayMs = LIGHT_REVEAL_DELAY_MS,
   revealDurationMs = LIGHT_REVEAL_DURATION_MS,
 }: IceRidgeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const canvasHostRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef(active)
   const revealStartRef = useRef<number | null>(null)
   const loopRef = useRef<RenderLoop | null>(null)
@@ -134,7 +162,8 @@ export default function IceRidge({
 
   useEffect(() => {
     const container = containerRef.current
-    if (!container) return
+    const canvasHost = canvasHostRef.current
+    if (!container || !canvasHost) return
 
     const renderer = new Renderer({
       dpr: Math.min(window.devicePixelRatio, 1.25),
@@ -152,7 +181,7 @@ export default function IceRidge({
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
     gl.canvas.style.width = '100%'
     gl.canvas.style.height = '100%'
-    container.appendChild(gl.canvas)
+    canvasHost.appendChild(gl.canvas)
 
     const geometry = new Triangle(gl)
     if (geometry.attributes.uv) delete geometry.attributes.uv
@@ -164,16 +193,43 @@ export default function IceRidge({
         uReveal: { value: 0 },
         uRidgeWidth: { value: 0.8 },
         uResolution: { value: [1, 1] },
+        uBandHeight: { value: 1 },
       },
       depthTest: false,
       depthWrite: false,
     })
     const mesh = new Mesh(gl, { geometry, program })
+    const frost = createFrostedLight(gl, renderer, mesh)
 
     const resize = () => {
-      const { clientWidth: width, clientHeight: height } = container
+      const { clientWidth: width, clientHeight: height } = canvasHost
+      if (width === 0 || height === 0) return
+
       renderer.setSize(width, height)
+      const scaleX = gl.canvas.width / width
+      const scaleY = gl.canvas.height / height
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
+      program.uniforms.uBandHeight.value = container.clientHeight * scaleY
+
+      frost.setSize(gl.canvas.width, gl.canvas.height)
+      const anchor = anchorRef.current
+      if (anchor) {
+        const hostRect = canvasHost.getBoundingClientRect()
+        const anchorRect = anchor.getBoundingClientRect()
+        frost.setGlass(
+          {
+            left: (anchorRect.left - hostRect.left) * scaleX,
+            top: (anchorRect.top - hostRect.top) * scaleY,
+            width: anchorRect.width * scaleX,
+            height: anchorRect.height * scaleY,
+          },
+          GLASS_RADIUS_PX * scaleX,
+          GLASS_BLUR_PX * scaleX,
+        )
+      } else {
+        frost.setGlass(null)
+      }
+
       const configuredWidth = Number.parseFloat(
         getComputedStyle(container).getPropertyValue('--ridge-width'),
       )
@@ -185,7 +241,8 @@ export default function IceRidge({
     }
 
     const observer = new ResizeObserver(resize)
-    observer.observe(container)
+    observer.observe(canvasHost)
+    if (anchorRef.current) observer.observe(anchorRef.current)
     resize()
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -200,7 +257,7 @@ export default function IceRidge({
               ? 0
               : Math.min(Math.max((timeMs - revealStart) / revealDurationMs, 0), 1)
         program.uniforms.uReveal.value = rawReveal
-        renderer.render({ scene: mesh })
+        frost.render()
 
         return revealStart !== null && timeMs < revealStart + revealDurationMs
       },
@@ -215,12 +272,20 @@ export default function IceRidge({
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()
     }
-  }, [revealDurationMs])
+  }, [anchorRef, revealDurationMs])
 
+  // Внешний блок — световая полоса: по нему считается видимость и гребень на
+  // его середине. Канвас внутри длиннее вниз на запас под блюр стекла.
   return (
     <div
       ref={containerRef}
-      className="pointer-events-none h-full w-full overflow-hidden [--ridge-width:0.64] sm:[--ridge-width:0.765] lg:[--ridge-width:0.815]"
-    />
+      className="pointer-events-none relative h-full w-full [--ridge-width:0.64] sm:[--ridge-width:0.765] lg:[--ridge-width:0.815]"
+    >
+      <div
+        ref={canvasHostRef}
+        className="absolute inset-x-0 top-0 overflow-hidden"
+        style={{ bottom: -GLASS_BLEED_PX }}
+      />
+    </div>
   )
 }

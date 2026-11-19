@@ -153,8 +153,11 @@ function useHoverBrake() {
 function MarqueeRow({ direction, frost }: { direction: 'left' | 'right'; frost?: boolean }) {
   const { trackRef, handlers } = useHoverBrake()
   return (
-    <div className="testimonial-marquee" aria-hidden {...handlers}>
-      {frost && <div className="testimonial-frost" />}
+    <div
+      className={`testimonial-marquee ${frost ? 'testimonial-marquee-frosted' : ''}`}
+      aria-hidden
+      {...handlers}
+    >
       <div ref={trackRef} className={`testimonial-track testimonial-track-${direction}`}>
         <CardSequence />
         <CardSequence />
