@@ -15,15 +15,16 @@ const BEAM_LENGTH_PX = 600
  */
 const CROSSING_INTENSITY = 0.77
 /**
- * Длина вертикальных нитей от точки удара в каждую сторону, в долях высоты
- * панели. За скруглённые углы контейнера свечение не выходит при любом
- * значении: к концам прямой кромки оно гаснет само (uEdgeExtent).
+ * Длина ореола вертикальных нитей от точки удара в каждую сторону, в долях
+ * высоты панели. Тонкое ядро от неё не зависит: оно всегда тянется до
+ * скругления углов (VERTICAL_CORE_TAPER в шейдере). За скруглённые углы
+ * контейнера свечение не выходит при любом значении (uEdgeExtent).
  */
 const VERTICAL_LENGTH = 0.53
 /**
- * Длина затухания вертикали у концов прямой кромки, в долях её длины от точки
- * удара. Меньше — свет держится почти до угла и гаснет резче, больше — гаснет
- * раньше и мягче.
+ * Длина затухания ореола вертикали у концов прямой кромки, в долях её длины
+ * от точки удара. Меньше — ореол держится почти до угла и гаснет резче,
+ * больше — гаснет раньше и мягче. На ядро не влияет.
  */
 const EDGE_FADE = 0.5
 
@@ -82,6 +83,12 @@ const float VERTICAL_CORE_GAIN = 1.112;
 // Тело вертикальных нитей. Шире горизонтали: вдали от перекрестья вдоль
 // кромки остаётся мягкое размытое свечение, а не тонкая линия.
 const float VERTICAL_THICKNESS = 46.0;
+// Затухание ядра вертикали к концам прямой кромки. Больше — тусклеет раньше,
+// меньше — яркая нить держится ближе к углам. Подобрано по гребню Bypass.
+const float VERTICAL_CORE_TAPER = 2.2;
+// Цвет ядра вертикали. Почти нейтральный: тусклый хвост ядра у краёв
+// контейнера светлый, как у гребня Bypass, а не синий.
+const vec3 coreTint = vec3(0.8, 0.86, 1.0);
 
 const float CROSSING_INTENSITY = ${CROSSING_INTENSITY.toFixed(3)};
 const float VERTICAL_LENGTH = ${VERTICAL_LENGTH.toFixed(3)};
@@ -95,10 +102,13 @@ float easeOut(float t) {
 // t = thickness × (0.35 + env), яркость × env. Хвосты 1/d² и дают ощущение
 // источника света. env — taper вдоль нити: к концам она и тусклее, и тоньше,
 // поэтому каждый луч звезды сходится в острие.
-float strandExposure(float d, float env, float thickness, float gain) {
-  float t = thickness * (0.35 + env);
+float strandProfile(float d, float t) {
   float g = t / (d + 0.45 * t);
-  return gain * env * g * g;
+  return g * g;
+}
+
+float strandExposure(float d, float env, float thickness, float gain) {
+  return gain * env * strandProfile(d, thickness * (0.35 + env));
 }
 
 // Слой Strands после собственного тонмапа — то, что Figma складывает через
@@ -173,11 +183,16 @@ void main() {
   float edgeFade = 1.0 - smoothstep(edgeEnd * (1.0 - EDGE_FADE), edgeEnd, verticalDistance);
   float ridgeEnvelope = pow(cos(HALF_PI * clamp(verticalDistance / ridgeLength, 0.0, 1.0)), 2.1)
     * edgeFade;
-  // Ядро гаснет вдоль кромки быстрее тела (лишний множитель env): вдали от
-  // перекрестья остаётся только мягкое свечение.
-  float ridge = strandExposure(crossDistance, ridgeEnvelope, VERTICAL_THICKNESS * mix(0.3, 1.0, bloom), 0.187)
-    + strandExposure(crossDistance, ridgeEnvelope, VERTICAL_CORE_THICKNESS * grow,
-      VERTICAL_CORE_GAIN * ridgeEnvelope);
+  float ridgeHalo = strandExposure(crossDistance, ridgeEnvelope,
+    VERTICAL_THICKNESS * mix(0.3, 1.0, bloom), 0.187);
+  // Ядро вертикали устроено как гребень Bypass: ореол к краям контейнера
+  // уходит первым, а ядро не истончается вместе с ним и тянется почти до
+  // скругления углов, плавно тускнея по (1 - x²)^VERTICAL_CORE_TAPER. Свет
+  // кончается тонкой светлой нитью, а не обрезом размытого пятна.
+  float edgeAxis = clamp(verticalDistance / max(edgeEnd, 1.0), 0.0, 1.0);
+  float coreTaper = pow(1.0 - edgeAxis * edgeAxis, VERTICAL_CORE_TAPER);
+  float ridgeCore = VERTICAL_CORE_GAIN * coreTaper * strandProfile(crossDistance,
+    VERTICAL_CORE_THICKNESS * (0.35 + max(ridgeEnvelope, 0.65)) * grow);
 
   // Diffusion starts at contact and spreads in both directions along the edge.
   float ridgeSettle = smoothstep(0.45, 1.0, contact);
@@ -196,11 +211,11 @@ void main() {
   float crossing = mix(1.0, CROSSING_INTENSITY,
     exp(-0.5 * dot(p, p) / (70.0 * 70.0)));
   beam *= crossing;
-  ridge *= crossing;
 
   vec3 horizontal = strandLayer((flight + beam) * breathe);
   // Вспышка прибавляется к паре вертикальных нитей, поэтому берётся вполовину.
-  vec3 vertical = strandLayer((ridge * ridgeField + source * 0.5) * breathe);
+  vec3 vertical = 1.0 - exp(-((ridgeHalo * tint + ridgeCore * coreTint) * crossing * ridgeField
+    + source * 0.5 * tint) * breathe);
   vec3 col = min(horizontal + 2.0 * vertical, 1.0);
 
   float alpha = clamp(max(max(col.r, col.g), col.b), 0.0, 1.0);
