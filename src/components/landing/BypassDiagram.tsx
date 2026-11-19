@@ -216,7 +216,9 @@ const mobileLayout: Layout = {
   height: 430,
   left: 18,
   right: 342,
-  header: { y: 28, font: 8, spacing: 1.15, text: ['ONE ENDPOINT · TWO OBSERVERS', null] },
+  // Шрифты мобильной схемы — в единицах viewBox 360: панель на телефоне ~310px,
+  // и прежние 7–8 превращались в 6px на экране.
+  header: { y: 28, font: 9, spacing: 1.2, text: ['ONE ENDPOINT · TWO OBSERVERS', null] },
   tag: null,
   caption: null,
   sources: [
@@ -236,8 +238,8 @@ const mobileLayout: Layout = {
   },
   inlineCells: true,
   radius: { box: 11, server: 14, cell: 6 },
-  box: { cap: 8, main: 10.5, capDy: 21, mainDy: 38, padX: 14 },
-  cell: { cap: 7, main: 9, capDy: 20, mainDy: 36, padX: 12 },
+  box: { cap: 9, main: 11.5, capDy: 21, mainDy: 39, padX: 14 },
+  cell: { cap: 8, main: 10, capDy: 20, mainDy: 37, padX: 11 },
   mark: { w: 30, h: 16 },
   routes: [
     'M92 98V104Q92 112 100 112H180V246H100Q92 246 92 254V344',

@@ -54,6 +54,8 @@ uniform vec2 uEdgeExtent;
 uniform float uScale;
 uniform vec2 uImpact;
 uniform vec2 uResolution;
+// Доля горизонтального луча: 1 — луч прилетает слева, 0 — только свет кромки.
+uniform float uBeam;
 
 out vec4 fragColor;
 
@@ -146,7 +148,7 @@ void main() {
   float tipCore = 1.6 / (tipDistance + 0.72);
   float tipHalo = 9.0 / (tipDistance + 9.0);
   float flight = (tipCore * tipCore * 1.2 + tipHalo * tipHalo * 0.5)
-    * beamEnvelope * beamIgnition * (1.0 - handoff);
+    * beamEnvelope * beamIgnition * (1.0 - handoff) * uBeam;
 
   // Свет собран как в макете: три прямые нити Strands — одна горизонтальная
   // и две вертикальные вдоль кромки стекла. Каждая нить проходит свой тонмап,
@@ -160,7 +162,7 @@ void main() {
       + strandExposure(verticalDistance, coreEnvelope, HORIZONTAL_CORE_THICKNESS * grow,
         HORIZONTAL_CORE_GAIN * pow(coreEnvelope, 0.342)))
     * exp(-rightDistance / 40.0)
-    * handoff;
+    * handoff * uBeam;
 
   // Вертикальные нити короче и с острым taper (cos²·¹) на 231 px от удара.
   float ridgeAxis = p.y / max(uPanelHeight * 0.5, 1.0);
@@ -274,6 +276,7 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
         uScale: { value: 1 },
         uImpact: { value: [1, 1] },
         uResolution: { value: [1, 1] },
+        uBeam: { value: 1 },
       },
       transparent: true,
       depthTest: false,
@@ -295,9 +298,11 @@ export default function PrivacyLight({ active, anchorRef }: PrivacyLightProps) {
       const scaleY = gl.canvas.height / height
       const compact = window.matchMedia('(max-width: 1023px)').matches
       const profileScale = compact ? 0.5 : 1
-      // На узких экранах панель стоит под текстом, но луч приходит так же, как
-      // на десктопе — слева, к её левому краю; хвост уходит за край экрана.
       const impactX = anchorRect.left - containerRect.left
+      // Лучу нужен разбег слева от панели. На телефоне до края экрана ~20px:
+      // от луча оставался обрубок-вспышка у самой кромки экрана. Там свет
+      // зажигается прямо на кромке стекла, без прилёта.
+      program.uniforms.uBeam.value = impactX >= 120 ? 1 : 0
       const impactY = anchorRect.top - containerRect.top + anchorRect.height * 0.515
 
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]

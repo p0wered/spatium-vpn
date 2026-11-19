@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { plans, type Plan } from './plans'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
@@ -47,7 +47,9 @@ function PlanCard({
 }) {
   return (
     <motion.article
-      className="h-full"
+      // < lg — слайд карусели: ширина экрана минус подглядывающие соседи,
+      // snap-always — один свайп листает ровно одну карточку
+      className="w-[min(20rem,calc(100vw-4.5rem))] shrink-0 snap-center snap-always lg:h-full lg:w-auto"
       aria-labelledby={`plan-${plan.name.toLowerCase()}`}
       initial={reduced ? { opacity: 0 } : { opacity: 0, y: 28, filter: 'blur(8px)' }}
       animate={
@@ -106,6 +108,74 @@ function PlanCard({
 }
 
 /**
+ * До lg тарифы — горизонтальная карусель на нативном scroll-snap: стопка из
+ * трёх высоких карточек растягивала секцию на два с лишним экрана, а сравнивать
+ * тарифы приходилось по памяти. Возвращает ref ленты, индекс карточки у центра
+ * и переход к карточке по индексу.
+ */
+function usePlanCarousel(reduced: boolean | null) {
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const frameRef = useRef(0)
+  const featuredIndex = Math.max(
+    plans.findIndex((plan) => plan.featured),
+    0,
+  )
+  const [active, setActive] = useState(featuredIndex)
+
+  /** scrollLeft, при котором карточка index стоит по центру ленты */
+  const offsetFor = (scroller: HTMLElement, index: number) => {
+    const card = scroller.children[index] as HTMLElement | undefined
+    if (!card) return 0
+    return card.offsetLeft - (scroller.clientWidth - card.offsetWidth) / 2
+  }
+
+  // Лента открывается на рекомендованном тарифе: соседи подглядывают с обеих
+  // сторон и сразу показывают, что карточки листаются. До отрисовки — иначе
+  // был бы виден прыжок от первой карточки.
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current
+    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return
+    scroller.scrollLeft = offsetFor(scroller, featuredIndex)
+  }, [featuredIndex])
+
+  useLayoutEffect(() => () => cancelAnimationFrame(frameRef.current), [])
+
+  const onScroll = useCallback(() => {
+    cancelAnimationFrame(frameRef.current)
+    frameRef.current = requestAnimationFrame(() => {
+      const scroller = scrollerRef.current
+      if (!scroller) return
+      const center = scroller.scrollLeft + scroller.clientWidth / 2
+      let nearest = 0
+      let best = Infinity
+      Array.from(scroller.children).forEach((child, index) => {
+        const card = child as HTMLElement
+        const distance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center)
+        if (distance < best) {
+          best = distance
+          nearest = index
+        }
+      })
+      setActive(nearest)
+    })
+  }, [])
+
+  const goTo = useCallback(
+    (index: number) => {
+      const scroller = scrollerRef.current
+      if (!scroller) return
+      scroller.scrollTo({
+        left: offsetFor(scroller, index),
+        behavior: reduced ? 'auto' : 'smooth',
+      })
+    },
+    [reduced],
+  )
+
+  return { scrollerRef, active, onScroll, goTo }
+}
+
+/**
  * Closing conversion on the landing. Composition follows the approved
  * three-plan board; material stays in the page's glass language.
  */
@@ -113,6 +183,7 @@ export function Pricing() {
   const sectionRef = useRef<HTMLElement>(null)
   const inView = useInView(sectionRef, { once: true, amount: 0.18 })
   const reduced = useReducedMotion()
+  const carousel = usePlanCarousel(reduced)
 
   return (
     <section
@@ -141,30 +212,75 @@ export function Pricing() {
 
         <motion.p
           variants={textItem}
-          className="mx-auto mt-3.5 max-w-[520px] text-center text-base leading-6 font-light
+          className="mx-auto mt-3.5 max-w-[520px] text-center text-base leading-6 font-light text-balance
           text-white/75 sm:text-lg sm:leading-7"
         >
           Billed daily from your balance. Stay connected for as long as it lasts.
         </motion.p>
 
+        {/* Лента выходит в поля контейнера (-mx) до краёв экрана, чтобы
+            соседние карточки обрезались кромкой экрана, а не отступом.
+            py/-my — запас под тень и ореол карточек: overflow-x: auto
+            обрезает и по вертикали. touch-action не сужаем до pan-x —
+            иначе вертикальный свайп по высокой карточке не скроллил бы
+            страницу. */}
+        {/* Обёртка держит затемнение краёв (.pricing-slider): псевдоэлементы
+            самой ленты прокручивались бы вместе с карточками */}
         <div
-          className="mt-14 grid gap-4 sm:mt-16 sm:gap-5
-          lg:mt-[72px] lg:grid-cols-3 lg:items-stretch lg:gap-6"
+          className="pricing-slider relative -mx-5 mt-10 -mb-4 sm:-mx-6 sm:mt-12
+          lg:mx-0 lg:mt-[72px] lg:mb-0"
         >
-          {plans.map((plan) => (
-            <PlanCard
-              key={plan.name}
-              plan={plan}
-              visible={Boolean(reduced || inView)}
-              reduced={reduced}
-            />
-          ))}
+          <div
+            ref={carousel.scrollerRef}
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Plans"
+            onScroll={carousel.onScroll}
+            className="no-scrollbar relative flex snap-x snap-mandatory gap-3
+            overflow-x-auto overscroll-x-contain px-5 pt-4 pb-4 scroll-px-5
+            sm:gap-4 sm:px-6 sm:scroll-px-6
+            lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-6 lg:overflow-visible lg:p-0"
+          >
+            {plans.map((plan) => (
+              <PlanCard
+                key={plan.name}
+                plan={plan}
+                visible={Boolean(reduced || inView)}
+                reduced={reduced}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-3 flex justify-center lg:hidden">
+          {plans.map((plan, index) => {
+            const current = index === carousel.active
+            return (
+              <button
+                key={plan.name}
+                type="button"
+                aria-label={`Show ${plan.name} plan`}
+                aria-current={current}
+                onClick={() => carousel.goTo(index)}
+                className="flex h-11 w-8 cursor-pointer items-center justify-center rounded-full
+                focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-fg"
+              >
+                <span
+                  aria-hidden
+                  className={`h-1.5 rounded-full transition-[width,background-color]
+                  duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${
+                    current ? 'w-5 bg-white/80' : 'w-1.5 bg-white/25'
+                  }`}
+                />
+              </button>
+            )
+          })}
         </div>
 
         <motion.p
           variants={textItem}
-          className="mx-auto mt-8 max-w-[480px] text-center text-sm
-          leading-6 font-light text-white/46 sm:mt-10"
+          className="mx-auto mt-5 max-w-[480px] text-center text-sm
+          leading-6 font-light text-white/46 sm:mt-6 lg:mt-10"
         >
           Each extra device is +0.02$ /day
           <span aria-hidden className="mx-2 text-white/28">

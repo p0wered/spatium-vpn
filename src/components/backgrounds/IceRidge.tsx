@@ -233,9 +233,16 @@ export default function IceRidge({
       const configuredWidth = Number.parseFloat(
         getComputedStyle(container).getPropertyValue('--ridge-width'),
       )
-      program.uniforms.uRidgeWidth.value = Number.isFinite(configuredWidth)
-        ? configuredWidth
-        : 0.8
+      const ridgeWidth = Number.isFinite(configuredWidth) ? configuredWidth : 0.8
+      // Гребень не должен выходить за прямой участок верхней кромки стекла:
+      // дальше начинается скругление, и свет висел в воздухе над углом.
+      // На телефоне радиус 24px — заметная доля ширины панели, поэтому
+      // одной доли канваса (--ridge-width) мало: ограничиваем в пикселях.
+      // Канвас и панель центрированы друг относительно друга.
+      const edgeLimit = anchor
+        ? (anchor.getBoundingClientRect().width / 2 - GLASS_RADIUS_PX) / (width / 2)
+        : ridgeWidth
+      program.uniforms.uRidgeWidth.value = Math.min(ridgeWidth, Math.max(edgeLimit, 0.1))
       // Смена размера сбрасывает канвас: остановленному циклу нужен новый кадр.
       loopRef.current?.invalidate()
     }

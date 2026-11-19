@@ -441,7 +441,8 @@ const mobileLayout: Layout = {
   dnsMax: 12,
   ip: { rows: 3, height: 2, gap: 2 },
   memory: { top: 30, base: 59 },
-  font: { header: 8, title: 8, lane: 7, caption: 8.5 },
+  // В единицах viewBox 360: на телефоне схема ~310px, прежние 7–8 давали 6px.
+  font: { header: 9, title: 9, lane: 8, caption: 10 },
   spacing: { header: 1.05, title: 0.85, lane: 0.58 },
   copy: {
     header: ['SESSION PRIVACY', 'LIVE ROUTE'],
@@ -450,8 +451,8 @@ const mobileLayout: Layout = {
     lanes: { ip: ['SHARED IP', 'REAL IP'], dns: ['TUNNEL', 'OUTSIDE'], memory: 'RAM ONLY' },
     caption: ['A shared identity leaves the tunnel.', 'DNS stays inside; memory is released.'],
   },
-  captionY: 404,
-  captionLine: 12,
+  captionY: 402,
+  captionLine: 14,
 }
 
 const LANE_STROKE = { stroke: 'white', strokeOpacity: 0.1 }

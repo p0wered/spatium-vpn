@@ -54,18 +54,18 @@ export function Footer() {
           <p className="max-w-[300px] text-sm leading-6 font-light text-white/50">
             Fast, private VPN that just works — on any network.
           </p>
-          <div className="mt-2 flex flex-col gap-2 font-mono text-xs text-white/50">
+          <div className="mt-1 flex flex-col font-mono text-xs text-white/50 sm:mt-2 sm:gap-2">
             <a
               href={SUPPORT_TELEGRAM.href}
               target="_blank"
               rel="noreferrer"
-              className="link-glow w-fit hover:text-fg"
+              className="link-glow w-fit py-1.5 hover:text-fg sm:py-0"
             >
               {SUPPORT_TELEGRAM.handle}
             </a>
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
-              className="link-glow w-fit select-text hover:text-fg"
+              className="link-glow w-fit py-1.5 select-text hover:text-fg sm:py-0"
             >
               {SUPPORT_EMAIL}
             </a>
@@ -76,10 +76,15 @@ export function Footer() {
           {footerGroups.map((group, i) => (
             <motion.nav key={group.title} {...fade(0.08 * (i + 1))} aria-label={group.title}>
               <p className={label}>{group.title}</p>
-              <ul className="mt-5 space-y-3">
+              <ul className="mt-3 space-y-0.5 sm:mt-5 sm:space-y-3">
                 {group.links.map((link) => (
                   <li key={link.label}>
-                    <FooterLink link={link} className="text-sm text-white/65 hover:text-fg" />
+                    {/* На тач-экране — строка ~36px вместо 20px: пальцу нужна
+                        площадка, а зазор между пунктами визуально прежний */}
+                    <FooterLink
+                      link={link}
+                      className="py-2 text-sm text-white/65 hover:text-fg sm:py-0"
+                    />
                   </li>
                 ))}
               </ul>

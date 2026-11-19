@@ -43,6 +43,9 @@
     color-scheme: dark;
     background-color: var(--color-bg);
     scrollbar-width: none;
+    /* Серая вспышка тапа на чёрном читается как баг; отклик дают свои
+       :active-состояния (active:scale у Button) */
+    -webkit-tap-highlight-color: transparent;
   }
 
   html::-webkit-scrollbar {
@@ -341,6 +344,29 @@
     letter-spacing: 0.08em;
   }
 
+  /*
+   * Телефон: шторки по краям лент на 15vw съедали почти половину экрана, и
+   * центральная карточка тоже уходила в тень; самые длинные цитаты в
+   * 11.75rem высоты прижимали подпись к тексту.
+   */
+  @media (max-width: 639px) {
+    .testimonial-marquee::before,
+    .testimonial-marquee::after {
+      width: clamp(2rem, 9vw, 3rem);
+    }
+
+    .glass-card.testimonial-card {
+      width: min(18.5rem, calc(100vw - 4.5rem));
+      height: 13rem;
+      padding: 1.375rem 1.375rem 1.25rem;
+    }
+
+    .testimonial-card-copy {
+      font-size: 1.0625rem;
+      line-height: 1.4;
+    }
+  }
+
   @keyframes testimonial-marquee-right {
     from {
       transform: translate3d(calc(-50% - var(--testimonial-gap) / 2), 0, 0);
@@ -489,6 +515,29 @@
   @media (min-width: 640px) {
     .glass-card.pricing-card {
       padding: 2.35rem 2.15rem 2.1rem;
+    }
+  }
+
+  /*
+   * Телефон: три карточки идут стопкой, и десктопные воздушные отступы
+   * растягивали секцию на два с лишним экрана. Ритм тот же, только плотнее.
+   */
+  @media (max-width: 639px) {
+    .glass-card.pricing-card {
+      padding: 1.75rem 1.5rem 1.5rem;
+    }
+
+    .pricing-card-price {
+      margin-top: 1.5rem;
+    }
+
+    .pricing-card-features {
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .pricing-card-cta {
+      margin-top: 1.75rem;
     }
   }
 
@@ -764,6 +813,48 @@
       rgb(0 0 0 / 0.55) 45%,
       transparent 100%
     );
+  }
+
+  /*
+   * Края мобильной карусели тарифов: соседние карточки подглядывают из-за
+   * кромки экрана и уходят в тень, а не обрываются ею. Шире, чем у
+   * .stats-slider, — накрывает весь выглядывающий край соседа.
+   */
+  .pricing-slider::before,
+  .pricing-slider::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    z-index: 2;
+    width: clamp(2rem, 9vw, 3.5rem);
+    pointer-events: none;
+  }
+
+  .pricing-slider::before {
+    left: 0;
+    background: linear-gradient(
+      to right,
+      #000 0%,
+      rgb(0 0 0 / 0.7) 40%,
+      transparent 100%
+    );
+  }
+
+  .pricing-slider::after {
+    right: 0;
+    background: linear-gradient(
+      to left,
+      #000 0%,
+      rgb(0 0 0 / 0.7) 40%,
+      transparent 100%
+    );
+  }
+
+  @media (min-width: 1024px) {
+    .pricing-slider::before,
+    .pricing-slider::after {
+      content: none;
+    }
   }
 
   @media (min-width: 640px) {

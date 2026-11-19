@@ -67,7 +67,7 @@ export function Privacy() {
       </div>
 
       <motion.div
-        className="landing-container relative z-10 grid gap-24 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[420px_720px] xl:justify-center xl:gap-[52px]"
+        className="landing-container relative z-10 grid gap-12 sm:gap-16 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[420px_720px] xl:justify-center xl:gap-[52px]"
         variants={revealContainer}
         initial={reduced ? false : 'hidden'}
         animate={reduced || inView ? 'show' : 'hidden'}
@@ -76,14 +76,14 @@ export function Privacy() {
           <motion.h2
             id="privacy-title"
             variants={textItem}
-            className="max-w-[420px] bg-[linear-gradient(180deg,#fff_8%,rgb(255_255_255/0.72)_100%)] bg-clip-text text-4xl leading-[1.06] font-semibold tracking-[-0.03em] text-transparent sm:text-5xl lg:text-[64px] lg:leading-[68px]"
+            className="text-balance max-w-[420px] bg-[linear-gradient(180deg,#fff_8%,rgb(255_255_255/0.72)_100%)] bg-clip-text text-4xl leading-[1.06] font-semibold tracking-[-0.03em] text-transparent sm:text-5xl lg:text-[64px] lg:leading-[68px]"
           >
             Your traffic stays yours
           </motion.h2>
 
           <motion.p
             variants={textItem}
-            className="mt-7 max-w-[420px] text-base leading-6 font-light text-white/70 sm:text-lg sm:leading-7 lg:mt-auto"
+            className="mt-5 max-w-[420px] text-base leading-6 font-light text-white/70 sm:text-lg sm:leading-7 lg:mt-auto"
           >
             Spatium hides your IP, keeps DNS inside the tunnel, and retains no activity history.
           </motion.p>

@@ -168,6 +168,7 @@ function MarqueeRow({ direction, frost }: { direction: 'left' | 'right'; frost?:
 
 export function Testimonials() {
   const sectionRef = useRef<HTMLElement>(null)
+  const ribbonsRef = useRef<HTMLDivElement>(null)
   const inView = useInView(sectionRef, { amount: 0.08 })
   const reduced = useReducedMotion()
 
@@ -185,7 +186,7 @@ export function Testimonials() {
         className="pointer-events-none absolute inset-0 z-0"
       >
         <Suspense fallback={null}>
-          <OrbitalHorizon active={Boolean(reduced || inView)} />
+          <OrbitalHorizon active={Boolean(reduced || inView)} apexRef={ribbonsRef} />
         </Suspense>
       </div>
 
@@ -221,7 +222,10 @@ export function Testimonials() {
         ))}
       </ul>
 
-      <div className="testimonial-ribbons relative z-10 mt-24 sm:mt-28 lg:mt-[168px]">
+      <div
+        ref={ribbonsRef}
+        className="testimonial-ribbons relative z-10 mt-32 sm:mt-36 lg:mt-[168px]"
+      >
         <MarqueeRow direction="right" frost />
         <MarqueeRow direction="left" />
       </div>

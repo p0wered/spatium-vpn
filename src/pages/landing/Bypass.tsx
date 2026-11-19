@@ -64,14 +64,14 @@ export function Bypass() {
         <motion.h2
           id="bypass-title"
           variants={textItem}
-          className="mx-auto max-w-[693px] bg-[linear-gradient(180deg,#fff_8%,rgb(255_255_255/0.72)_100%)] bg-clip-text text-center text-4xl leading-[1.06] font-semibold tracking-[-0.03em] text-transparent sm:text-5xl lg:text-[64px] lg:leading-[68px]"
+          className="text-balance mx-auto max-w-[693px] bg-[linear-gradient(180deg,#fff_8%,rgb(255_255_255/0.72)_100%)] bg-clip-text text-center text-4xl leading-[1.06] font-semibold tracking-[-0.03em] text-transparent sm:text-5xl lg:text-[64px] lg:leading-[68px]"
         >
           Build to resist blocking
         </motion.h2>
 
         <motion.p
           variants={textItem}
-          className="mx-auto mt-3.5 max-w-[609px] text-center text-base leading-6 font-light text-white/75 sm:text-lg sm:leading-7"
+          className="mx-auto mt-3.5 max-w-[609px] text-center text-base leading-6 font-light text-balance text-white/75 sm:text-lg sm:leading-7"
         >
           Spatium is built to bypass filtering based on Deep Packet Inspection, helping your
           connection remain available on restrictive networks.
@@ -80,7 +80,7 @@ export function Bypass() {
         <motion.div
           ref={panelRef}
           aria-hidden
-          className="relative isolate mx-auto mt-11 aspect-[360/430] min-h-[420px] w-full max-w-[480px] lg:aspect-[1060/563] lg:min-h-0 lg:max-w-none"
+          className="relative isolate mx-auto mt-11 aspect-[360/430] w-full max-w-[480px] lg:aspect-[1060/563] lg:max-w-none"
           variants={blockItem}
         >
           <div className="pointer-events-none absolute inset-x-[-28%] top-0 z-0 h-40 -translate-y-1/2 sm:inset-x-[-15%] sm:h-56 lg:inset-x-[-11%] lg:h-64">

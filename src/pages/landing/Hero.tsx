@@ -41,7 +41,9 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
   }
 
   return (
-    <section className="relative h-svh overflow-hidden">
+    // min-h: на низких экранах (SE, телефон в landscape) h-svh сжимал секцию
+    // настолько, что заголовок наезжал на подзаголовок и кнопки.
+    <section className="relative h-svh min-h-[34rem] overflow-hidden">
       {background === 'color-bends' ? (
         <>
           <motion.div
@@ -115,7 +117,9 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
            здесь стоила полноэкранной внеэкранной поверхности на каждый кадр */
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-20 translate-y-[5%]"
+          // На низких экранах (≤620px) лента поднята: иначе она ложилась
+          // ровно на подзаголовок, а не в просвет между ним и заголовком
+          className="pointer-events-none absolute inset-0 z-20 translate-y-[5%] [@media(max-height:620px)]:-translate-y-[4%]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.6, delay: 0.1 }}
@@ -150,7 +154,7 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
       <GrainOverlay className="z-30" style={{ bottom: '18%' }} />
       <GrainOverlay
         className="z-30 mask-[linear-gradient(to_bottom,black,transparent)]"
-        style={{ top: '82%', backgroundPositionY: '-82svh' }}
+        style={{ top: '82%', backgroundPositionY: 'calc(-0.82 * max(100svh, 34rem))' }}
       />
 
       <motion.div
@@ -165,33 +169,45 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
       >
         <motion.h1
           variants={item}
+          // На телефоне кегль тянется по ширине: две строки при любой ширине
+          // от 320px — фиксированные 3rem ломали заголовок на 3–4 строки,
+          // и он уходил под световую ленту.
           className={`${
             isLeftAligned
               ? 'mt-[30svh] max-w-3xl sm:text-[5.5rem]'
-              : 'mt-[24svh] max-w-4xl sm:text-[6rem]'
-          } text-5xl font-semibold tracking-tighter text-balance [text-shadow:0_2px_32px_rgb(0_0_0/0.55)]`}
+              : 'mt-[max(6rem,24svh)] max-w-4xl sm:text-[6rem]'
+          } text-[clamp(2.5rem,12.4vw,3.5rem)] leading-[1.04] font-semibold tracking-tighter text-balance [text-shadow:0_2px_32px_rgb(0_0_0/0.55)] sm:leading-none`}
         >
           Move unseen. Arrive instantly.
         </motion.h1>
 
-        <div className={isLeftAligned ? 'mt-4' : 'mt-auto mb-[12svh]'}>
+        <div
+          className={
+            isLeftAligned
+              ? 'mt-4'
+              : 'mt-auto mb-[max(2rem,11svh)] flex w-full flex-col items-center pt-10'
+          }
+        >
           <motion.p
             variants={item}
-            className="max-w-xl text-md md:text-lg text-balance leading-6 text-fg [text-shadow:0_1px_16px_rgb(0_0_0/0.7)]"
+            className="max-w-[21rem] text-[0.9375rem] leading-6 text-balance text-fg/90 [text-shadow:0_1px_16px_rgb(0_0_0/0.7)] sm:max-w-xl sm:text-base sm:text-fg md:text-lg"
           >
             Fast, private VPN that just works — bypass censorship, stay anonymous, game on
-            low-latency servers.
+            low‑latency servers.
           </motion.p>
 
+          {/* Телефон: две равные кнопки в ряд, а где не помещаются (<356px) —
+              стопкой на всю ширину. Раньше они переносились по одной и
+              получались разной ширины. */}
           <motion.div
             variants={item}
-            className={`mt-6 flex flex-wrap items-center gap-3 ${
+            className={`mt-6 flex w-full max-w-sm flex-wrap items-center gap-3 sm:w-auto sm:max-w-none ${
               isLeftAligned ? '' : 'justify-center'
             }`}
           >
             <Button
               size="lg"
-              className="rounded-full min-w-40"
+              className="grow basis-[9.5rem] rounded-full px-4! whitespace-nowrap sm:min-w-40 sm:grow-0 sm:basis-auto sm:px-7!"
               onClick={() => navigate('/login')}
             >
               Get SpatiumVPN
@@ -199,7 +215,7 @@ export function Hero({ background = 'strands', contentLayout = 'centered' }: Her
             <Button
               size="lg"
               variant="secondary"
-              className="rounded-full min-w-40"
+              className="grow basis-[9.5rem] rounded-full px-4! whitespace-nowrap sm:min-w-40 sm:grow-0 sm:basis-auto sm:px-7!"
               onClick={() => scrollToSection('pricing')}
             >
               View pricing

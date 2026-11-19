@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { startRenderLoop, type RenderLoop } from './loop'
 import { LIGHT_PALETTE_GLSL } from './lightPalette'
@@ -17,6 +17,8 @@ precision highp float;
 
 uniform float uReveal;
 uniform vec2 uResolution;
+// Вершина дуги от нижней кромки канваса, px канваса; < 0 — по пропорции.
+uniform float uApex;
 
 out vec4 fragColor;
 
@@ -53,7 +55,7 @@ void main() {
   float halfSpan = uResolution.x * mix(0.56, 0.395, responsiveMix);
   float curveX = (frag.x - uResolution.x * 0.5) / halfSpan;
   float sag = uResolution.x * mix(0.118, 0.153, responsiveMix);
-  float finalApex = uResolution.y * mix(0.69, 0.742, responsiveMix);
+  float finalApex = uApex >= 0.0 ? uApex : uResolution.y * mix(0.69, 0.742, responsiveMix);
   float startApex = finalApex - uResolution.y * mix(0.040, 0.055, responsiveMix);
   float apex = mix(startApex, finalApex, progress);
   float curveY = apex - sag * curveX * curveX;
@@ -96,6 +98,10 @@ void main() {
   vec3 color = strandColor * strand * envelope * progress;
   color += outerColor * outerGlow * envelope * progress * 0.24;
   color *= 0.45 + 0.7 * intensity;
+  // Гало 1/d² не доходит до нуля и обрезалось верхней кромкой канваса —
+  // на стыке с секцией Privacy читалась горизонтальная ступень. Гасим
+  // верхние 20% высоты, нить (вершина ниже) это не задевает.
+  color *= smoothstep(0.0, uResolution.y * 0.2, uResolution.y - frag.y);
   color = 1.0 - exp(-color * 2.75);
 
   float alpha = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0);
@@ -103,8 +109,17 @@ void main() {
 }
 `
 
+/** Вершина дуги над верхней кромкой якоря, CSS px. */
+const APEX_ABOVE_ANCHOR_PX = 44
+
 interface OrbitalHorizonProps {
   active: boolean
+  /**
+   * Якорь вершины на узких экранах (< 1024px). Там высота секции зависит от
+   * переносов заголовка, и вершина по пропорции высоты попадала на текст;
+   * с якорем дуга встаёт прямо над лентами карточек.
+   */
+  apexRef?: RefObject<HTMLElement | null>
   revealDelayMs?: number
   revealDurationMs?: number
 }
@@ -120,6 +135,7 @@ interface OrbitalHorizonProps {
  */
 export default function OrbitalHorizon({
   active,
+  apexRef,
   revealDelayMs = LIGHT_REVEAL_DELAY_MS,
   revealDurationMs = LIGHT_REVEAL_DURATION_MS,
 }: OrbitalHorizonProps) {
@@ -167,6 +183,7 @@ export default function OrbitalHorizon({
       uniforms: {
         uReveal: { value: 0 },
         uResolution: { value: [1, 1] },
+        uApex: { value: -1 },
       },
       depthTest: false,
       depthWrite: false,
@@ -177,12 +194,23 @@ export default function OrbitalHorizon({
       const { clientWidth: width, clientHeight: height } = container
       renderer.setSize(width, height)
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
+
+      const anchor = apexRef?.current
+      if (anchor && width < 1024 && height > 0) {
+        const containerRect = container.getBoundingClientRect()
+        const anchorTop = anchor.getBoundingClientRect().top - containerRect.top
+        const apexFromBottom = height - (anchorTop - APEX_ABOVE_ANCHOR_PX)
+        program.uniforms.uApex.value = apexFromBottom * (gl.canvas.height / height)
+      } else {
+        program.uniforms.uApex.value = -1
+      }
       // Смена размера сбрасывает канвас: остановленному циклу нужен новый кадр.
       loopRef.current?.invalidate()
     }
 
     const observer = new ResizeObserver(resize)
     observer.observe(container)
+    if (apexRef?.current) observer.observe(apexRef.current)
     resize()
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -214,7 +242,7 @@ export default function OrbitalHorizon({
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       gl.canvas.remove()
     }
-  }, [revealDurationMs])
+  }, [revealDurationMs, apexRef])
 
   return <div ref={containerRef} className="pointer-events-none h-full w-full overflow-hidden" />
 }
