@@ -2,7 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react'
 import { Mesh, Program, Renderer, Triangle } from 'ogl'
 import { createFrostedLight } from './frostedLight'
 import { startRenderLoop, type RenderLoop } from './loop'
-import { LIGHT_PALETTE_GLSL } from './lightPalette'
+import { GLOW_LINE_GLSL } from './glowLine'
 import { LIGHT_REVEAL_DELAY_MS, LIGHT_REVEAL_DURATION_MS } from './lightMotion'
 
 /** Размытие света под стеклом панели, CSS px — прежний backdrop-filter: blur(48px). */
@@ -31,9 +31,11 @@ uniform float uRidgeWidth;
 uniform vec2 uResolution;
 // Высота световой полосы в пикселях канваса. Гребень лежит на её середине.
 uniform float uBandHeight;
+// Пикселей канваса в CSS-пикселе по вертикали
+uniform float uPxScale;
 
 out vec4 fragColor;
-${LIGHT_PALETTE_GLSL}
+${GLOW_LINE_GLSL}
 
 // Прежде яркость дышала как 0.988 + sin(uTime * 0.34) * 0.012 — колебание в
 // 1.2% с периодом 18 секунд. На глаз оно неразличимо, но заставляло шейдер
@@ -77,15 +79,15 @@ void main() {
   float center = exp(-ridgeX * ridgeX * 4.2);
   float crown = exp(-ridgeX * ridgeX * 9.0);
 
-  // Keep the white ridge visibly dense without widening the surrounding blue bloom.
-  float core = exp(-abs(y) * 66.0) * envelope;
-  float body = exp(-abs(y) * 13.5) * envelope * (0.34 + center * 0.66);
-  float haze = exp(-abs(y) * 4.8) * center * envelope * 0.34;
-  float centralHaze = exp(-abs(y) * 2.7) * crown * envelope * 0.14;
+  // Свечение считается в CSS-пикселях от гребня, а не в долях полосы: ширина
+  // ореола не должна зависеть от высоты полосы на разных брейкпоинтах.
+  float d = abs(gl_FragCoord.y - ridgeY) / uPxScale;
 
-  vec3 col = (haze + centralHaze) * haloBlue * 2.2
-    + body * paleBlue * 0.78
-    + core * coreWhite * 1.45;
+  // Профиль линии общий для всей вторичной графики (glowLine.ts).
+  vec3 col = glowLine(d, d, envelope, center) + glowBloom(d, 46.0, crown * envelope);
+
+  // Дальний хвост 1/d² не должен обрываться о границу полосы.
+  col *= 1.0 - smoothstep(0.6, 1.0, abs(y));
   col *= breathe;
 
   // The ridge propagates as light, not as a center-out clip. A concentrated
@@ -117,7 +119,7 @@ void main() {
   col = col * lightField
     + (sourceCore * coreWhite * 1.05 + sourceBloom * paleBlue * 0.26) * sourcePulse
     + transientRay * coreWhite;
-  col = 1.0 - exp(-col * 2.5);
+  col = glowTonemap(col);
 
   float alpha = clamp(max(max(col.r, col.g), col.b), 0.0, 1.0);
   fragColor = vec4(col, alpha);
@@ -194,6 +196,7 @@ export default function IceRidge({
         uRidgeWidth: { value: 0.8 },
         uResolution: { value: [1, 1] },
         uBandHeight: { value: 1 },
+        uPxScale: { value: 1 },
       },
       depthTest: false,
       depthWrite: false,
@@ -210,6 +213,7 @@ export default function IceRidge({
       const scaleY = gl.canvas.height / height
       program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height]
       program.uniforms.uBandHeight.value = container.clientHeight * scaleY
+      program.uniforms.uPxScale.value = scaleY
 
       frost.setSize(gl.canvas.width, gl.canvas.height)
       const anchor = anchorRef.current

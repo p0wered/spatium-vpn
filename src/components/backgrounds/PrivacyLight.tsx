@@ -13,7 +13,7 @@ const BEAM_LENGTH_PX = 600
  * мягче и белый клин короче, больше — ярче и шире. Влияет только на область
  * в ~100 px вокруг удара, лучи вдали остаются прежними.
  */
-const CROSSING_INTENSITY = 0.77
+const CROSSING_INTENSITY = 0.57
 /**
  * Длина ореола вертикальных нитей от точки удара в каждую сторону, в долях
  * высоты панели. Тонкое ядро от неё не зависит: оно всегда тянется до
@@ -86,8 +86,8 @@ const float VERTICAL_THICKNESS = 46.0;
 // Затухание ядра вертикали к концам прямой кромки. Больше — тусклеет раньше,
 // меньше — яркая нить держится ближе к углам. Подобрано по гребню Bypass.
 const float VERTICAL_CORE_TAPER = 2.2;
-// Цвет ядра вертикали. Почти нейтральный: тусклый хвост ядра у краёв
-// контейнера светлый, как у гребня Bypass, а не синий.
+// Цвет ядра вертикали. У удара почти нейтральный, к концам кромки уходит в
+// холодный tint: как у гребня Bypass, где концы линии голубые, а не белые.
 const vec3 coreTint = vec3(0.8, 0.86, 1.0);
 
 const float CROSSING_INTENSITY = ${CROSSING_INTENSITY.toFixed(3)};
@@ -214,7 +214,7 @@ void main() {
 
   vec3 horizontal = strandLayer((flight + beam) * breathe);
   // Вспышка прибавляется к паре вертикальных нитей, поэтому берётся вполовину.
-  vec3 vertical = 1.0 - exp(-((ridgeHalo * tint + ridgeCore * coreTint) * crossing * ridgeField
+  vec3 vertical = 1.0 - exp(-((ridgeHalo * tint + ridgeCore * mix(tint, coreTint, coreTaper)) * crossing * ridgeField
     + source * 0.5 * tint) * breathe);
   vec3 col = min(horizontal + 2.0 * vertical, 1.0);
 
