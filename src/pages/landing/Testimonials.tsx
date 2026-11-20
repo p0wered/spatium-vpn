@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, type PointerEvent } fro
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
 import { GlassCard } from '../../components/GlassCard'
 
-const OrbitalHorizon = lazy(() => import('../../components/backgrounds/OrbitalHorizon'))
+const LightThread = lazy(() => import('../../components/backgrounds/LightThread'))
 
 const textItem: Variants = {
   hidden: { opacity: 0, y: 24, filter: 'blur(6px)' },
@@ -150,11 +150,11 @@ function useHoverBrake() {
   return { trackRef, handlers }
 }
 
-function MarqueeRow({ direction, frost }: { direction: 'left' | 'right'; frost?: boolean }) {
+function MarqueeRow({ direction }: { direction: 'left' | 'right' }) {
   const { trackRef, handlers } = useHoverBrake()
   return (
     <div
-      className={`testimonial-marquee ${frost ? 'testimonial-marquee-frosted' : ''}`}
+      className="testimonial-marquee"
       aria-hidden
       {...handlers}
     >
@@ -177,7 +177,9 @@ export function Testimonials() {
       id="testimonials"
       ref={sectionRef}
       aria-labelledby="testimonials-title"
-      className={`testimonials-section relative isolate overflow-hidden bg-black py-24 sm:py-28 lg:py-[132px] ${
+      // Нижняя дуга световой нити со свечением опускается ниже лент: без
+      // запаса overflow-hidden секции срезал бы ореол ровной линией.
+      className={`testimonials-section relative isolate overflow-hidden bg-black pt-24 pb-36 sm:pt-28 sm:pb-40 lg:pt-[132px] lg:pb-[210px] ${
         reduced || inView ? 'is-active' : ''
       }`}
     >
@@ -186,7 +188,7 @@ export function Testimonials() {
         className="pointer-events-none absolute inset-0 z-0"
       >
         <Suspense fallback={null}>
-          <OrbitalHorizon active={Boolean(reduced || inView)} apexRef={ribbonsRef} />
+          <LightThread anchorRef={ribbonsRef} />
         </Suspense>
       </div>
 
@@ -226,7 +228,7 @@ export function Testimonials() {
         ref={ribbonsRef}
         className="testimonial-ribbons relative z-10 mt-32 sm:mt-36 lg:mt-[168px]"
       >
-        <MarqueeRow direction="right" frost />
+        <MarqueeRow direction="right" />
         <MarqueeRow direction="left" />
       </div>
     </section>

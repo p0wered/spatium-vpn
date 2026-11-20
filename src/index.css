@@ -180,6 +180,8 @@
   .testimonial-ribbons {
     --testimonial-row-gap: 1.25rem;
     --testimonial-halo-pad: 2.5rem; /* matches --halo-radius so the glow isn't clipped */
+    /* Мягкий край шторок: меньше половины зазора между рядами (1.25rem). */
+    --testimonial-shutter-feather: 8px;
   }
 
   @media (min-width: 640px) {
@@ -210,14 +212,41 @@
     margin-bottom: calc(-1 * var(--testimonial-halo-pad));
   }
 
+  /*
+   * Шторки — только в высоту карточек, без запаса под ореол: на всю ленту
+   * они перекрывались между рядами, и световая нить у краёв темнела там
+   * полосой со ступенькой на карточках. Свет вне рядов гасит к краям сам
+   * шейдер (LightThread).
+   *
+   * Край шторки мягкий: маска нарастает на --testimonial-shutter-feather за
+   * пределами карточек, а шейдер на том же участке добирает недостающее
+   * затемнение. С жёстким краем граница шторки (сетка экрана) и граница в
+   * шейдере (сетка канваса) расходились на долю пикселя, и строку пикселей
+   * затемняли оба — у краёв оставалась чёрная линия. Шторка статична, её
+   * маска растеризуется один раз.
+   */
   .testimonial-marquee::before,
   .testimonial-marquee::after {
     content: '';
     position: absolute;
-    inset-block: 0;
+    inset-block: calc(var(--testimonial-halo-pad) - var(--testimonial-shutter-feather));
     z-index: 5;
     width: clamp(5.5rem, 15vw, 16rem);
     pointer-events: none;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--testimonial-shutter-feather),
+      #000 calc(100% - var(--testimonial-shutter-feather)),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--testimonial-shutter-feather),
+      #000 calc(100% - var(--testimonial-shutter-feather)),
+      transparent
+    );
   }
 
   .testimonial-marquee::before {
@@ -282,16 +311,15 @@
   }
 
   /*
-   * Матовое стекло — только у карточек первой ленты. Цена backdrop-filter
-   * считается за элемент, и пока лента едет, браузер платит её на каждом
-   * кадре, поэтому блюр стоит лишь там, где под стеклом есть что размывать:
-   * концы дуги горизонта заходят под первую ленту. До второй дуга не
-   * опускается — под ней чёрный фон и пологое гало, которые блюр не меняет.
+   * Матовое стекло у карточек обеих лент: световая нить проходит под обеими
+   * и должна размываться стеклом, а не просвечивать сквозь текст. Цена
+   * backdrop-filter считается за элемент и платится на каждом кадре, пока
+   * лента едет.
    *
    * Одной общей полосой под лентой это не заменить: она размывает свет и в
    * зазорах между карточками, и там проступает сплошная подложка.
    */
-  .testimonial-marquee-frosted .glass-card.testimonial-card {
+  .testimonial-marquee .glass-card.testimonial-card {
     backdrop-filter: blur(24px);
   }
 
@@ -402,7 +430,7 @@
       background-color: rgb(0 0 0 / 0.92);
     }
 
-    .testimonial-marquee-frosted .glass-card.testimonial-card {
+    .testimonial-marquee .glass-card.testimonial-card {
       backdrop-filter: none;
     }
   }
