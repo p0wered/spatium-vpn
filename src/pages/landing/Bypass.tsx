@@ -73,7 +73,7 @@ export function Bypass() {
           variants={textItem}
           className="mx-auto mt-3.5 max-w-[609px] text-center text-base leading-6 font-light text-balance text-white/75 sm:text-lg sm:leading-7"
         >
-          Spatium is built to bypass filtering based on Deep Packet Inspection, helping your
+          Spatium is built to bypass filtering based on DPI, helping your
           connection remain available on restrictive networks.
         </motion.p>
 

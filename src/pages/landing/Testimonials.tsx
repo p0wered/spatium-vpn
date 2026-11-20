@@ -191,7 +191,7 @@ export function Testimonials() {
       </div>
 
       <motion.div
-        className="landing-container relative z-10 grid gap-6 lg:grid-cols-12 lg:items-end"
+        className="landing-container relative z-10 grid gap-6 lg:grid-cols-12 lg:items-center"
         initial={reduced ? false : 'hidden'}
         animate={reduced || inView ? 'show' : 'hidden'}
       >

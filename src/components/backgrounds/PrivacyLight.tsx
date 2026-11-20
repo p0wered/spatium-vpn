@@ -29,7 +29,7 @@ const VERTICAL_LENGTH = 0.53
 const EDGE_FADE = 0.5
 
 /** Размытие света под стеклом панели, CSS px — прежний backdrop-filter: blur(48px). */
-const GLASS_BLUR_PX = 48
+const GLASS_BLUR_PX = 96
 /** Скругление панели (.privacy-shell). */
 const GLASS_RADIUS_PX = 24
 

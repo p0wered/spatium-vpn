@@ -1,14 +1,23 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { plans, type Plan } from './plans'
 import { motion, useInView, useReducedMotion, type Variants } from 'motion/react'
 import { ArrowUpRight, Check } from 'lucide-react'
 import { Button } from '../../components/Button'
 import { GlassCard } from '../../components/GlassCard'
+import { DESKTOP_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
+
+const IceRidge = lazy(() => import('../../components/backgrounds/IceRidge'))
 
 const revealContainer: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.12, delayChildren: 0.06 } },
+}
+
+/** Общая стеклянная панель тарифов проявляется вместе с первой карточкой. */
+const shellItem: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] } },
 }
 
 const textItem: Variants = {
@@ -184,6 +193,11 @@ export function Pricing() {
   const inView = useInView(sectionRef, { once: true, amount: 0.18 })
   const reduced = useReducedMotion()
   const carousel = usePlanCarousel(reduced)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const lightInView = useInView(panelRef, { once: true, amount: 0.12 })
+  // Свет и общая панель — только на десктопе: ниже lg тарифы листаются
+  // каруселью до краёв экрана, и панели вокруг неё нет.
+  const desktop = useMediaQuery(DESKTOP_QUERY)
 
   return (
     <section
@@ -213,7 +227,7 @@ export function Pricing() {
         <motion.p
           variants={textItem}
           className="mx-auto mt-3.5 max-w-[520px] text-center text-base leading-6 font-light text-balance
-          text-white/75 sm:text-lg sm:leading-7"
+          text-white/75 sm:text-lg sm:leading-7 lg:max-w-none"
         >
           Billed daily from your balance. Stay connected for as long as it lasts.
         </motion.p>
@@ -225,31 +239,47 @@ export function Pricing() {
             иначе вертикальный свайп по высокой карточке не скроллил бы
             страницу. */}
         {/* Обёртка держит затемнение краёв (.pricing-slider): псевдоэлементы
-            самой ленты прокручивались бы вместе с карточками */}
+            самой ленты прокручивались бы вместе с карточками. На десктопе она
+            же — якорь света: IceRidge лежит на верхней кромке общей
+            стеклянной панели (.pricing-shell) и уходит под стекло размытым,
+            как в Bypass. */}
         <div
+          ref={panelRef}
           className="pricing-slider relative -mx-5 mt-10 -mb-4 sm:-mx-6 sm:mt-12
-          lg:mx-0 lg:mt-[72px] lg:mb-0"
+          lg:isolate lg:mx-0 lg:mt-[72px] lg:mb-0"
         >
-          <div
-            ref={carousel.scrollerRef}
-            role="region"
-            aria-roledescription="carousel"
-            aria-label="Plans"
-            onScroll={carousel.onScroll}
-            className="no-scrollbar relative flex snap-x snap-mandatory gap-3
-            overflow-x-auto overscroll-x-contain px-5 pt-4 pb-4 scroll-px-5
-            sm:gap-4 sm:px-6 sm:scroll-px-6
-            lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-6 lg:overflow-visible lg:p-0"
+          {desktop && (
+            <div className="pointer-events-none absolute inset-x-[-11%] top-0 z-0 h-64 -translate-y-1/2">
+              <Suspense fallback={null}>
+                <IceRidge active={Boolean(reduced || lightInView)} anchorRef={panelRef} />
+              </Suspense>
+            </div>
+          )}
+          <motion.div
+            variants={desktop ? shellItem : undefined}
+            className="pricing-shell lg:relative lg:z-10"
           >
-            {plans.map((plan) => (
-              <PlanCard
-                key={plan.name}
-                plan={plan}
-                visible={Boolean(reduced || inView)}
-                reduced={reduced}
-              />
-            ))}
-          </div>
+            <div
+              ref={carousel.scrollerRef}
+              role="region"
+              aria-roledescription="carousel"
+              aria-label="Plans"
+              onScroll={carousel.onScroll}
+              className="no-scrollbar relative flex snap-x snap-mandatory gap-3
+              overflow-x-auto overscroll-x-contain px-5 pt-4 pb-4 scroll-px-5
+              sm:gap-4 sm:px-6 sm:scroll-px-6
+              lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-4 lg:overflow-visible lg:p-4"
+            >
+              {plans.map((plan) => (
+                <PlanCard
+                  key={plan.name}
+                  plan={plan}
+                  visible={Boolean(reduced || inView)}
+                  reduced={reduced}
+                />
+              ))}
+            </div>
+          </motion.div>
         </div>
 
         <div className="mt-3 flex justify-center lg:hidden">
