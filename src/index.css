@@ -177,6 +177,19 @@
    * Testimonials marquee. Two identical sequences make each ribbon seamless;
    * black overlay gradients dissolve the glass cards into the page edges.
    */
+  /*
+   * Рамка секции на ultrawide: ленты и канвас горизонта не шире 1920px.
+   * Шейдер считает размах и прогиб дуги от ширины канваса, поэтому без
+   * рамки дуга раздувалась вместе с монитором, а ленты уходили к краям
+   * дисплея. Края канваса прозрачны (огибающая дуги гаснет раньше), так
+   * что по бокам рамки шва нет.
+   */
+  .testimonials-frame {
+    width: 100%;
+    max-width: 120rem;
+    margin-inline: auto;
+  }
+
   .testimonial-ribbons {
     --testimonial-row-gap: 1.25rem;
     --testimonial-halo-pad: 2.5rem; /* matches --halo-radius so the glow isn't clipped */
